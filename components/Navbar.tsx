@@ -1,0 +1,102 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import type { Session } from '@supabase/supabase-js'
+import { Map, Plus, LogIn, UserPlus, LogOut, User } from 'lucide-react'
+
+export default function Navbar() {
+  const [session, setSession] = useState<Session | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Получаем текущую сессию при монтировании
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    // Подписываемся на изменения состояния авторизации
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
+
+  return (
+    <header className="sticky top-0 z-50 w-full bg-black/50 backdrop-blur-md border-b border-white/10">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Логотип */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-white font-bold text-xl hover:text-blue-400 transition-colors"
+        >
+          <Map className="w-6 h-6 text-blue-400" />
+          Roadmaps
+        </Link>
+
+        {/* Правая часть */}
+        <div className="flex items-center gap-3">
+          {session ? (
+            <>
+              {/* Кнопка Создать */}
+              <Link
+                href="/create"
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Создать
+              </Link>
+
+              {/* Имя пользователя */}
+              <Link
+                href="/profile"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <User className="w-4 h-4" />
+                {session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Профиль'}
+              </Link>
+
+              {/* Кнопка Выйти */}
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-1.5 text-gray-300 hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Выйти
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Войти */}
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                Войти
+              </Link>
+
+              {/* Регистрация */}
+              <Link
+                href="/register"
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <UserPlus className="w-4 h-4" />
+                Регистрация
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
+  )
+}
