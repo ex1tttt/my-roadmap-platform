@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 
-type Step = { id: string; title: string; content: string; media_url?: string };
+type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
 type Resource = { id: string; label: string; url: string };
 
 function uid() {
@@ -17,7 +17,7 @@ export default function CreatePage() {
   const [category, setCategory] = useState("");
 
   const [steps, setSteps] = useState<Step[]>([
-    { id: uid(), title: "", content: "", media_url: undefined },
+    { id: uid(), title: "", content: "", link: "", media_url: undefined },
   ]);
   const [resources, setResources] = useState<Resource[]>([]);
 
@@ -27,30 +27,29 @@ export default function CreatePage() {
   async function handleFileUpload(file: File, stepId: string) {
     try {
       setUploadingStepId(stepId);
-      const filename = `${uid()}-${file.name.replace(/\s+/g, "-")}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from("media")
-        .upload(filename, file);
+      const fileName = `${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: publicData } = supabase.storage.from("media").getPublicUrl(filename);
-      const publicUrl = publicData?.publicUrl || null;
+      const { data: publicData } = supabase.storage.from("images").getPublicUrl(fileName);
+      const publicUrl = publicData.publicUrl;
 
       setSteps((prev) =>
-        prev.map((s) => (s.id === stepId ? { ...s, media_url: publicUrl || undefined } : s))
+        prev.map((s) => (s.id === stepId ? { ...s, media_url: publicUrl } : s))
       );
-      setUploadingStepId(null);
-      return publicUrl;
     } catch (err) {
       console.error("Upload error:", err);
+      alert("Ошибка загрузки файла: " + (err as any)?.message);
+    } finally {
       setUploadingStepId(null);
-      return null;
     }
   }
 
   function addStep() {
-    setSteps((s) => [...s, { id: uid(), title: "", content: "", media_url: undefined }]);
+    setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_url: undefined }]);
   }
 
   function removeStep(id: string) {
@@ -112,6 +111,7 @@ export default function CreatePage() {
         "order": idx + 1,
         title: s.title,
         content: s.content,
+        link: s.link ?? null,
         media_url: s.media_url || null,
       }));
 
@@ -135,7 +135,7 @@ export default function CreatePage() {
       setTitle("");
       setDescription("");
       setCategory("");
-      setSteps([{ id: uid(), title: "", content: "", media_url: undefined }]);
+      setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
       setResources([]);
       alert("Карточка успешно опубликована");
     } catch (err: any) {
@@ -200,51 +200,68 @@ export default function CreatePage() {
 
             <div className="space-y-3">
               {steps.map((s, idx) => (
-                <div key={s.id} className="rounded-lg bg-gray-50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
+                <div key={s.id} className="box-border w-full rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {/* Левая колонка: текстовые поля */}
+                    <div className="flex flex-col gap-3">
                       <label className="block">
                         <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Заголовок шага</div>
                         <input
-                          className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
+                          className="box-border w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
                           value={s.title}
                           onChange={(e) => updateStep(s.id, { title: e.target.value })}
                           required
                         />
                       </label>
 
-                      <label className="mt-3 block">
+                      <label className="block">
                         <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Описание</div>
                         <textarea
-                          className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
+                          className="box-border w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
                           rows={3}
                           value={s.content}
                           onChange={(e) => updateStep(s.id, { content: e.target.value })}
                         />
                       </label>
+
+                      <label className="block">
+                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Ссылка (необязательно)</div>
+                        <input
+                          type="url"
+                          placeholder="https://..."
+                          className="box-border w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
+                          value={s.link ?? ""}
+                          onChange={(e) => updateStep(s.id, { link: e.target.value })}
+                        />
+                      </label>
                     </div>
 
-                    <div className="w-36 shrink-0 text-right">
-                      <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">Медиа</div>
+                    {/* Правая колонка: медиа + удаление */}
+                    <div className="flex flex-col gap-2">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Медиа</div>
                       <input
                         type="file"
                         accept="image/*"
+                        className="text-sm"
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           await handleFileUpload(file, s.id);
                         }}
                       />
-
-                      {s.media_url && (
-                        <img src={s.media_url} alt="media" className="mt-2 h-20 w-full rounded object-cover" />
+                      {uploadingStepId === s.id && (
+                        <p className="text-xs text-gray-500">Загрузка...</p>
                       )}
-
-                      <div className="mt-2">
-                        <button type="button" className="text-sm text-red-600" onClick={() => removeStep(s.id)}>
-                          Удалить
-                        </button>
-                      </div>
+                      {s.media_url && (
+                        <img src={s.media_url} alt="media" className="mt-1 h-32 w-full rounded object-cover" />
+                      )}
+                      <button
+                        type="button"
+                        className="mt-auto self-start text-sm text-red-600 hover:text-red-800"
+                        onClick={() => removeStep(s.id)}
+                      >
+                        Удалить шаг
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -25,7 +25,8 @@ create table if not exists steps (
   "order" integer not null,
   title text not null,
   content text,
-  media_url text
+  media_url text,
+  link text
 );
 
 -- Resources related to a card

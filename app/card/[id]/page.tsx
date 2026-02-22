@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { ExternalLink, ArrowLeft, BookOpen, Pencil } from "lucide-react";
+import UserAvatar from "@/components/UserAvatar";
 
 // Для серверного компонента используем базовый createClient напрямую,
 // т.к. lib/supabase использует createBrowserClient (только для браузера)
@@ -8,18 +12,20 @@ const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
+type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
+
+function normalizeUrl(url: string): string {
+  if (!url) return url;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
 
 function getYouTubeId(url?: string) {
   if (!url) return null;
-  // youtu.be/<id>
   const shortMatch = url.match(/youtu\.be\/([\w-]{11})/i);
   if (shortMatch) return shortMatch[1];
-  // youtube.com/watch?v=<id>
   const longMatch = url.match(/[?&]v=([\w-]{11})/i);
   if (longMatch) return longMatch[1];
-  // embed or /v/ urls
   const embedMatch = url.match(/(?:embed|v)\/([\w-]{11})/i);
   if (embedMatch) return embedMatch[1];
   return null;
@@ -35,27 +41,45 @@ function isVideoFile(url?: string) {
   return /\.(mp4|webm)(?:\?|$)/i.test(url);
 }
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const { id } = params;
+// Аватар вынесен в components/UserAvatar.tsx
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
   console.log('ID from URL:', id);
 
-  const { data, error } = await supabaseServer
-    .from("cards")
-    .select("*, steps(*), resources(*), profiles!cards_user_id_fkey(*)")
-    .eq("id", id)
-    .maybeSingle();
+  // Получаем карточку и текущего пользователя параллельно
+  const cookieStore = await cookies();
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: () => {},
+      },
+    }
+  );
+
+  const [{ data, error }, { data: { user: currentUser } }] = await Promise.all([
+    supabaseServer
+      .from("cards")
+      .select("*, steps(*), resources(*), profiles!cards_user_id_fkey(*)")
+      .eq("id", id)
+      .maybeSingle(),
+    supabaseAuth.auth.getUser(),
+  ]);
 
   console.log('Fetched data:', data);
 
   if (error) {
     console.error('Full fetch error:', error);
     return (
-      <div className="min-h-screen bg-zinc-50 py-12 px-6 dark:bg-black">
+      <div className="min-h-screen bg-zinc-950 py-12 px-6">
         <main className="mx-auto max-w-4xl">
-          <div className="rounded-lg bg-red-50 p-6 text-red-700 space-y-1">
-            <p className="font-semibold">Ошибка при загрузке карточки</p>
-            <p className="text-sm">{error.message}</p>
+          <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-6 space-y-1">
+            <p className="font-semibold text-red-400">Ошибка при загрузке карточки</p>
+            <p className="text-sm text-red-300">{error.message}</p>
             {error.details && <p className="text-xs text-red-500">{error.details}</p>}
           </div>
         </main>
@@ -65,124 +89,186 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-zinc-50 py-12 px-6 dark:bg-black">
+      <div className="min-h-screen bg-zinc-950 py-12 px-6">
         <main className="mx-auto max-w-4xl">
-          <div className="rounded-lg bg-white p-8 text-center shadow-sm">Карточка с таким ID не найдена.</div>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-10 text-center text-slate-400">
+            Карточка с таким ID не найдена.
+          </div>
         </main>
       </div>
     );
   }
 
-  // profiles может быть массивом или объектом в зависимости от join
   const author = Array.isArray(data.profiles) ? (data.profiles[0] ?? null) : (data.profiles ?? null);
   const authorName = author?.username ?? 'Автор неизвестен';
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-  const resources: Resource[] = data.resources || [];
+  const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
+  const isOwner = !!currentUser && currentUser.id === data.user_id;
 
   return (
-    <div className="min-h-screen bg-zinc-50 py-12 px-6 dark:bg-black">
-      <main className="mx-auto max-w-4xl space-y-6">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-1 text-sm shadow hover:bg-gray-50 dark:bg-gray-900">
-              ← Назад
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{data.title}</h1>
-              <div className="mt-2 flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                {data.category && <span className="rounded-md border border-transparent bg-linear-to-r from-blue-500 to-cyan-400 px-2 py-1 text-white">{data.category}</span>}
-                <span>by {authorName}</span>
+    <div className="min-h-screen bg-zinc-950 text-slate-100">
+
+      {/* Hero-секция */}
+      <div className="relative overflow-hidden border-b border-white/10 bg-linear-to-br from-zinc-900 via-zinc-950 to-blue-950/30">
+        {/* Декоративное свечение */}
+        <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 right-0 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-5xl px-6 py-14">
+          <Link
+            href="/"
+            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Назад
+          </Link>
+
+          <div className="flex flex-col gap-4">
+            {data.category && (
+              <span className="w-fit rounded-full bg-blue-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-400">
+                {data.category}
+              </span>
+            )}
+
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl">
+                {data.title}
+              </h1>
+
+              {isOwner && (
+                <Link
+                  href={`/card/${id}/edit`}
+                  className="mt-1 inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-300"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Редактировать
+                </Link>
+              )}
+            </div>
+
+            {/* Бейдж автора */}
+            <div className="flex items-center gap-2.5">
+              <UserAvatar username={authorName} size={36} />
+              <div>
+                <p className="text-sm font-medium text-slate-200">{authorName}</p>
+                <p className="text-xs text-slate-500">Автор</p>
               </div>
             </div>
+
+            {data.description && (
+              <p className="mt-2 max-w-2xl text-base text-slate-400 leading-relaxed">
+                {data.description}
+              </p>
+            )}
           </div>
-        </header>
+        </div>
+      </div>
 
-        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
-          <h2 className="mb-2 text-lg font-medium text-gray-800 dark:text-gray-100">Описание</h2>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{data.description}</p>
-        </section>
+      {/* Основной контент */}
+      <div className="mx-auto max-w-5xl gap-8 px-6 py-12 lg:grid lg:grid-cols-[1fr_280px]">
 
-        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">Шаги</h2>
-          <div className="relative">
-            <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
-            <ol className="space-y-8 pl-10">
-              {steps.map((s, idx) => (
-                <li key={s.id} className="relative flex gap-4">
-                  <div className="absolute left-0 top-0 -ml-6 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">{s.order ?? idx + 1}</div>
-                  <div className="flex-1">
-                    <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">{s.title}</h3>
-                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{s.content}</p>
-                    {s.media_url && (
-                      <div className="mt-3">
-                        {(() => {
-                          const ytId = getYouTubeId(s.media_url);
-                          if (ytId) {
-                            return (
-                              <div className="aspect-video w-full overflow-hidden rounded-md">
-                                <iframe
-                                  className="h-full w-full"
-                                  src={`https://www.youtube.com/embed/${ytId}`}
-                                  title={s.title}
-                                  frameBorder="0"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                />
-                              </div>
-                            );
-                          }
+        {/* Timeline шагов */}
+        <section>
+          <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-200">
+            <BookOpen className="h-5 w-5 text-blue-400" />
+            Дорожная карта
+            <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
+              {steps.length}
+            </span>
+          </h2>
 
-                          if (isVideoFile(s.media_url)) {
-                            return (
-                              <video controls src={s.media_url} className="max-h-64 w-full rounded-md object-cover" />
-                            );
-                          }
+          <ol className="relative space-y-6 pl-8">
+            {/* Вертикальная линия */}
+            <div className="absolute left-3.5 top-3 bottom-3 w-px bg-linear-to-b from-blue-500/60 via-slate-700 to-slate-800" />
 
-                          if (isImageUrl(s.media_url)) {
-                            return (
-                              <a href={s.media_url} target="_blank" rel="noopener noreferrer">
-                                <img src={s.media_url} alt={s.title} className="max-h-64 w-full rounded-md object-cover hover:scale-105 transition-transform" />
-                              </a>
-                            );
-                          }
+            {steps.map((s, idx) => (
+              <li key={s.id} className="relative">
+                {/* Кружок на линии */}
+                <div className="absolute -left-8 flex h-7 w-7 items-center justify-center rounded-full border-2 border-blue-500 bg-zinc-950 text-xs font-bold text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.4)]">
+                  {s.order ?? idx + 1}
+                </div>
 
-                          // Fallback: render as image but wrapped link
-                          return (
-                            <a href={s.media_url} target="_blank" rel="noopener noreferrer">
-                              <img src={s.media_url} alt={s.title} className="max-h-64 w-full rounded-md object-cover hover:scale-105 transition-transform" />
-                            </a>
-                          );
-                        })()}
+                {/* Карточка шага */}
+                <div className="rounded-xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:border-blue-500/50 hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(59,130,246,0.08)]">
+                  <h3 className="text-base font-semibold text-slate-100">{s.title}</h3>
+                  {s.content && (
+                    <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.content}</p>
+                  )}
+
+                  {s.link && (
+                    <a
+                      href={normalizeUrl(s.link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400 transition-colors hover:border-blue-400/60 hover:bg-blue-500/20 hover:text-blue-300"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      {s.link}
+                    </a>
+                  )}
+
+                  {/* Медиа */}
+                  {s.media_url && (() => {
+                    const ytId = getYouTubeId(s.media_url);
+                    if (ytId) return (
+                      <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl">
+                        <iframe
+                          className="h-full w-full"
+                          src={`https://www.youtube.com/embed/${ytId}`}
+                          title={s.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
                       </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
+                    );
+                    if (isVideoFile(s.media_url)) return (
+                      <video controls src={s.media_url} className="mt-4 w-full rounded-xl" />
+                    );
+                    if (isImageUrl(s.media_url)) return (
+                      <a href={s.media_url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
+                        <img src={s.media_url} alt={s.title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
+                      </a>
+                    );
+                    return (
+                      <a href={s.media_url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
+                        <img src={s.media_url} alt={s.title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
+                      </a>
+                    );
+                  })()}
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
-          <h2 className="mb-3 text-lg font-medium text-gray-800 dark:text-gray-100">Полезные ссылки</h2>
-          <div className="flex flex-wrap gap-3">
-            {resources.length === 0 && <span className="text-sm text-gray-600 dark:text-gray-400">Нет ресурсов</span>}
-            {resources.map((r) => (
-              <a
-                key={r.id}
-                href={r.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md border-2 border-transparent bg-linear-to-r from-indigo-500 to-pink-500 px-4 py-2 text-sm text-white shadow hover:opacity-95 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
-              >
-                <span>{r.label || r.url}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="h-4 w-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H21m0 0v7.5M21 6l-9 9" />
-                </svg>
-              </a>
-            ))}
-          </div>
-        </section>
-      </main>
+        {/* Sidebar: ресурсы */}
+        {resources.length > 0 && (
+          <aside className="mt-12 lg:mt-0">
+            <div className="sticky top-20 rounded-xl border border-white/10 bg-white/5 p-5">
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-400">
+                <ExternalLink className="h-4 w-4" />
+                Материалы
+              </h2>
+              <ul className="space-y-2">
+                {resources.map((r) => (
+                  <li key={r.id}>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-2 rounded-lg border border-white/0 px-3 py-2.5 text-sm text-slate-300 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-300"
+                    >
+                      <span className="truncate">{r.label || r.url}</span>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
