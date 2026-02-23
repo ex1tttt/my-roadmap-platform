@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { ExternalLink, ArrowLeft, BookOpen, Pencil } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
+import DeleteButton from "@/components/DeleteButton";
 
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
@@ -155,13 +156,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               </h1>
 
               {isOwner && (
-                <Link
-                  href={`/card/${id}/edit`}
-                  className="mt-1 inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-300"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Редактировать
-                </Link>
+                <div className="mt-1 flex shrink-0 items-center gap-2">
+                  <Link
+                    href={`/card/${id}/edit`}
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-300"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Редактировать
+                  </Link>
+                  <DeleteButton cardId={id} />
+                </div>
               )}
             </div>
 

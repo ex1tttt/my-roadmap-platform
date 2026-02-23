@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/Card'
-import { User, Heart, Map as MapIcon } from 'lucide-react'
+import { User, Heart, Map as MapIcon, Trash2 } from 'lucide-react'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
 type Profile = { id: string; username: string; avatar?: string }
@@ -114,6 +114,16 @@ export default function ProfilePage() {
     load()
   }, [router])
 
+  async function handleDelete(cardId: string) {
+    if (!window.confirm('Вы уверены, что хотите удалить эту карточку?')) return
+    const { error } = await supabase.from('cards').delete().eq('id', cardId)
+    if (error) {
+      alert('Ошибка при удалении: ' + error.message)
+      return
+    }
+    setMyCards((prev) => prev.filter((c) => c.id !== cardId))
+  }
+
   const tabs: { key: Tab; label: string; icon: React.ReactNode; count: number }[] = [
     { key: 'my', label: 'Мои дорожные карты', icon: <MapIcon className="w-4 h-4" />, count: myCards.length },
     { key: 'liked', label: 'Понравилось', icon: <Heart className="w-4 h-4" />, count: likedCards.length },
@@ -202,9 +212,20 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {displayed.map((c) => (
-              <Link key={c.id} href={`/card/${c.id}`} className="cursor-pointer">
-                <Card card={c} />
-              </Link>
+              <div key={c.id} className="relative group">
+                <Link href={`/card/${c.id}`} className="cursor-pointer">
+                  <Card card={c} />
+                </Link>
+                {tab === 'my' && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); handleDelete(c.id) }}
+                    className="absolute top-3 right-3 rounded-md p-1.5 text-red-500/70 opacity-0 transition-all group-hover:opacity-100 hover:text-red-500 hover:bg-red-500/10"
+                    title="Удалить карточку"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}
