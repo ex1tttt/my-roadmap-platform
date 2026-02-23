@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
 
 const INPUT_CLS =
   "box-border w-full rounded-lg border border-slate-800 bg-zinc-900 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
@@ -50,6 +50,13 @@ export default function SettingsPage() {
   const [passwordMsg, setPasswordMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [userEmail, setUserEmail] = useState("");
+
+  // Danger Zone
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Загружаем профиль текущего пользователя
   useEffect(() => {
@@ -240,6 +247,45 @@ export default function SettingsPage() {
       setPasswordError("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setPasswordSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      // 1. Проверяем креденциалы
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: deleteEmail.trim(),
+        password: deletePassword,
+      });
+      if (signInError) {
+        setDeleteError("Неверная почта или пароль.");
+        return;
+      }
+
+      // 2. Получаем ID текущего пользователя
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setDeleteError("Сессия истекла, войдите заново."); return; }
+
+      // 3. Вызываем серверный API-роут, передаём userId в теле
+      const res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Ошибка сервера");
+
+      // 4. Разлогиниваемся и переходим на главную
+      await supabase.auth.signOut();
+      router.push("/");
+      router.refresh();
+    } catch (err: any) {
+      setDeleteError("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -478,6 +524,68 @@ export default function SettingsPage() {
               >
                 <Lock className="h-4 w-4" />
                 {passwordSaving ? "Проверка..." : "Сменить пароль"}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* ── Danger Zone ── */}
+        <form onSubmit={handleDeleteAccount}>
+          <div className="rounded-xl border border-red-900/50 bg-red-950/10 p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-500">
+              <Trash2 className="h-3.5 w-3.5" />
+              Опасная зона
+            </h2>
+            <p className="mb-4 text-xs text-slate-500">
+              Это действие необратимо. Все ваши дорожные карты будут удалены.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <div className="mb-1.5 text-sm font-medium text-slate-300">Ваша почта</div>
+                <input
+                  type="email"
+                  value={deleteEmail}
+                  onChange={(e) => setDeleteEmail(e.target.value)}
+                  required
+                  placeholder="email@example.com"
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div>
+                <div className="mb-1.5 text-sm font-medium text-slate-300">Ваш пароль</div>
+                <div className="relative">
+                  <input
+                    type={showDeletePassword ? "text" : "password"}
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    className={INPUT_CLS + " pr-10"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDeletePassword((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  >
+                    {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{deleteError}</div>
+            )}
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="submit"
+                disabled={deleteLoading || !deleteEmail.trim() || !deletePassword}
+                className="inline-flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/50 px-5 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/60 hover:text-red-300 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deleteLoading ? "Удаление..." : "Удалить навсегда"}
               </button>
             </div>
           </div>
