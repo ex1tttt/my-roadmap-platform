@@ -3,13 +3,15 @@
 create extension if not exists "pgcrypto";
 
 -- Profiles table
+-- ВАЖНО: id = auth.users.id (не gen_random_uuid)
 create table if not exists profiles (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key references auth.users(id) on delete cascade,
   username text not null unique,
   avatar text
 );
 
 -- Cards (roadmaps)
+-- user_id → profiles.id → auth.users.id
 create table if not exists cards (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
@@ -39,6 +41,14 @@ create table if not exists resources (
 
 -- Likes for cards
 create table if not exists likes (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  card_id uuid references cards(id) on delete cascade not null,
+  unique(user_id, card_id)
+);
+
+-- Favorites for cards
+create table if not exists favorites (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete cascade not null,
   card_id uuid references cards(id) on delete cascade not null,

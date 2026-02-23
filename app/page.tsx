@@ -15,6 +15,9 @@ type CardType = {
   category?: string;
   user: Profile;
   steps?: Step[];
+  likesCount: number;
+  isLiked: boolean;
+  isFavorite: boolean;
 };
 
 export default function Home() {
@@ -25,6 +28,14 @@ export default function Home() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Получаем текущего пользователя один раз при монтировании
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, []);
 
   // Debounce: обновляем debouncedQuery через 350ms после последнего ввода
   useEffect(() => {
@@ -59,28 +70,37 @@ export default function Home() {
         const cardIds = cardsData.map((c: any) => c.id);
         const userIds = Array.from(new Set(cardsData.map((c: any) => c.user_id)));
 
-        const { data: stepsData, error: stepsError } = await supabase
-          .from("steps")
-          .select("*")
-          .in("card_id", cardIds)
-          .order("order", { ascending: true });
-        if (stepsError) throw stepsError;
+        // Параллельно грузим шаги, профили, лайки и избранное
+        const [stepsRes, profilesRes, likesRes, favsRes, userLikesRes, userFavsRes] = await Promise.all([
+          supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
+          supabase.from("profiles").select("*").in("id", userIds),
+          supabase.from("likes").select("card_id").in("card_id", cardIds),
+          supabase.from("favorites").select("card_id").in("card_id", cardIds),
+          userId ? supabase.from("likes").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
+          userId ? supabase.from("favorites").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
+        ]);
 
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("id", userIds);
-        if (profilesError) throw profilesError;
+        if (stepsRes.error) throw stepsRes.error;
+        if (profilesRes.error) throw profilesRes.error;
 
         const profilesMap = new Map<string, Profile>();
-        (profilesData || []).forEach((p: any) => profilesMap.set(p.id, { id: p.id, username: p.username, avatar: p.avatar }));
+        (profilesRes.data || []).forEach((p: any) => profilesMap.set(p.id, { id: p.id, username: p.username, avatar: p.avatar }));
 
         const stepsByCard = new Map<string, Step[]>();
-        (stepsData || []).forEach((s: any) => {
+        (stepsRes.data || []).forEach((s: any) => {
           const arr = stepsByCard.get(s.card_id) || [];
           arr.push({ id: s.id, order: s.order, title: s.title, content: s.content, media_url: s.media_url });
           stepsByCard.set(s.card_id, arr);
         });
+
+        // Считаем лайки per card
+        const likesCountMap = new Map<string, number>();
+        (likesRes.data || []).forEach((l: any) => {
+          likesCountMap.set(l.card_id, (likesCountMap.get(l.card_id) || 0) + 1);
+        });
+
+        const userLikedSet = new Set<string>((userLikesRes.data || []).map((l: any) => l.card_id));
+        const userFavSet = new Set<string>((userFavsRes.data || []).map((f: any) => f.card_id));
 
         const merged = (cardsData || []).map((c: any) => ({
           id: c.id,
@@ -89,6 +109,9 @@ export default function Home() {
           category: c.category,
           user: profilesMap.get(c.user_id) || { id: c.user_id, username: "Unknown" },
           steps: stepsByCard.get(c.id) || [],
+          likesCount: likesCountMap.get(c.id) || 0,
+          isLiked: userLikedSet.has(c.id),
+          isFavorite: userFavSet.has(c.id),
         }));
 
         if (mounted) setCards(merged);
@@ -104,7 +127,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [debouncedQuery, selectedCategory]);
+  }, [debouncedQuery, selectedCategory, userId]);
 
   return (
     <div className="min-h-screen bg-zinc-950 py-12 px-6">
@@ -174,7 +197,13 @@ export default function Home() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
               {cards.map((c) => (
                 <Link key={c.id} href={`/card/${c.id}`} className="cursor-pointer h-full block">
-                  <Card card={c} />
+                  <Card
+                    card={c}
+                    userId={userId}
+                    initialLikesCount={c.likesCount}
+                    initialIsLiked={c.isLiked}
+                    initialIsFavorite={c.isFavorite}
+                  />
                 </Link>
               ))}
             </div>

@@ -119,7 +119,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  const author = Array.isArray(data.profiles) ? (data.profiles[0] ?? null) : (data.profiles ?? null);
+  // Если join по FK не вернул профиль — делаем отдельный запрос (фолбэк)
+  let author = Array.isArray(data.profiles) ? (data.profiles[0] ?? null) : (data.profiles ?? null);
+  if (!author && data.user_id) {
+    const { data: profileFallback } = await supabaseServer
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user_id)
+      .maybeSingle();
+    author = profileFallback ?? null;
+  }
   const authorName = author?.username ?? 'Автор неизвестен';
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
