@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
+import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const INPUT_CLS =
   "box-border w-full rounded-lg border border-slate-800 bg-zinc-900 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
 const CARD_CLS = "rounded-xl border border-slate-800 bg-slate-900/50 p-6";
 const BTN_PRIMARY =
-  "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-60";
+  "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50";
 
 type Profile = {
   id: string;
@@ -30,14 +31,10 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [profileMsg, setProfileMsg] = useState("");
-  const [profileError, setProfileError] = useState("");
 
   // Смена почты
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
-  const [emailMsg, setEmailMsg] = useState("");
-  const [emailError, setEmailError] = useState("");
 
   // Смена пароля
   const [currentPassword, setCurrentPassword] = useState("");
@@ -47,7 +44,6 @@ export default function SettingsPage() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
@@ -56,7 +52,6 @@ export default function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
 
   // Загружаем профиль текущего пользователя
   useEffect(() => {
@@ -79,7 +74,7 @@ export default function SettingsPage() {
         .maybeSingle();
 
       if (error) {
-        setProfileError("Не удалось загрузить профиль: " + error.message);
+        toast.error("Не удалось загрузить профиль: " + error.message);
       } else if (data) {
         setProfile(data);
         setUsername(data.username ?? "");
@@ -93,7 +88,7 @@ export default function SettingsPage() {
           .single();
 
         if (upsertError) {
-          setProfileError("Не удалось создать профиль: " + upsertError.message);
+          toast.error("Не удалось создать профиль: " + upsertError.message);
         } else if (newProfile) {
           setProfile(newProfile);
           setUsername(newProfile.username ?? "");
@@ -130,12 +125,11 @@ export default function SettingsPage() {
   async function handleAvatarUpload(file: File) {
     try {
       setUploading(true);
-      setProfileError("");
 
       // Получаем актуальный ID пользователя из auth, а не из локального стейта profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setProfileError("Необходимо войти в аккаунт.");
+        toast.error("Необходимо войти в аккаунт.");
         return;
       }
 
@@ -164,9 +158,10 @@ export default function SettingsPage() {
       // Обновляем state постоянным URL из хранилища
       setAvatarUrl(publicUrl);
       setProfile((prev) => prev ? { ...prev, avatar: publicUrl } : prev);
+      toast.success("Аватар обновлён!");
     } catch (err: any) {
       console.error("Avatar upload error:", err);
-      setProfileError("Ошибка загрузки аватара: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error("Ошибка загрузки аватара: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setUploading(false);
     }
@@ -176,8 +171,6 @@ export default function SettingsPage() {
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setProfileMsg("");
-    setProfileError("");
 
     try {
       const {
@@ -191,7 +184,7 @@ export default function SettingsPage() {
 
       const trimmed = username.trim();
       if (!trimmed) {
-        setProfileError("Имя пользователя не может быть пустым.");
+        toast.error("Имя пользователя не может быть пустым.");
         return;
       }
 
@@ -201,11 +194,11 @@ export default function SettingsPage() {
 
       if (error) throw error;
 
-      setProfileMsg("Профиль успешно обновлён!");
+      toast.success("Профиль успешно обновлён!");
       setProfile((prev) => prev ? { ...prev, username: trimmed, avatar: avatarUrl } : prev);
     } catch (err: any) {
       console.error("Save profile error:", err);
-      setProfileError("Ошибка сохранения: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error("Ошибка сохранения: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setSaving(false);
     }
@@ -214,15 +207,16 @@ export default function SettingsPage() {
   async function handleEmailUpdate(e: React.FormEvent) {
     e.preventDefault();
     setEmailSaving(true);
-    setEmailMsg("");
-    setEmailError("");
     try {
       const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
       if (error) throw error;
-      setEmailMsg("Письмо с подтверждением отправлено на обе почты. Перейдите по ссылке в каждом письме.");
+      toast.success("Письмо с подтверждением отправлено на обе почты!", {
+        description: "Перейдите по ссылке в каждом письме для подтверждения.",
+        duration: 6000,
+      });
       setNewEmail("");
     } catch (err: any) {
-      setEmailError("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error("Ошибка обновления Email: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setEmailSaving(false);
     }
@@ -231,7 +225,6 @@ export default function SettingsPage() {
   async function handlePasswordUpdate(e: React.FormEvent) {
     e.preventDefault();
     setPasswordSaving(true);
-    setPasswordMsg("");
     setPasswordError("");
     try {
       if (newPassword !== confirmPassword) {
@@ -240,11 +233,12 @@ export default function SettingsPage() {
       }
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      setPasswordMsg("Пароль успешно изменён!");
+      toast.success("Пароль успешно изменён!");
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      setPasswordError("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error("Ошибка смены пароля: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setPasswordSaving(false);
     }
@@ -253,7 +247,6 @@ export default function SettingsPage() {
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
     setDeleteLoading(true);
-    setDeleteError("");
     try {
       // 1. Проверяем креденциалы
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -261,13 +254,16 @@ export default function SettingsPage() {
         password: deletePassword,
       });
       if (signInError) {
-        setDeleteError("Неверная почта или пароль.");
+        toast.error("Неверная почта или пароль.");
         return;
       }
 
       // 2. Получаем ID текущего пользователя
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setDeleteError("Сессия истекла, войдите заново."); return; }
+      if (!user) {
+        toast.error("Сессия истекла, войдите заново.");
+        return;
+      }
 
       // 3. Вызываем серверный API-роут, передаём userId в теле
       const res = await fetch("/api/delete-account", {
@@ -278,12 +274,13 @@ export default function SettingsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Ошибка сервера");
 
-      // 4. Разлогиниваемся и переходим на главную
+      // 4. Уведомляем, разлогиниваемся и переходим на главную
+      toast.success("Ваш аккаунт был успешно удалён.");
       await supabase.auth.signOut();
-      router.push("/");
       router.refresh();
+      router.push("/");
     } catch (err: any) {
-      setDeleteError("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error("Ошибка удаления: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setDeleteLoading(false);
     }
@@ -350,9 +347,11 @@ export default function SettingsPage() {
                 type="button"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-white/5 px-4 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-white/5 px-4 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Camera className="h-4 w-4" />
+                {uploading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Camera className="h-4 w-4" />}
                 {uploading ? "Загрузка..." : "Выбрать фото"}
               </button>
               {avatarUrl && (
@@ -381,15 +380,11 @@ export default function SettingsPage() {
                 className={INPUT_CLS}
               />
             </label>
-            {profileError && (
-              <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{profileError}</div>
-            )}
-            {profileMsg && (
-              <div className="mt-3 rounded-lg border border-green-500/30 bg-green-950/40 px-4 py-3 text-sm text-green-400">{profileMsg}</div>
-            )}
             <div className="mt-4 flex justify-end">
               <button type="submit" disabled={saving || uploading} className={BTN_PRIMARY}>
-                <Save className="h-4 w-4" />
+                {saving
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Save className="h-4 w-4" />}
                 {saving ? "Сохранение..." : "Сохранить"}
               </button>
             </div>
@@ -414,15 +409,11 @@ export default function SettingsPage() {
                 className={INPUT_CLS}
               />
             </label>
-            {emailError && (
-              <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{emailError}</div>
-            )}
-            {emailMsg && (
-              <div className="mt-3 rounded-lg border border-green-500/30 bg-green-950/40 px-4 py-3 text-sm text-green-400">{emailMsg}</div>
-            )}
             <div className="mt-4 flex justify-end">
               <button type="submit" disabled={emailSaving || !newEmail.trim()} className={BTN_PRIMARY}>
-                <Mail className="h-4 w-4" />
+                {emailSaving
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Mail className="h-4 w-4" />}
                 {emailSaving ? "Отправка..." : "Обновить Email"}
               </button>
             </div>
@@ -513,17 +504,16 @@ export default function SettingsPage() {
             {passwordError && (
               <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{passwordError}</div>
             )}
-            {passwordMsg && (
-              <div className="mt-3 rounded-lg border border-green-500/30 bg-green-950/40 px-4 py-3 text-sm text-green-400">{passwordMsg}</div>
-            )}
             <div className="mt-4 flex justify-end">
               <button
                 type="submit"
                 disabled={passwordSaving || !currentPassword || newPassword.length < 6 || newPassword !== confirmPassword}
                 className={BTN_PRIMARY}
               >
-                <Lock className="h-4 w-4" />
-                {passwordSaving ? "Проверка..." : "Сменить пароль"}
+                {passwordSaving
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Lock className="h-4 w-4" />}
+                {passwordSaving ? "Сохранение..." : "Сменить пароль"}
               </button>
             </div>
           </div>
@@ -574,17 +564,15 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {deleteError && (
-              <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{deleteError}</div>
-            )}
-
             <div className="mt-4 flex justify-end">
               <button
                 type="submit"
                 disabled={deleteLoading || !deleteEmail.trim() || !deletePassword}
-                className="inline-flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/50 px-5 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/60 hover:text-red-300 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/50 px-5 py-2.5 text-sm font-medium text-red-400 transition-all hover:bg-red-900/60 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Trash2 className="h-4 w-4" />
+                {deleteLoading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Trash2 className="h-4 w-4" />}
                 {deleteLoading ? "Удаление..." : "Удалить навсегда"}
               </button>
             </div>
