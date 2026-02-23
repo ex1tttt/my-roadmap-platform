@@ -9,21 +9,61 @@ import { Map, Plus, LogIn, UserPlus, LogOut, User, Settings } from 'lucide-react
 
 export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
+  const [username, setUsername] = useState('')
+  const [usernameLoading, setUsernameLoading] = useState(false)
   const router = useRouter()
+
+  // Загружаем username из таблицы profiles
+  async function loadUsername(userId: string) {
+    setUsernameLoading(true)
+    const { data } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single()
+    setUsername(data?.username ?? '')
+    setUsernameLoading(false)
+  }
 
   useEffect(() => {
     // Получаем текущую сессию при монтировании
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
+      if (session?.user) loadUsername(session.user.id)
     })
 
     // Подписываемся на изменения состояния авторизации
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session?.user) {
+        loadUsername(session.user.id)
+      } else {
+        setUsername('')
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // Realtime: обновляем username если пользователь изменил его в настройках
+  useEffect(() => {
+    if (!session?.user) return
+
+    const userId = session.user.id
+    const channel = supabase
+      .channel(`profile-navbar-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+        (payload) => {
+          const newUsername = (payload.new as any)?.username
+          if (newUsername) setUsername(newUsername)
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [session?.user?.id])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -62,7 +102,11 @@ export default function Navbar() {
                 className="flex items-center gap-1.5 text-gray-300 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <User className="w-4 h-4" />
-                {session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Профиль'}
+                {usernameLoading ? (
+                  <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                ) : (
+                  username || session.user.email?.split('@')[0] || 'Профиль'
+                )}
               </Link>
 
               {/* Настройки */}
