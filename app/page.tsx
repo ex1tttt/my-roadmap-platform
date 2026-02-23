@@ -71,13 +71,12 @@ export default function Home() {
         const userIds = Array.from(new Set(cardsData.map((c: any) => c.user_id)));
 
         // Параллельно грузим шаги, профили, лайки и избранное
-        const [stepsRes, profilesRes, likesRes, favsRes, userLikesRes, userFavsRes] = await Promise.all([
+        const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes] = await Promise.all([
           supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
           supabase.from("profiles").select("*").in("id", userIds),
           supabase.from("likes").select("card_id").in("card_id", cardIds),
-          supabase.from("favorites").select("card_id").in("card_id", cardIds),
           userId ? supabase.from("likes").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
-          userId ? supabase.from("favorites").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
+          userId ? supabase.from("favorites").select("roadmap_id").eq("user_id", userId).in("roadmap_id", cardIds) : Promise.resolve({ data: [] }),
         ]);
 
         if (stepsRes.error) throw stepsRes.error;
@@ -100,7 +99,7 @@ export default function Home() {
         });
 
         const userLikedSet = new Set<string>((userLikesRes.data || []).map((l: any) => l.card_id));
-        const userFavSet = new Set<string>((userFavsRes.data || []).map((f: any) => f.card_id));
+        const userFavSet = new Set<string>((userFavsRes.data || []).map((f: any) => f.roadmap_id));
 
         const merged = (cardsData || []).map((c: any) => ({
           id: c.id,

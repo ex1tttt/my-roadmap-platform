@@ -231,6 +231,15 @@ export default function SettingsPage() {
         setPasswordError("Пароли не совпадают.");
         return;
       }
+      // Проверяем текущий пароль перед сменой
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: currentPassword,
+      });
+      if (signInError) {
+        setPasswordError("Текущий пароль введён неверно.");
+        return;
+      }
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       toast.success("Пароль успешно изменён!");

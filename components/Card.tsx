@@ -63,10 +63,10 @@ export default function Card({
     setFavLoading(true);
     try {
       if (isFavorite) {
-        await supabase.from('favorites').delete().eq('user_id', userId).eq('card_id', card.id);
+        await supabase.from('favorites').delete().eq('user_id', userId).eq('roadmap_id', card.id);
         setIsFavorite(false);
       } else {
-        await supabase.from('favorites').insert({ user_id: userId, card_id: card.id });
+        await supabase.from('favorites').insert({ user_id: userId, roadmap_id: card.id });
         setIsFavorite(true);
       }
     } finally {

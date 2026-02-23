@@ -51,6 +51,6 @@ create table if not exists likes (
 create table if not exists favorites (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete cascade not null,
-  card_id uuid references cards(id) on delete cascade not null,
-  unique(user_id, card_id)
+  roadmap_id uuid references cards(id) on delete cascade not null,
+  unique(user_id, roadmap_id)
 );

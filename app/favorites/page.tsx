@@ -40,46 +40,39 @@ export default function FavoritesPage() {
 
       setUserId(user.id);
 
-      // Получаем избранные карточки текущего пользователя
+      // Один join-запрос: favorites + cards (roadmap) + steps + profiles
       const { data: favData, error: favError } = await supabase
         .from("favorites")
-        .select("card_id")
+        .select("roadmap_id, roadmap:roadmap_id(*, steps(*))")
         .eq("user_id", user.id);
 
-      if (favError || !favData || favData.length === 0) {
+      if (favError) {
+        console.error("Favorites fetch error:", favError);
         setLoading(false);
         return;
       }
 
-      const cardIds = favData.map((f) => f.card_id);
+      if (!favData || favData.length === 0) {
+        setLoading(false);
+        return;
+      }
 
-      // Параллельно загружаем карточки, шаги, лайки
-      const [cardsRes, stepsRes, likesRes, userLikesRes] = await Promise.all([
-        supabase.from("cards").select("*").in("id", cardIds),
-        supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
+      const cardIds = favData.map((f: any) => f.roadmap_id).filter(Boolean);
+
+      // Параллельно: лайки (count) + пользовательские лайки + профили авторов
+      const rawRoadmaps = favData.map((f: any) => f.roadmap).filter(Boolean);
+      const authorIds = Array.from(new Set(rawRoadmaps.map((r: any) => r.user_id)));
+
+      const [likesRes, userLikesRes, profilesRes] = await Promise.all([
         supabase.from("likes").select("card_id").in("card_id", cardIds),
         supabase.from("likes").select("card_id").eq("user_id", user.id).in("card_id", cardIds),
+        supabase.from("profiles").select("*").in("id", authorIds),
       ]);
 
-      const cardsData = cardsRes.data || [];
-      const userIds = Array.from(new Set(cardsData.map((c: any) => c.user_id)));
-
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("*")
-        .in("id", userIds);
-
       const profilesMap = new Map<string, Profile>();
-      (profilesData || []).forEach((p: any) =>
+      (profilesRes.data || []).forEach((p: any) =>
         profilesMap.set(p.id, { id: p.id, username: p.username, avatar: p.avatar })
       );
-
-      const stepsByCard = new Map<string, Step[]>();
-      (stepsRes.data || []).forEach((s: any) => {
-        const arr = stepsByCard.get(s.card_id) || [];
-        arr.push({ id: s.id, order: s.order, title: s.title, content: s.content, media_url: s.media_url });
-        stepsByCard.set(s.card_id, arr);
-      });
 
       const likesCountMap = new Map<string, number>();
       (likesRes.data || []).forEach((l: any) => {
@@ -88,16 +81,18 @@ export default function FavoritesPage() {
 
       const userLikedSet = new Set<string>((userLikesRes.data || []).map((l: any) => l.card_id));
 
-      const merged: CardType[] = cardsData.map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        category: c.category,
-        user: profilesMap.get(c.user_id) || { id: c.user_id, username: "Unknown" },
-        steps: stepsByCard.get(c.id) || [],
-        likesCount: likesCountMap.get(c.id) || 0,
-        isLiked: userLikedSet.has(c.id),
-        isFavorite: true, // все карточки здесь в избранном
+      const merged: CardType[] = rawRoadmaps.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        category: r.category,
+        user: profilesMap.get(r.user_id) || { id: r.user_id, username: "Unknown" },
+        steps: ((r.steps || []) as Step[])
+          .slice()
+          .sort((a, b) => a.order - b.order),
+        likesCount: likesCountMap.get(r.id) || 0,
+        isLiked: userLikedSet.has(r.id),
+        isFavorite: true,
       }));
 
       setCards(merged);
