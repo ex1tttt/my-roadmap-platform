@@ -115,7 +115,7 @@ export default function Home() {
         </header>
 
         {/* Поиск + Фильтры */}
-        <div className="mb-8 flex items-center gap-3 w-full max-w-2xl">
+        <div className="mb-8 flex items-center gap-2 w-full max-w-2xl">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -123,23 +123,21 @@ export default function Home() {
               placeholder="Поиск по названию..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="flex-1 rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 w-full"
             />
           </div>
 
           <div className="relative">
             <button
               onClick={() => setFiltersOpen((p) => !p)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm text-slate-300 transition-all bg-slate-900/50 backdrop-blur-md hover:bg-slate-800 ${
-                selectedCategory ? 'border-blue-500/60 text-blue-300' : 'border-slate-800 hover:text-white'
-              }`}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900/80 border border-slate-800 rounded-lg text-slate-300 hover:text-white transition-all whitespace-nowrap"
             >
-              <SlidersHorizontal className="h-4 w-4" />
+              <SlidersHorizontal size={18} />
               <span>Фильтры{selectedCategory ? `: ${selectedCategory}` : ''}</span>
             </button>
 
             {filtersOpen && (
-              <div className="absolute left-0 top-full z-20 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900/90 p-2 backdrop-blur-md shadow-xl">
+              <div className="absolute right-0 top-full z-20 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900/90 p-2 backdrop-blur-md shadow-xl">
                 {['', 'frontend', 'datascience', 'devops'].map((cat) => (
                   <button
                     key={cat}
@@ -173,7 +171,7 @@ export default function Home() {
           </div>
         ) : (
           <section>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {cards.map((c) => (
                 <Link key={c.id} href={`/card/${c.id}`} className="cursor-pointer">
                   <Card card={c} />
