@@ -216,8 +216,13 @@ export default function EditPage() {
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <label className="sm:col-span-2">
-                <div className="mb-1 text-sm font-medium text-slate-200">Заголовок</div>
-                <input className={INPUT_CLS} value={title} onChange={(e) => setTitle(e.target.value)} required />
+                <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
+                  <span>Заголовок</span>
+                  <span className={`text-xs tabular-nums ${title.length >= 45 ? 'text-red-400' : 'text-slate-500'}`}>
+                    {title.length}/50
+                  </span>
+                </div>
+                <input className={INPUT_CLS} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={50} required />
               </label>
 
               <label>
@@ -370,7 +375,7 @@ export default function EditPage() {
             </Link>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || title.trim().length === 0 || title.length > 50}
               className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? (

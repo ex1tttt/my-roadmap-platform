@@ -157,11 +157,17 @@ export default function CreatePage() {
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <label className="sm:col-span-2">
-                <div className="mb-1 text-sm font-medium text-slate-200">Title</div>
+                <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
+                  <span>Title</span>
+                  <span className={`text-xs tabular-nums ${title.length >= 45 ? 'text-red-400' : 'text-slate-500'}`}>
+                    {title.length}/50
+                  </span>
+                </div>
                 <input
                   className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  maxLength={50}
                   required
                 />
               </label>

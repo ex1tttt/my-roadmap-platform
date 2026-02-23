@@ -20,13 +20,13 @@ export default function Card({ card }: { card: CardType }) {
           alt={card.user.username}
           className="h-10 w-10 rounded-full object-cover"
         />
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{card.title}</h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="w-full overflow-hidden break-words text-sm font-semibold text-gray-900 line-clamp-2 dark:text-gray-100">{card.title}</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">by {card.user.username}</p>
         </div>
       </header>
 
-      {card.description && <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">{card.description}</div>}
+      {card.description && <div className="mb-3 overflow-hidden break-words text-sm text-gray-700 line-clamp-3 dark:text-gray-300">{card.description}</div>}
 
       <ol className="space-y-2 text-sm">
         {(card.steps || [])
