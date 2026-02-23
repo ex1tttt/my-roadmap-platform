@@ -13,20 +13,20 @@ type CardType = {
 
 export default function Card({ card }: { card: CardType }) {
   return (
-    <article className="rounded-xl border border-white/10 bg-slate-900/50 p-4 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
-      <header className="mb-3 flex items-center gap-3">
+    <article className="max-w-xs mx-auto w-full rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
+      <header className="mb-2 flex items-center gap-2">
         <img
           src={card.user.avatar || '/placeholder-avatar.png'}
           alt={card.user.username}
-          className="h-10 w-10 rounded-full object-cover"
+          className="h-8 w-8 flex-none rounded-full object-cover"
         />
         <div className="min-w-0 flex-1">
-          <h3 className="w-full truncate text-sm font-semibold text-white line-clamp-1">{card.title}</h3>
+          <h3 className="truncate text-sm font-semibold text-white">{card.title}</h3>
           <p className="text-xs text-slate-400">by {card.user.username}</p>
         </div>
       </header>
 
-      {card.description && <div className="mb-3 overflow-hidden text-sm text-slate-400 line-clamp-2">{card.description}</div>}
+      {card.description && <div className="mb-2 text-xs text-slate-400 line-clamp-2">{card.description}</div>}
 
       <ol className="space-y-2 text-sm">
         {(card.steps || [])

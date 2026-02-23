@@ -171,7 +171,7 @@ export default function Home() {
           </div>
         ) : (
           <section>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
               {cards.map((c) => (
                 <Link key={c.id} href={`/card/${c.id}`} className="cursor-pointer">
                   <Card card={c} />
