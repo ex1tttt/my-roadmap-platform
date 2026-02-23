@@ -13,7 +13,7 @@ type CardType = {
 
 export default function Card({ card }: { card: CardType }) {
   return (
-    <article className="max-w-xs mx-auto w-full rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
+    <article className="max-w-xs mx-auto w-full h-full flex flex-col rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
       <header className="mb-2 flex items-center gap-2">
         <img
           src={card.user.avatar || '/placeholder-avatar.png'}
@@ -26,9 +26,10 @@ export default function Card({ card }: { card: CardType }) {
         </div>
       </header>
 
-      {card.description && <div className="mb-2 text-xs text-slate-400 line-clamp-2">{card.description}</div>}
+      <div className="flex-grow">
+        <div className="mb-2 min-h-[2.5rem] text-xs text-slate-400 line-clamp-2">{card.description || ''}</div>
 
-      <ol className="space-y-2 text-sm">
+        <ol className="space-y-2 text-sm">
         {(card.steps || [])
           .slice()
           .sort((a, b) => a.order - b.order)
@@ -43,7 +44,8 @@ export default function Card({ card }: { card: CardType }) {
               </div>
             </li>
           ))}
-      </ol>
+        </ol>
+      </div>
     </article>
   );
 }
