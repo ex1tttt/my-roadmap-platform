@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Settings } from 'lucide-react'
 
 export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
@@ -63,6 +63,15 @@ export default function Navbar() {
               >
                 <User className="w-4 h-4" />
                 {session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Профиль'}
+              </Link>
+
+              {/* Настройки */}
+              <Link
+                href="/settings"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Настройки
               </Link>
 
               {/* Кнопка Выйти */}

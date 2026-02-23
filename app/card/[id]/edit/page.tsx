@@ -18,7 +18,8 @@ const INPUT_CLS =
 
 export default function EditPage() {
   const params = useParams();
-  const cardId = params?.id as string;
+  const rawId = params?.id;
+  const cardId = Array.isArray(rawId) ? rawId[0] : (rawId ?? "");
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);

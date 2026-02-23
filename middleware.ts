@@ -29,8 +29,6 @@ export async function middleware(req: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  console.log('Proxy Session:', !!session)
-
   // Защита роута /create — пускаем, если сессия есть
   if (req.nextUrl.pathname.startsWith('/create')) {
     if (!session) {

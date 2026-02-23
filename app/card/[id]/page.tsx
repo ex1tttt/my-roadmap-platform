@@ -5,13 +5,6 @@ import { cookies } from "next/headers";
 import { ExternalLink, ArrowLeft, BookOpen, Pencil } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 
-// Для серверного компонента используем базовый createClient напрямую,
-// т.к. lib/supabase использует createBrowserClient (только для браузера)
-const supabaseServer = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -20,8 +13,9 @@ function normalizeUrl(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-function getYouTubeId(url?: string) {
-  if (!url) return null;
+// ─── Вспомогательные функции рендеринга медиа ───────────────────────────────
+
+function getYouTubeId(url: string): string | null {
   const shortMatch = url.match(/youtu\.be\/([\w-]{11})/i);
   if (shortMatch) return shortMatch[1];
   const longMatch = url.match(/[?&]v=([\w-]{11})/i);
@@ -31,22 +25,49 @@ function getYouTubeId(url?: string) {
   return null;
 }
 
-function isImageUrl(url?: string) {
-  if (!url) return false;
-  return /\.(jpe?g|png|gif|webp|svg)(?:\?|$)/i.test(url);
-}
-
-function isVideoFile(url?: string) {
-  if (!url) return false;
+function isVideoFile(url: string): boolean {
   return /\.(mp4|webm)(?:\?|$)/i.test(url);
 }
 
-// Аватар вынесен в components/UserAvatar.tsx
+function renderMedia(url: string | undefined, title: string) {
+  if (!url) return null;
+
+  const ytId = getYouTubeId(url);
+  if (ytId) {
+    return (
+      <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl">
+        <iframe
+          className="h-full w-full"
+          src={`https://www.youtube.com/embed/${ytId}`}
+          title={title}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+
+  if (isVideoFile(url)) {
+    return <video controls src={url} className="mt-4 w-full rounded-xl" />;
+  }
+
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
+      <img src={url} alt={title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
+    </a>
+  );
+}
+
+// Для серверного компонента используем базовый createClient напрямую,
+// т.к. lib/supabase использует createBrowserClient (только для браузера)
+const supabaseServer = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
-  console.log('ID from URL:', id);
 
   // Получаем карточку и текущего пользователя параллельно
   const cookieStore = await cookies();
@@ -70,10 +91,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     supabaseAuth.auth.getUser(),
   ]);
 
-  console.log('Fetched data:', data);
-
   if (error) {
-    console.error('Full fetch error:', error);
+    console.error("Full fetch error:", error);
     return (
       <div className="min-h-screen bg-zinc-950 py-12 px-6">
         <main className="mx-auto max-w-4xl">
@@ -207,35 +226,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                     </a>
                   )}
 
-                  {/* Медиа */}
-                  {s.media_url && (() => {
-                    const ytId = getYouTubeId(s.media_url);
-                    if (ytId) return (
-                      <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl">
-                        <iframe
-                          className="h-full w-full"
-                          src={`https://www.youtube.com/embed/${ytId}`}
-                          title={s.title}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      </div>
-                    );
-                    if (isVideoFile(s.media_url)) return (
-                      <video controls src={s.media_url} className="mt-4 w-full rounded-xl" />
-                    );
-                    if (isImageUrl(s.media_url)) return (
-                      <a href={s.media_url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
-                        <img src={s.media_url} alt={s.title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
-                      </a>
-                    );
-                    return (
-                      <a href={s.media_url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
-                        <img src={s.media_url} alt={s.title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
-                      </a>
-                    );
-                  })()}
+                  {renderMedia(s.media_url, s.title)}
                 </div>
               </li>
             ))}
@@ -254,7 +245,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                 {resources.map((r) => (
                   <li key={r.id}>
                     <a
-                      href={r.url}
+                      href={normalizeUrl(r.url!)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-between gap-2 rounded-lg border border-white/0 px-3 py-2.5 text-sm text-slate-300 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-300"
