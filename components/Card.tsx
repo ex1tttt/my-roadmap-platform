@@ -13,7 +13,7 @@ type CardType = {
 
 export default function Card({ card }: { card: CardType }) {
   return (
-    <article className="max-w-xs mx-auto w-full h-full flex flex-col rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
+    <article className="max-w-[300px] mx-auto w-full h-full flex flex-col min-h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
       <header className="mb-2 flex items-center gap-2">
         <img
           src={card.user.avatar || '/placeholder-avatar.png'}
@@ -26,26 +26,23 @@ export default function Card({ card }: { card: CardType }) {
         </div>
       </header>
 
-      <div className="flex-grow">
-        <div className="mb-2 min-h-[2.5rem] text-xs text-slate-400 line-clamp-2">{card.description || ''}</div>
+      <div className="flex-grow min-h-[3rem] line-clamp-2 text-sm text-slate-400">
+        {card.description || '\u00a0'}
+      </div>
 
-        <ol className="space-y-2 text-sm">
+      <ol className="mt-auto space-y-1.5 text-xs">
         {(card.steps || [])
           .slice()
           .sort((a, b) => a.order - b.order)
           .map((step) => (
-            <li key={step.id} className="flex gap-3">
-              <div className="min-w-[28px] flex-none rounded-md bg-white/5 p-1 text-center text-xs font-medium text-slate-300">
+            <li key={step.id} className="flex gap-2">
+              <div className="min-w-[22px] flex-none rounded bg-white/5 px-1 py-0.5 text-center font-medium text-slate-300">
                 {step.order}
               </div>
-              <div>
-                <div className="font-medium text-slate-200">{step.title}</div>
-                {step.content && <div className="text-slate-400">{step.content}</div>}
-              </div>
+              <div className="truncate font-medium text-slate-200">{step.title}</div>
             </li>
           ))}
-        </ol>
-      </div>
+      </ol>
     </article>
   );
 }
