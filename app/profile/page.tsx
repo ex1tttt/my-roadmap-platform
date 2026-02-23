@@ -30,13 +30,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
         router.replace('/login')
         return
       }
 
-      const userId = session.user.id
+      const userId = user.id
 
       // Профиль пользователя
       const { data: profileData } = await supabase
@@ -45,7 +45,7 @@ export default function ProfilePage() {
         .eq('id', userId)
         .maybeSingle()
 
-      setProfile(profileData ?? { id: userId, username: session.user.email?.split('@')[0] ?? 'Пользователь' })
+      setProfile(profileData ?? { id: userId, username: user.email?.split('@')[0] ?? 'Пользователь' })
 
       // Загружаем мои карточки и лайкнутые параллельно
       const [myCardsRes, likedRes] = await Promise.all([
