@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Card from "../components/Card";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -23,6 +23,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Debounce: обновляем debouncedQuery через 350ms после последнего ввода
   useEffect(() => {
@@ -42,6 +44,9 @@ export default function Home() {
         let query = supabase.from("cards").select("*");
         if (debouncedQuery) {
           query = query.ilike("title", `%${debouncedQuery}%`);
+        }
+        if (selectedCategory) {
+          query = query.eq("category", selectedCategory);
         }
 
         const { data: cardsData, error: cardsError } = await query;
@@ -99,39 +104,71 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 py-12 px-6 dark:bg-black">
+    <div className="min-h-screen bg-zinc-950 py-12 px-6">
       <main className="mx-auto max-w-6xl">
         <header className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Roadmaps</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Карточки достижений от пользователей</p>
+          <h1 className="text-2xl font-bold text-white">Roadmaps</h1>
+          <p className="text-sm text-slate-400">Карточки достижений от пользователей</p>
         </header>
 
-        {/* Поиск */}
-        <div className="relative mb-8">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Поиск по названию..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:bg-zinc-900"
-          />
+        {/* Поиск + Фильтры */}
+        <div className="mb-8 flex items-center gap-3 w-full max-w-2xl">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Поиск по названию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setFiltersOpen((p) => !p)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm text-slate-300 transition-all bg-slate-900/50 backdrop-blur-md hover:bg-slate-800 ${
+                selectedCategory ? 'border-blue-500/60 text-blue-300' : 'border-slate-800 hover:text-white'
+              }`}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span>Фильтры{selectedCategory ? `: ${selectedCategory}` : ''}</span>
+            </button>
+
+            {filtersOpen && (
+              <div className="absolute left-0 top-full z-20 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900/90 p-2 backdrop-blur-md shadow-xl">
+                {['', 'frontend', 'datascience', 'devops'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => { setSelectedCategory(cat); setFiltersOpen(false); }}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                      selectedCategory === cat
+                        ? 'bg-blue-500/20 text-blue-300'
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {cat === '' ? 'Все категории' : cat === 'frontend' ? 'Frontend' : cat === 'datascience' ? 'Data Science' : 'DevOps'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? (
-          <div className="rounded-lg bg-white p-6 text-center shadow-sm dark:bg-zinc-900 dark:text-slate-400">Загрузка...</div>
+          <div className="rounded-xl border border-white/10 bg-slate-900/50 p-6 text-center text-slate-400 backdrop-blur-md">Загрузка...</div>
         ) : error ? (
-          <div className="rounded-lg bg-red-50 p-6 text-center text-red-700 shadow-sm">{error}</div>
+          <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-6 text-center text-red-400">{error}</div>
         ) : cards.length === 0 ? (
-          <div className="rounded-lg bg-white p-8 text-center shadow-sm dark:bg-zinc-900">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-              {debouncedQuery ? `Ничего не найдено по запросу «${debouncedQuery}»` : "Пока нет ни одной дорожной карты"}
+          <div className="rounded-xl border border-white/10 bg-slate-900/50 p-8 text-center backdrop-blur-md">
+            <h2 className="text-lg font-medium text-slate-200">
+              {debouncedQuery || selectedCategory ? `Ничего не найдено` : "Пока нет ни одной дорожной карты"}
             </h2>
-            {!debouncedQuery && (
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Создайте первую дорожную карту на странице создания.</p>
+            {!debouncedQuery && !selectedCategory && (
+              <p className="mt-2 text-sm text-slate-400">Создайте первую дорожную карту на странице создания.</p>
             )}
           </div>
         ) : (
