@@ -14,7 +14,7 @@ function uid() {
 }
 
 const INPUT_CLS =
-  "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100";
+  "w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
 
 export default function EditPage() {
   const params = useParams();
@@ -165,8 +165,8 @@ export default function EditPage() {
         if (insResErr) { console.error(insResErr); alert("Ошибка при сохранении ресурсов: " + insResErr.message); return; }
       }
 
-      router.push(`/card/${cardId}`);
       router.refresh();
+      router.push(`/card/${cardId}`);
     } catch (err: any) {
       console.error("Update error:", err);
       alert("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
@@ -177,8 +177,8 @@ export default function EditPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
-        <p className="text-gray-500 dark:text-gray-400">Загрузка...</p>
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
       </div>
     );
   }
@@ -198,7 +198,7 @@ export default function EditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6 dark:bg-black">
+    <div className="min-h-screen bg-zinc-950 py-12 px-6 text-slate-100">
       <main className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center gap-3">
           <Link
@@ -208,20 +208,20 @@ export default function EditPage() {
             <ArrowLeft className="h-4 w-4" />
             К карточке
           </Link>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Редактировать карточку</h1>
+          <h1 className="text-2xl font-semibold text-slate-100">Редактировать карточку</h1>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-6">
           {/* Основная информация */}
-          <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
+          <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <label className="sm:col-span-2">
-                <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Заголовок</div>
+                <div className="mb-1 text-sm font-medium text-slate-200">Заголовок</div>
                 <input className={INPUT_CLS} value={title} onChange={(e) => setTitle(e.target.value)} required />
               </label>
 
               <label>
-                <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Категория</div>
+                <div className="mb-1 text-sm font-medium text-slate-200">Категория</div>
                 <select className={INPUT_CLS} value={category} onChange={(e) => setCategory(e.target.value)}>
                   <option value="">Выберите категорию</option>
                   <option value="frontend">Frontend</option>
@@ -232,7 +232,7 @@ export default function EditPage() {
             </div>
 
             <label className="mt-4 block">
-              <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Описание</div>
+              <div className="mb-1 text-sm font-medium text-slate-200">Описание</div>
               <textarea
                 className={INPUT_CLS}
                 rows={4}
@@ -245,22 +245,22 @@ export default function EditPage() {
           {/* Шаги */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Шаги</h2>
-              <button type="button" onClick={addStep} className="rounded-md bg-white px-3 py-1 text-sm shadow hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200">
+              <h2 className="text-lg font-medium text-slate-200">Шаги</h2>
+              <button type="button" onClick={addStep} className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700">
                 + Добавить шаг
               </button>
             </div>
 
             <div className="space-y-3">
               {steps.map((s, idx) => (
-                <div key={s.id} className="box-border w-full rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-                  <div className="mb-3 text-xs font-semibold text-gray-400 dark:text-gray-500">Шаг {idx + 1}</div>
+                <div key={s.id} className="box-border w-full rounded-lg border border-white/10 bg-slate-900/50 p-4">
+                  <div className="mb-3 text-xs font-semibold text-slate-500">Шаг {idx + 1}</div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {/* Левая колонка: текстовые поля */}
                     <div className="flex flex-col gap-3">
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Заголовок</div>
+                        <div className="mb-1 text-sm font-medium text-slate-200">Заголовок</div>
                         <input
                           className={INPUT_CLS}
                           value={s.title}
@@ -269,7 +269,7 @@ export default function EditPage() {
                         />
                       </label>
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Описание</div>
+                        <div className="mb-1 text-sm font-medium text-slate-200">Описание</div>
                         <textarea
                           className={INPUT_CLS}
                           rows={3}
@@ -278,7 +278,7 @@ export default function EditPage() {
                         />
                       </label>
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Ссылка на ресурс</div>
+                        <div className="mb-1 text-sm font-medium text-slate-200">Ссылка на ресурс</div>
                         <input
                           className={INPUT_CLS}
                           placeholder="Ссылка на ресурс (YouTube, статья и т.д.)"
@@ -290,7 +290,7 @@ export default function EditPage() {
 
                     {/* Правая колонка: медиа */}
                     <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Медиа (изображение)</div>
+                      <div className="text-sm font-medium text-slate-200">Медиа (изображение)</div>
                       <input
                         type="file"
                         accept="image/*"
@@ -364,17 +364,29 @@ export default function EditPage() {
           <div className="flex items-center justify-end gap-3">
             <Link
               href={`/card/${cardId}`}
-              className="rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
             >
               Отмена
             </Link>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Save className="h-4 w-4" />
-              {saving ? "Сохранение..." : "Сохранить изменения"}
+              {saving ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Загрузка...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Сохранить изменения
+                </>
+              )}
             </button>
           </div>
         </form>
