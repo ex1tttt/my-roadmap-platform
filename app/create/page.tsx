@@ -61,7 +61,7 @@ export default function CreatePage() {
   }
 
   function addResource() {
-    setResources((r) => [...r, { id: uid(), label: "", url: "" }]);
+    setResources((r) => [...r, { id: crypto.randomUUID(), label: "", url: "" }]);
   }
 
   function updateResource(id: string, patch: Partial<Resource>) {
@@ -124,8 +124,10 @@ export default function CreatePage() {
         }
       }
 
-      // 3) insert resources
-      const resourcesPayload = resources.map((r) => ({ card_id: cardId, label: r.label, url: r.url }));
+      // 3) insert resources (пропускаем строки с пустым url)
+      const resourcesPayload = resources
+        .filter((r) => r.url.trim() !== "")
+        .map((r) => ({ card_id: cardId, label: r.label, url: r.url }));
       if (resourcesPayload.length > 0) {
         const { error: resError } = await supabase.from("resources").insert(resourcesPayload);
         if (resError) throw resError;
@@ -272,27 +274,35 @@ export default function CreatePage() {
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-medium text-slate-200">Полезные ссылки</h2>
-              <button type="button" onClick={addResource} className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700">
+              <button
+                type="button"
+                onClick={addResource}
+                className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700"
+              >
                 + Добавить ссылку
               </button>
             </div>
 
             <div className="space-y-3">
               {resources.map((r) => (
-                <div key={r.id} className="flex gap-3">
+                <div key={r.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-900/40 px-3 py-2">
                   <input
-                    className="w-1/3 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="w-1/3 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     placeholder="Название"
                     value={r.label}
                     onChange={(e) => updateResource(r.id, { label: e.target.value })}
                   />
                   <input
-                    className="flex-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="flex-1 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     placeholder="https://..."
                     value={r.url}
                     onChange={(e) => updateResource(r.id, { url: e.target.value })}
                   />
-                  <button type="button" className="text-red-600" onClick={() => removeResource(r.id)}>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-md px-2 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                    onClick={() => removeResource(r.id)}
+                  >
                     Удалить
                   </button>
                 </div>

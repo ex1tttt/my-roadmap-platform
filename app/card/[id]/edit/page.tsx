@@ -112,7 +112,7 @@ export default function EditPage() {
     setSteps((s) => s.map((st) => (st.id === id ? { ...st, ...patch } : st)));
 
   // Управление ресурсами
-  const addResource = () => setResources((r) => [...r, { id: uid(), label: "", url: "" }]);
+  const addResource = () => setResources((r) => [...r, { id: crypto.randomUUID(), label: "", url: "" }]);
   const removeResource = (id: string) => setResources((r) => r.filter((res) => res.id !== id));
   const updateResource = (id: string, patch: Partial<Resource>) =>
     setResources((r) => r.map((res) => (res.id === id ? { ...res, ...patch } : res)));
@@ -321,30 +321,38 @@ export default function EditPage() {
           </section>
 
           {/* Ресурсы */}
-          <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
+          <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Полезные ссылки</h2>
-              <button type="button" onClick={addResource} className="rounded-md bg-white px-3 py-1 text-sm shadow hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200">
+              <h2 className="text-lg font-medium text-slate-200">Полезные ссылки</h2>
+              <button
+                type="button"
+                onClick={addResource}
+                className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700"
+              >
                 + Добавить ссылку
               </button>
             </div>
 
             <div className="space-y-3">
               {resources.map((r) => (
-                <div key={r.id} className="flex gap-3">
+                <div key={r.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-900/40 px-3 py-2">
                   <input
-                    className="w-1/3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    className="w-1/3 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     placeholder="Название"
                     value={r.label}
                     onChange={(e) => updateResource(r.id, { label: e.target.value })}
                   />
                   <input
-                    className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    className="flex-1 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     placeholder="https://..."
                     value={r.url}
                     onChange={(e) => updateResource(r.id, { url: e.target.value })}
                   />
-                  <button type="button" className="text-red-500 hover:text-red-400" onClick={() => removeResource(r.id)}>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-md px-2 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                    onClick={() => removeResource(r.id)}
+                  >
                     Удалить
                   </button>
                 </div>
