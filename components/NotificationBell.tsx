@@ -138,7 +138,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
           table: 'notifications',
           filter: `receiver_id=eq.${userId}`,
         },
-        () => {
+        (payload) => {
+          console.log('Данные из Realtime:', payload.new)
           // Мгновенно зажигаем красный индикатор
           setHasUnread(true)
           // Если попап открыт — обновляем список
