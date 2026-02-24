@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { Trash2, MessageSquare, Send, User, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -401,6 +402,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentUserProfile, setCurrentUserProfile] = useState<{ username: string; avatar?: string } | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
@@ -408,8 +410,17 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id ?? null)
+    supabase.auth.getSession().then(async ({ data }) => {
+      const userId = data.session?.user?.id ?? null
+      setCurrentUserId(userId)
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, avatar')
+          .eq('id', userId)
+          .single()
+        setCurrentUserProfile(profile ?? null)
+      }
     })
   }, [])
 
@@ -489,15 +500,54 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed || !currentUserId || sending) return
+
+    // Валидация перед отправкой
+    if (!trimmed || !roadmapId || !currentUserId) {
+      toast.error('Данные не полные')
+      return
+    }
+
     setSending(true)
+    setText('')
+
+    // Debug-лог перед отправкой в Supabase
+    console.log('Данные перед отправкой:', {
+      content: trimmed,
+      roadmap_id: String(roadmapId),
+      user_id: currentUserId,
+    })
+
+    // Optimistic Update — добавляем коммент в список немедленно
+    const tempId = `optimistic-${Date.now()}`
+    const optimisticComment: Comment = {
+      id: tempId,
+      content: trimmed,
+      created_at: new Date().toISOString(),
+      user_id: currentUserId,
+      parent_id: null,
+      author: currentUserProfile ?? { username: 'Вы' },
+      likesCount: 0,
+      isLiked: false,
+      dislikesCount: 0,
+      isDisliked: false,
+    }
+    setFlat((prev) => [optimisticComment, ...prev])
+    setTotalCount((prev) => prev + 1)
+
     const { data, error } = await supabase
       .from('comments')
-      .insert({ roadmap_id: roadmapId, user_id: currentUserId, content: trimmed })
+      .insert({ roadmap_id: String(roadmapId), user_id: currentUserId, content: trimmed })
       .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar)')
       .single()
+
     if (error) {
-      console.error(error)
+      console.log("ПОЛНАЯ ОШИБКА:", JSON.stringify(error, null, 2))
+      // Откат оптимистичного обновления
+      setFlat((prev) => prev.filter((c) => c.id !== tempId))
+      setTotalCount((prev) => prev - 1)
+      setText(trimmed)
     } else {
+      // Заменяем временный коммент реальным (с настоящим id и created_at)
       const newComment: Comment = {
         id: data.id,
         content: data.content,
@@ -512,9 +562,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         dislikesCount: 0,
         isDisliked: false,
       }
-      setText('')
-      setFlat((prev) => [newComment, ...prev])
-      setTotalCount((prev) => prev + 1)
+      setFlat((prev) => prev.map((c) => (c.id === tempId ? newComment : c)))
       textareaRef.current?.focus()
     }
     setSending(false)
