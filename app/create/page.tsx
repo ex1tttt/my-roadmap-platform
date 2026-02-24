@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 
@@ -12,6 +14,7 @@ function uid() {
 }
 
 export default function CreatePage() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -139,7 +142,10 @@ export default function CreatePage() {
       setCategory("");
       setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
       setResources([]);
-      alert("Карточка успешно опубликована");
+      toast.success('Карточка успешно опубликована', {
+        description: 'Теперь она доступна в общем списке',
+      });
+      setTimeout(() => router.push('/'), 1500);
     } catch (err: any) {
       console.error('Full error:', err);
       alert('Ошибка: ' + (err?.message || 'Неизвестная ошибка при публикации'));
