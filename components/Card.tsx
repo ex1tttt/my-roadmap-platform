@@ -21,6 +21,7 @@ type CardProps = {
   initialLikesCount?: number;
   initialIsLiked?: boolean;
   initialIsFavorite?: boolean;
+  actions?: React.ReactNode;
 };
 
 export default function Card({
@@ -29,6 +30,7 @@ export default function Card({
   initialLikesCount = 0,
   initialIsLiked = false,
   initialIsFavorite = false,
+  actions,
 }: CardProps) {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
@@ -75,7 +77,10 @@ export default function Card({
   }
 
   return (
-    <article className="max-w-[300px] mx-auto w-full h-full flex flex-col min-h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
+    <article className="relative w-full h-full flex flex-col min-h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
+      {actions && (
+        <div className="absolute top-2 right-2 z-10">{actions}</div>
+      )}
       <header className="mb-2 flex items-center gap-2">
         <img
           src={card.user.avatar || '/placeholder-avatar.png'}

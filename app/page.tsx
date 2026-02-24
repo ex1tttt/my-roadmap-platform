@@ -137,7 +137,7 @@ export default function Home() {
         </header>
 
         {/* Поиск + Фильтры */}
-        <div className="mb-8 flex items-center gap-2 w-full max-w-2xl">
+        <div className="mb-8 flex items-center gap-4 w-full">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
