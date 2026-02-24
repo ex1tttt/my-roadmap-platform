@@ -389,6 +389,21 @@ export default function SettingsPage() {
                 className={INPUT_CLS}
               />
             </label>
+
+            <label className="mt-4 block">
+              <div className="mb-1.5 text-sm font-medium text-slate-300">Электронная почта</div>
+              {loading ? (
+                <div className="h-10 animate-pulse rounded-lg bg-slate-800/60" />
+              ) : (
+                <input
+                  type="email"
+                  value={userEmail}
+                  readOnly
+                  className="box-border w-full cursor-not-allowed rounded-lg border border-slate-800 bg-slate-800/50 px-4 py-2.5 text-sm text-slate-400 outline-none"
+                />
+              )}
+              <p className="mt-1.5 text-xs text-slate-600">Чтобы изменить почту, используйте раздел «Изменить почту» ниже.</p>
+            </label>
             <div className="mt-4 flex justify-end">
               <button type="submit" disabled={saving || uploading} className={BTN_PRIMARY}>
                 {saving

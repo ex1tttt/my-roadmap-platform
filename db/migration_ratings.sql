@@ -3,7 +3,7 @@ create table if not exists ratings (
   id         uuid primary key default gen_random_uuid(),
   roadmap_id uuid not null references cards(id) on delete cascade,
   user_id    uuid not null references auth.users(id) on delete cascade,
-  value      smallint not null check (value between 1 and 5),
+  rate       smallint not null check (rate between 1 and 5),
   created_at timestamptz not null default now(),
   unique(roadmap_id, user_id)
 );

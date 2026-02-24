@@ -1,34 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Star } from 'lucide-react'
 
 type Props = {
   roadmapId: string
   initialAverageRate?: number
 }
 
-// Рисует одну звезду с частичной заливкой (для среднего значения)
-function StarIcon({ fill, size = 22 }: { fill: number; size?: number }) {
-  // fill: 0..1 — доля заливки
-  const id = `star-clip-${Math.random().toString(36).slice(2)}`
+// Стабильный clipId передаётся снаружи (uid + индекс звезды)
+function StarIcon({ fill, clipId }: { fill: number; clipId: string }) {
   const clipped = Math.min(1, Math.max(0, fill))
-
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'block', flexShrink: 0 }}
-    >
+    <svg width={22} height={22} viewBox="0 0 24 24" style={{ display: 'block', flexShrink: 0 }}>
       <defs>
-        <clipPath id={id}>
+        <clipPath id={clipId}>
           <rect x="0" y="0" width={24 * clipped} height="24" />
         </clipPath>
       </defs>
-      {/* Фоновая (пустая) звезда */}
+      {/* Фоновая пустая звезда */}
       <path
         d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
         fill="none"
@@ -36,87 +26,120 @@ function StarIcon({ fill, size = 22 }: { fill: number; size?: number }) {
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      {/* Залитая звезда (обрезается по ширине) */}
+      {/* Залитая звезда — обрезается по ширине */}
       <path
         d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
         fill="#FBBF24"
         stroke="#FBBF24"
         strokeWidth="1.5"
         strokeLinejoin="round"
-        clipPath={`url(#${id})`}
+        clipPath={`url(#${clipId})`}
       />
     </svg>
   )
 }
 
 export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props) {
+  const uid = useId() // стабильный уникальный префикс для clipPath id
+
   const [average, setAverage] = useState(initialAverageRate)
   const [totalCount, setTotalCount] = useState(0)
   const [userRating, setUserRating] = useState<number | null>(null)
   const [hovered, setHovered] = useState<number | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
-  // Получаем текущего пользователя
+  // Загружаем пользователя + рейтинги за один проход
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id ?? null)
-    })
-  }, [])
+    let cancelled = false
 
-  // Загружаем все рейтинги и оценку текущего пользователя
-  useEffect(() => {
-    async function fetchRatings() {
-      const { data } = await supabase
-        .from('ratings')
-        .select('value, user_id')
-        .eq('roadmap_id', roadmapId)
+    async function load() {
+      const [{ data: { user } }, { data: ratings, error }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from('ratings').select('rate, user_id').eq('roadmap_id', roadmapId),
+      ])
 
-      if (!data || data.length === 0) return
+      if (cancelled) return
 
-      const values = data.map((r: any) => r.value as number)
-      const avg = values.reduce((a, b) => a + b, 0) / values.length
+      if (error) {
+        console.error('StarRating: ошибка загрузки рейтингов:', error)
+        return
+      }
+
+      const userId = user?.id ?? null
+      setCurrentUserId(userId)
+
+      if (!ratings || ratings.length === 0) return
+
+      const values = ratings.map((r: any) => r.rate as number)
+      const avg = values.reduce((a: number, b: number) => a + b, 0) / values.length
       setAverage(avg)
       setTotalCount(values.length)
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const own = data.find((r: any) => r.user_id === user.id)
-        if (own) setUserRating(own.value)
+      if (userId) {
+        const own = ratings.find((r: any) => r.user_id === userId)
+        if (own) setUserRating(own.rate)
       }
     }
 
-    fetchRatings()
+    load()
+    return () => { cancelled = true }
   }, [roadmapId])
 
   async function handleRate(value: number) {
-    if (!currentUserId || loading) return
-    setLoading(true)
+    if (!currentUserId || submitting) return
 
-    await supabase.from('ratings').upsert(
-      { roadmap_id: roadmapId, user_id: currentUserId, value },
-      { onConflict: 'roadmap_id,user_id' }
-    )
+    // Оптимистичное обновление
+    const prevRating = userRating
+    const prevAverage = average
+    const prevCount = totalCount
+    setUserRating(value)
+    setSubmitting(true)
 
-    // Обновляем среднее с сервера
-    const { data } = await supabase
+    const { error: upsertError } = await supabase
       .from('ratings')
-      .select('value')
+      .upsert(
+        { user_id: currentUserId, roadmap_id: roadmapId, rate: value },
+        { onConflict: 'roadmap_id,user_id' }
+      )
+
+    if (upsertError) {
+      console.error('StarRating: ошибка сохранения оценки:', upsertError)
+      // Откатываем
+      setUserRating(prevRating)
+      setAverage(prevAverage)
+      setTotalCount(prevCount)
+      setSubmitting(false)
+      return
+    }
+
+    // Пересчитываем среднее с сервера
+    const { data: ratings, error: fetchError } = await supabase
+      .from('ratings')
+      .select('rate')
       .eq('roadmap_id', roadmapId)
 
-    if (data && data.length > 0) {
-      const values = data.map((r: any) => r.value as number)
-      const avg = values.reduce((a, b) => a + b, 0) / values.length
+    if (fetchError) {
+      console.error('StarRating: ошибка обновления среднего:', fetchError)
+    } else if (ratings && ratings.length > 0) {
+      const values = ratings.map((r: any) => r.rate as number)
+      const avg = values.reduce((a: number, b: number) => a + b, 0) / values.length
       setAverage(avg)
       setTotalCount(values.length)
     }
 
-    setUserRating(value)
-    setLoading(false)
+    setSubmitting(false)
   }
 
-  // Что показывать в звёздах: hover → целое число, иначе → средний балл
+  // Что рисуем в звёздах: hover → оценка пользователя → среднее
   const displayValue = hovered ?? (userRating !== null ? userRating : average)
+  const isInteractive = !!currentUserId && !submitting
+
+  function declCount(n: number) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'оценка'
+    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'оценки'
+    return 'оценок'
+  }
 
   return (
     <div className="flex flex-col items-start gap-1.5">
@@ -127,28 +150,25 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
         aria-label={`Рейтинг: ${average.toFixed(1)} из 5`}
       >
         {[1, 2, 3, 4, 5].map((star) => {
-          // Доля заливки для текущей звезды
           const fill = hovered !== null
             ? (star <= hovered ? 1 : 0)
             : Math.min(1, Math.max(0, displayValue - (star - 1)))
-
-          const isInteractive = !!currentUserId
 
           return (
             <button
               key={star}
               type="button"
-              disabled={!isInteractive || loading}
+              disabled={!isInteractive}
               onClick={() => handleRate(star)}
-              onMouseEnter={() => isInteractive && setHovered(star)}
-              className={`
-                rounded transition-transform
-                ${isInteractive && !loading ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-default'}
-                disabled:opacity-75
-              `}
+              onMouseEnter={() => currentUserId && setHovered(star)}
+              className={`rounded p-0.5 transition-transform ${
+                isInteractive
+                  ? 'cursor-pointer hover:scale-110 active:scale-95'
+                  : 'cursor-default opacity-75'
+              }`}
               aria-label={`Поставить ${star} ${star === 1 ? 'звезду' : star < 5 ? 'звезды' : 'звёзд'}`}
             >
-              <StarIcon fill={fill} size={22} />
+              <StarIcon fill={fill} clipId={`${uid}-star-${star}`} />
             </button>
           )
         })}
@@ -156,11 +176,13 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
 
       {/* Подпись */}
       <p className="text-xs text-slate-500">
-        {totalCount > 0 ? (
+        {submitting ? (
+          <span className="animate-pulse">Сохранение...</span>
+        ) : totalCount > 0 ? (
           <>
             <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
             {' · '}
-            {totalCount} {totalCount === 1 ? 'оценка' : totalCount < 5 ? 'оценки' : 'оценок'}
+            {totalCount} {declCount(totalCount)}
             {userRating !== null && (
               <span className="ml-1.5 text-slate-600">(вы: {userRating})</span>
             )}

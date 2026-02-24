@@ -6,7 +6,7 @@ import { Trash2, MessageSquare, Send, User } from 'lucide-react'
 
 type Comment = {
   id: string
-  text: string
+  content: string
   created_at: string
   user_id: string
   author: {
@@ -45,7 +45,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   async function fetchComments() {
     const { data, error } = await supabase
       .from('comments')
-      .select('id, text, created_at, user_id, profiles:user_id(username, avatar)')
+      .select('id, content, created_at, user_id, profiles:user_id(username, avatar)')
       .eq('roadmap_id', roadmapId)
       .order('created_at', { ascending: false })
 
@@ -57,7 +57,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
     const mapped: Comment[] = (data ?? []).map((c: any) => ({
       id: c.id,
-      text: c.text,
+      content: c.content,
       created_at: c.created_at,
       user_id: c.user_id,
       author: Array.isArray(c.profiles)
@@ -83,7 +83,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     const { error } = await supabase.from('comments').insert({
       roadmap_id: roadmapId,
       user_id: currentUserId,
-      text: trimmed,
+      content: trimmed,
     })
 
     if (error) {
@@ -211,7 +211,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
               {/* Текст */}
               <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-                {c.text}
+                {c.content}
               </p>
             </li>
           ))}

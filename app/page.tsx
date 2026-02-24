@@ -78,7 +78,7 @@ export default function Home() {
           supabase.from("likes").select("card_id").in("card_id", cardIds),
           userId ? supabase.from("likes").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
           userId ? supabase.from("favorites").select("roadmap_id").eq("user_id", userId).in("roadmap_id", cardIds) : Promise.resolve({ data: [] }),
-          supabase.from("ratings").select("roadmap_id, value").in("roadmap_id", cardIds),
+          supabase.from("ratings").select("roadmap_id, rate").in("roadmap_id", cardIds),
         ]);
 
         if (stepsRes.error) throw stepsRes.error;
@@ -107,7 +107,7 @@ export default function Home() {
         const ratingsMap = new Map<string, number[]>();
         (ratingsRes.data || []).forEach((r: any) => {
           const arr = ratingsMap.get(r.roadmap_id) || [];
-          arr.push(r.value);
+          arr.push(r.rate);
           ratingsMap.set(r.roadmap_id, arr);
         });
         const avgRatingMap = new Map<string, number>();
