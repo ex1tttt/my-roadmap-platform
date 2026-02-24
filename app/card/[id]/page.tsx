@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -7,6 +8,8 @@ import UserAvatar from "@/components/UserAvatar";
 import DeleteButton from "@/components/DeleteButton";
 import CommentSection from "@/components/CommentSection";
 import StarRating from "@/components/StarRating";
+import ScrollToHash from "@/components/ScrollToHash";
+import ShareButton from "@/components/ShareButton";
 
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
@@ -68,6 +71,45 @@ const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+const DEFAULT_OG_IMAGE = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://roadmap-platform.vercel.app"}/og-default.svg`;
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params;
+
+  const { data } = await supabaseServer
+    .from("cards")
+    .select("title, description, image_url")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!data) {
+    return { title: "Roadmap | Дорожная карта не найдена" };
+  }
+
+  const title = data.title ?? "Без названия";
+  const description = (data.description ?? "").slice(0, 160) || "Дорожная карта развития навыков";
+  const image = data.image_url || DEFAULT_OG_IMAGE;
+
+  return {
+    title: `${title} | Roadmap Platform`,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  };
+}
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -181,6 +223,17 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               )}
             </div>
 
+            {/* Кнопка «Поделиться» — всегда видна */}
+            <div className="flex items-center gap-2">
+              <ShareButton
+                cardId={id}
+                title={data.title}
+                description={data.description ?? undefined}
+                label="Поделиться"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-400 hover:border-white/20 hover:text-blue-400"
+              />
+            </div>
+
             {/* Бейдж автора */}
             <div className="flex items-center gap-2.5">
               {authorAvatar ? (
@@ -291,7 +344,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       </div>
 
       {/* Разделитель + Комментарии */}
-      <div className="mx-auto max-w-5xl px-6 pb-16">
+      <ScrollToHash />
+      <div id="comments" className="mx-auto max-w-5xl px-6 pb-16">
         <div className="border-t border-slate-700/60 pt-10">
           <CommentSection roadmapId={id} />
         </div>

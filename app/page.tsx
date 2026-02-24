@@ -19,6 +19,7 @@ type CardType = {
   isLiked: boolean;
   isFavorite: boolean;
   averageRating: number;
+  commentsCount: number;
 };
 
 export default function Home() {
@@ -65,7 +66,7 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
-        let query = supabase.from("cards").select("*");
+        let query = supabase.from("cards").select("*").order("created_at", { ascending: false });
         if (debouncedQuery) {
           query = query.ilike("title", `%${debouncedQuery}%`);
         }
@@ -83,14 +84,15 @@ export default function Home() {
         const cardIds = cardsData.map((c: any) => c.id);
         const userIds = Array.from(new Set(cardsData.map((c: any) => c.user_id)));
 
-        // Параллельно грузим шаги, профили, лайки, избранное и рейтинги
-        const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes] = await Promise.all([
+        // Параллельно грузим шаги, профили, лайки, избранное, рейтинги и комментарии
+        const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
           supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
           supabase.from("profiles").select("*").in("id", userIds),
           supabase.from("likes").select("card_id").in("card_id", cardIds),
           userId ? supabase.from("likes").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
           userId ? supabase.from("favorites").select("roadmap_id").eq("user_id", userId).in("roadmap_id", cardIds) : Promise.resolve({ data: [] }),
           supabase.from("ratings").select("roadmap_id, rate").in("roadmap_id", cardIds),
+          supabase.from("comments").select("roadmap_id").in("roadmap_id", cardIds),
         ]);
 
         if (stepsRes.error) throw stepsRes.error;
@@ -128,6 +130,11 @@ export default function Home() {
           avgRatingMap.set(cardId, avg);
         });
 
+        const commentsCountMap = new Map<string, number>();
+        (commentsRes.data || []).forEach((cm: any) => {
+          commentsCountMap.set(cm.roadmap_id, (commentsCountMap.get(cm.roadmap_id) || 0) + 1);
+        });
+
         const merged = (cardsData || []).map((c: any) => ({
           id: c.id,
           title: c.title,
@@ -139,6 +146,7 @@ export default function Home() {
           isLiked: userLikedSet.has(c.id),
           isFavorite: userFavSet.has(c.id),
           averageRating: avgRatingMap.get(c.id) ?? 0,
+          commentsCount: commentsCountMap.get(c.id) ?? 0,
         }));
 
         if (mounted) setCards(merged);
@@ -247,6 +255,7 @@ export default function Home() {
                     initialIsLiked={c.isLiked}
                     initialIsFavorite={c.isFavorite}
                     initialAverageRating={c.averageRating}
+                  initialCommentsCount={c.commentsCount}
                   />
                 </Link>
               ))}

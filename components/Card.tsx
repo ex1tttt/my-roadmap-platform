@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Heart, Bookmark, Star } from 'lucide-react';
+import Link from 'next/link';
+import { Heart, Bookmark, MessageSquare, Star } from 'lucide-react';
+import ShareButton from './ShareButton';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -22,6 +24,7 @@ type CardProps = {
   initialIsLiked?: boolean;
   initialIsFavorite?: boolean;
   initialAverageRating?: number;
+  initialCommentsCount?: number;
   actions?: React.ReactNode;
 };
 
@@ -32,6 +35,7 @@ export default function Card({
   initialIsLiked = false,
   initialIsFavorite = false,
   initialAverageRating = 0,
+  initialCommentsCount = 0,
   actions,
 }: CardProps) {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
@@ -113,46 +117,62 @@ export default function Card({
           ))}
       </ol>
 
-      {/* Лайки, рейтинг и избранное */}
+      {/* Лайки | Комментарии → Рейтинг | Избранное */}
       <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2.5">
-        <button
-          onClick={handleLike}
-          disabled={!userId || likeLoading}
-          title={userId ? (isLiked ? 'Убрать лайк' : 'Лайк') : 'Войдите, чтобы лайкнуть'}
-          className={`flex items-center gap-1.5 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
-            isLiked ? 'text-red-400' : 'text-slate-500 hover:text-red-400'
-          }`}
-        >
-          <Heart
-            className={`h-4 w-4 transition-all ${
-              isLiked ? 'fill-red-400 stroke-red-400' : ''
+        {/* Левая группа: лайки + комментарии */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleLike}
+            disabled={!userId || likeLoading}
+            title={userId ? (isLiked ? 'Убрать лайк' : 'Лайк') : 'Войдите, чтобы лайкнуть'}
+            className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
+              isLiked ? 'text-red-400' : 'text-slate-500 hover:text-red-400'
             }`}
-          />
-          <span>{likesCount > 0 ? likesCount : ''}</span>
-        </button>
+          >
+            <Heart
+              className={`h-3.5 w-3.5 transition-all ${
+                isLiked ? 'fill-red-400 stroke-red-400' : ''
+              }`}
+            />
+            <span>{likesCount > 0 ? likesCount : ''}</span>
+          </button>
 
-        {/* Средний рейтинг */}
-        {initialAverageRating > 0 && (
-          <div className="flex items-center gap-1 text-xs text-amber-400">
-            <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
-            <span>{initialAverageRating.toFixed(1)}</span>
-          </div>
-        )}
+          <Link
+            href={`/card/${card.id}#comments`}
+            onClick={(e) => e.stopPropagation()}
+            className={`flex items-center gap-1 text-xs transition-colors hover:text-blue-400 ${ initialCommentsCount > 0 ? 'text-slate-400' : 'text-slate-600' }`}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            <span>{initialCommentsCount}</span>
+          </Link>
+        </div>
 
-        <button
-          onClick={handleFavorite}
-          disabled={!userId || favLoading}
-          title={userId ? (isFavorite ? 'Убрать из избранного' : 'В избранное') : 'Войдите, чтобы добавить в избранное'}
-          className={`flex items-center gap-1.5 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
-            isFavorite ? 'text-amber-400' : 'text-slate-500 hover:text-amber-400'
-          }`}
-        >
-          <Bookmark
-            className={`h-4 w-4 transition-all ${
-              isFavorite ? 'fill-amber-400 stroke-amber-400' : ''
+        {/* Правая группа: рейтинг + избранное */}
+        <div className="flex items-center gap-3">
+          {initialAverageRating > 0 && (
+            <div className="flex items-center gap-1 text-xs text-amber-400">
+              <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
+              <span>{initialAverageRating.toFixed(1)}</span>
+            </div>
+          )}
+
+          <button
+            onClick={handleFavorite}
+            disabled={!userId || favLoading}
+            title={userId ? (isFavorite ? 'Убрать из избранного' : 'В избранное') : 'Войдите, чтобы добавить в избранное'}
+            className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
+              isFavorite ? 'text-amber-400' : 'text-slate-500 hover:text-amber-400'
             }`}
-          />
-        </button>
+          >
+            <Bookmark
+              className={`h-3.5 w-3.5 transition-all ${
+                isFavorite ? 'fill-amber-400 stroke-amber-400' : ''
+              }`}
+            />
+          </button>
+
+          <ShareButton cardId={card.id} title={card.title} description={card.description} />
+        </div>
       </div>
     </article>
   );

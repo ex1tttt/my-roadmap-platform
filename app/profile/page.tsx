@@ -67,7 +67,7 @@ export default function ProfilePage() {
 
       // Загружаем мои карточки и лайкнутые параллельно
       const [myCardsRes, likedRes] = await Promise.all([
-        supabase.from('cards').select('*').eq('user_id', userId),
+        supabase.from('cards').select('*').order('created_at', { ascending: false }).eq('user_id', userId),
         supabase.from('likes').select('card_id').eq('user_id', userId),
         supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('user_id', userId)
           .then(({ count }) => setFavoritesCount(count ?? 0)),
@@ -78,7 +78,7 @@ export default function ProfilePage() {
 
       // Загружаем лайкнутые карточки отдельно, чтобы знать их user_id для профилей
       const likedCardsRaw = likedCardIds.length > 0
-        ? (await supabase.from('cards').select('*').in('id', likedCardIds)).data ?? []
+        ? (await supabase.from('cards').select('*').order('created_at', { ascending: false }).in('id', likedCardIds)).data ?? []
         : []
 
       const allCardIds = Array.from(new Set([
@@ -157,7 +157,7 @@ export default function ProfilePage() {
         return
       }
 
-      const { data: cardsData } = await supabase.from('cards').select('*').in('id', favIds)
+      const { data: cardsData } = await supabase.from('cards').select('*').order('created_at', { ascending: false }).in('id', favIds)
       const cardsRaw = cardsData ?? []
 
       const cardIds = cardsRaw.map((c: any) => c.id)
