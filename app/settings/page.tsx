@@ -109,7 +109,6 @@ export default function SettingsPage() {
   // Обработчик выбора файла
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    console.log('Файл выбран:', file);
 
     if (!file) return;
 

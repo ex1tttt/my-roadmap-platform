@@ -79,6 +79,24 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
         await supabase
           .from('likes')
           .insert({ card_id: cardId, user_id: userId })
+
+        // Создаём уведомление (не если пользователь лайкает свою карточку)
+        const { data: card } = await supabase
+          .from('cards')
+          .select('user_id, title')
+          .eq('id', cardId)
+          .maybeSingle()
+
+        if (card && card.user_id !== userId) {
+          await supabase.from('notifications').insert({
+            user_id: card.user_id,
+            actor_id: userId,
+            type: 'like',
+            card_id: cardId,
+            card_title: card.title,
+            is_read: false,
+          })
+        }
       }
     } catch {
       // Откатываем optimistic update при ошибке

@@ -23,6 +23,8 @@ type CardType = {
   commentsCount: number;
 };
 
+const PAGE_SIZE = 16;
+
 export default function Home() {
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [inputValue, setInputValue] = useState('1');
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -76,7 +79,6 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
-        const PAGE_SIZE = 16;
         let query = supabase
           .from("cards")
           .select("*", { count: 'exact' })
@@ -186,7 +188,20 @@ export default function Home() {
 
   function handlePageChange(next: number) {
     setCurrentPage(next);
+    setInputValue(String(next));
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return;
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    const parsed = parseInt(inputValue, 10);
+    if (!isNaN(parsed) && parsed > 0 && parsed <= totalPages) {
+      handlePageChange(parsed);
+    } else {
+      // вернуть обратно текущую страницу если невалидное значение
+      setInputValue(String(currentPage));
+    }
   }
 
   return (
@@ -284,8 +299,16 @@ export default function Home() {
               <button disabled className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
                 ← Назад
               </button>
-              <span className="min-w-20 text-center text-sm font-medium text-slate-400">
-                Страница {currentPage}
+              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-400">
+                Стр.
+                <input
+                  type="number"
+                  disabled
+                  value={currentPage}
+                  readOnly
+                  className="w-12 rounded bg-slate-800 py-1 text-center text-sm text-slate-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none opacity-40 cursor-not-allowed"
+                />
+                из {Math.ceil(totalCount / PAGE_SIZE) || '…'}
               </span>
               <button disabled className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
                 Вперёд →
@@ -344,8 +367,22 @@ export default function Home() {
               >
                 ← Назад
               </button>
-              <span className="min-w-20 text-center text-sm font-medium text-slate-400">
-                Страница {currentPage}
+              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-400">
+                Стр.
+                <input
+                  type="number"
+                  min={1}
+                  max={Math.ceil(totalCount / PAGE_SIZE)}
+                  value={inputValue}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0)) setInputValue(v);
+                  }}
+                  onKeyDown={handleInputKeyDown}
+                  onBlur={() => setInputValue(String(currentPage))}
+                  className="w-12 rounded bg-slate-800 py-1 text-center text-sm text-slate-300 outline-none ring-1 ring-transparent focus:ring-indigo-500 transition-shadow [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                из {Math.ceil(totalCount / PAGE_SIZE)}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}

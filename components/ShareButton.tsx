@@ -28,7 +28,6 @@ export default function ShareButton({ cardId, title = "Roadmap", description, la
 
     if (navigator.share) {
       try {
-        console.log('Sharing URL:', url);
         await navigator.share({
           title,
           text: description ?? title,

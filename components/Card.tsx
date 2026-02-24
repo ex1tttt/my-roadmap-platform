@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Heart, Bookmark, MessageSquare, Star } from 'lucide-react';
+import { Heart, Bookmark, MessageSquare, Star, Download } from 'lucide-react';
 import ShareButton from './ShareButton';
+import UserAvatar from './UserAvatar';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -44,6 +45,7 @@ export default function Card({
   onFavorite,
 }: CardProps) {
   const router = useRouter();
+  const cardRef = useRef<HTMLElement>(null);
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -70,6 +72,18 @@ export default function Card({
       } else {
         const { error } = await supabase.from('likes').insert({ user_id: userId, card_id: card.id });
         if (error) throw error;
+
+        // Уведомление владельцу карточки (не себе)
+        if (card.user.id !== userId) {
+          await supabase.from('notifications').insert({
+            user_id: card.user.id,
+            actor_id: userId,
+            type: 'like',
+            card_id: card.id,
+            card_title: card.title,
+            is_read: false,
+          });
+        }
       }
     } catch {
       // Откатываем при ошибке
@@ -78,6 +92,33 @@ export default function Card({
       onLike?.(card.id, wasLiked);
     } finally {
       setLikeLoading(false);
+    }
+  }
+
+  async function handleDownload(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = cardRef.current;
+    if (!el) return;
+    if (typeof window === 'undefined') return;
+    try {
+      const { toPng } = await import('html-to-image');
+      const dataUrl = await toPng(el, {
+        cacheBust: true,
+        backgroundColor: '#0f172a', // slate-900 — тёмный фон вместо прозрачного
+        pixelRatio: 2,             // retina-качество
+        logging: false,            // отключаем внутренние логи библиотеки
+        filter: () => true,        // включаем все узлы DOM
+        includeQueryParams: true,  // сохраняем query-параметры в URL ресурсов
+        skipFonts: true,           // не встраиваем шрифты — избегаем ошибок путей на Windows
+        fontEmbedCSS: '',          // пустой CSS шрифтов — отключаем Tailwind-font-lookup
+      } as Parameters<typeof toPng>[1]);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${card.title.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.click();
+    } catch {
+      // тихий fail — не логируем в консоль
     }
   }
 
@@ -112,7 +153,8 @@ export default function Card({
 
   return (
     <article
-      className="relative w-full h-full flex flex-col min-h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70 cursor-pointer"
+      ref={cardRef}
+      className="group relative w-full h-full flex flex-col min-h-45 rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70 cursor-pointer"
       onClick={() => router.push(`/card/${card.id}`)}
     >
       {actions && (
@@ -124,10 +166,10 @@ export default function Card({
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${card.user.id}`); }}
           className="flex shrink-0 items-center gap-2 text-left hover:opacity-80 transition-opacity"
         >
-          <img
-            src={card.user.avatar || '/placeholder-avatar.png'}
-            alt={card.user.username}
-            className="h-8 w-8 rounded-full object-cover"
+          <UserAvatar
+            username={card.user.username}
+            avatarUrl={card.user.avatar}
+            size={32}
           />
         </button>
         <div className="min-w-0 flex-1">
@@ -142,7 +184,7 @@ export default function Card({
         </div>
       </header>
 
-      <div className="flex-grow min-h-[3rem] line-clamp-2 text-sm text-slate-400">
+      <div className="grow min-h-12 line-clamp-2 text-sm text-slate-400">
         {card.description || '\u00a0'}
       </div>
 
@@ -152,7 +194,7 @@ export default function Card({
           .sort((a, b) => a.order - b.order)
           .map((step) => (
             <li key={step.id} className="flex gap-2">
-              <div className="min-w-[22px] flex-none rounded bg-white/5 px-1 py-0.5 text-center font-medium text-slate-300">
+              <div className="min-w-5.5 flex-none rounded bg-white/5 px-1 py-0.5 text-center font-medium text-slate-300">
                 {step.order}
               </div>
               <div className="truncate font-medium text-slate-200">{step.title}</div>
@@ -215,6 +257,14 @@ export default function Card({
           </button>
 
           <ShareButton cardId={card.id} title={card.title} description={card.description} />
+
+          <button
+            onClick={handleDownload}
+            title="Скачать как изображение"
+            className="flex items-center gap-1 text-xs text-slate-500 opacity-0 transition-all duration-150 hover:scale-110 hover:text-sky-400 group-hover:opacity-100"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </article>

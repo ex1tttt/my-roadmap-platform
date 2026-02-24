@@ -2,9 +2,9 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { ArrowLeft, Settings } from "lucide-react";
-import UserAvatar from "@/components/UserAvatar";
+import { ArrowLeft } from "lucide-react";
 import PublicProfileCards from "@/components/PublicProfileCards";
+import ProfileHeader from "@/components/ProfileHeader";
 
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,6 +45,8 @@ export default async function PublicProfilePage({
     { data: profile },
     { data: cards },
     { data: { user: currentUser } },
+    { count: followersCount },
+    { count: followingCount },
   ] = await Promise.all([
     supabaseServer.from("profiles").select("id, username, avatar, bio").eq("id", id).maybeSingle(),
     supabaseServer
@@ -53,9 +55,23 @@ export default async function PublicProfilePage({
       .eq("user_id", id)
       .order("created_at", { ascending: false }),
     supabaseAuth.auth.getUser(),
+    // Подписчики: только счёт строк, где following_id = id
+    supabaseServer.from("follows").select("*", { count: "exact", head: true }).eq("following_id", id),
+    // Подписки: только счёт строк, где follower_id = id
+    supabaseServer.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", id),
   ]);
 
   const isOwner = currentUser?.id === id;
+
+  // Проверяем подписку текущего пользователя отдельным точечным запросом
+  const { count: isFollowingCount } = currentUser && !isOwner
+    ? await supabaseServer
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", currentUser.id)
+        .eq("following_id", id)
+    : { count: 0 };
+  const isFollowing = (isFollowingCount ?? 0) > 0;
 
   // Загружаем социальные данные для карточек
   const cardIds = (cards ?? []).map((c: any) => c.id as string);
@@ -133,46 +149,15 @@ export default async function PublicProfilePage({
         </Link>
 
         {/* Шапка профиля */}
-        <div className="mb-8 flex flex-col gap-6 rounded-2xl border border-white/10 bg-slate-900/50 p-6 sm:flex-row sm:items-start">
-          {/* Аватар */}
-          <div className="shrink-0">
-            {profile.avatar ? (
-              <img
-                src={profile.avatar}
-                alt={profile.username}
-                className="h-20 w-20 rounded-full object-cover ring-2 ring-white/10"
-              />
-            ) : (
-              <UserAvatar username={profile.username} size={80} />
-            )}
-          </div>
-
-          {/* Информация */}
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="flex items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold text-white">{profile.username}</h1>
-              {isOwner && (
-                <Link
-                  href="/settings"
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
-                >
-                  <Settings className="h-4 w-4" />
-                  Настройки
-                </Link>
-              )}
-            </div>
-
-            {profile.bio ? (
-              <p className="text-sm text-slate-400">{profile.bio}</p>
-            ) : (
-              <p className="text-sm italic text-slate-600">Описание не добавлено</p>
-            )}
-
-            <p className="mt-1 text-xs text-slate-500">
-              {cards?.length ?? 0} {plural(cards?.length ?? 0, "карточка", "карточки", "карточек")}
-            </p>
-          </div>
-        </div>
+        <ProfileHeader
+          profile={profile}
+          cardsCount={cards?.length ?? 0}
+          initialFollowersCount={followersCount ?? 0}
+          followingCount={followingCount ?? 0}
+          initialIsFollowing={isFollowing}
+          isOwner={isOwner}
+          currentUserId={currentUser?.id ?? null}
+        />
 
         {/* Карточки */}
         <section>
@@ -205,12 +190,4 @@ export default async function PublicProfilePage({
       </main>
     </div>
   );
-}
-
-function plural(n: number, one: string, few: string, many: string) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
-  return many;
 }

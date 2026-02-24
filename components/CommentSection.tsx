@@ -118,15 +118,21 @@ function Avatar({
   userId: string
   size?: 6 | 8 | 10
 }) {
+  const [imgError, setImgError] = useState(false)
   const dim = { 6: 'h-6 w-6', 8: 'h-8 w-8', 10: 'h-10 w-10' }[size]
-  const icon = { 6: 'h-3 w-3', 8: 'h-4 w-4', 10: 'h-5 w-5' }[size]
+  const letter = author.username?.trim()?.[0]?.toUpperCase() ?? '?'
   return (
     <Link href={`/profile/${userId}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
       <div className={`${dim} flex items-center justify-center overflow-hidden rounded-full bg-slate-700 transition-opacity hover:opacity-75`}>
-        {author.avatar ? (
-          <img src={author.avatar} alt={author.username} className="h-full w-full object-cover" />
+        {author.avatar && !imgError ? (
+          <img
+            src={author.avatar}
+            alt={author.username}
+            className="h-full w-full object-cover"
+            onError={() => setImgError(true)}
+          />
         ) : (
-          <User className={`${icon} text-slate-400`} />
+          <span className="text-xs font-bold text-slate-300 select-none">{letter}</span>
         )}
       </div>
     </Link>

@@ -37,6 +37,8 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>('my')
   const [loading, setLoading] = useState(true)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [followersCount, setFollowersCount] = useState(0)
+  const [followingCount, setFollowingCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Закрываем меню при клике вне его
@@ -70,13 +72,20 @@ export default function ProfilePage() {
 
       setProfile(profileData ?? { id: userId, username: user.email?.split('@')[0] ?? 'Пользователь' })
 
-      // Загружаем мои карточки и лайкнутые параллельно
-      const [myCardsRes, likedRes] = await Promise.all([
+      // Загружаем мои карточки, лайкнутые и подписки параллельно
+      const [myCardsRes, likedRes, , followersRes, followingRes] = await Promise.all([
         supabase.from('cards').select('*').order('created_at', { ascending: false }).eq('user_id', userId),
         supabase.from('likes').select('card_id').eq('user_id', userId),
         supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('user_id', userId)
           .then(({ count }) => setFavoritesCount(count ?? 0)),
+        // Подписчики: строки, где following_id = userId
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId),
+        // Подписки: строки, где follower_id = userId
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId),
       ])
+
+      setFollowersCount(followersRes.count ?? 0)
+      setFollowingCount(followingRes.count ?? 0)
 
       const myCardsRaw = myCardsRes.data ?? []
       const likedCardIds = (likedRes.data ?? []).map((l: any) => l.card_id)
@@ -335,6 +344,10 @@ export default function ProfilePage() {
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {myCards.length} карт · {likedCards.length} лайков
+                {' · '}
+                <span className="font-semibold text-slate-300">{followersCount}</span> подписчиков
+                {' · '}
+                <span className="font-semibold text-slate-300">{followingCount}</span> подписок
               </p>
               {profile?.bio ? (
                 <p className="mt-2 text-sm text-slate-300 max-w-md">{profile.bio}</p>

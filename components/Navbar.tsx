@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import { Map, Plus, LogIn, UserPlus, LogOut, User } from 'lucide-react'
+import NotificationBell from '@/components/NotificationBell'
 
 export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
@@ -87,6 +88,9 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {session ? (
             <>
+              {/* Колокольчик уведомлений */}
+              <NotificationBell userId={session.user.id} />
+
               {/* Кнопка Создать */}
               <Link
                 href="/create"
