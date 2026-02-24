@@ -45,16 +45,24 @@ export default function NotificationBell({ userId }: { userId: string }) {
 
   // Загружаем последние 20 уведомлений
   async function fetchNotifications() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('notifications')
-      .select('id, type, is_read, created_at, card_id, card_title, actor:actor_id(id, username)')
+      .select('id, type, is_read, created_at, card_id')
       .eq('receiver_id', userId)
       .order('created_at', { ascending: false })
       .limit(20)
 
+    console.log('fetchNotifications result:', { data, error })
+
     if (data) {
       console.log('Список уведомлений в UI:', data)
-      setNotifications(data as unknown as Notification[])
+      // actor и card_title пока null — добавим JOIN вторым шагом
+      const mapped = data.map((n: any) => ({
+        ...n,
+        actor: null,
+        card_title: null,
+      }))
+      setNotifications(mapped as Notification[])
       setHasUnread(data.some((n: any) => !n.is_read))
     }
   }
