@@ -102,6 +102,7 @@ export default function Card({
     if (!el) return;
     if (typeof window === 'undefined') return;
     try {
+      // @ts-ignore — html-to-image не имеет поля exports, bundler-резолюция может не находить модуль
       const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(el, {
         cacheBust: true,
