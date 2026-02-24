@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Share2 } from "lucide-react";
 
 interface ShareButtonProps {
-  cardId: string;
+  cardId: string | undefined;
   title?: string;
   description?: string;
   label?: string;
@@ -19,10 +19,16 @@ export default function ShareButton({ cardId, title = "Roadmap", description, la
     e.preventDefault();
     e.stopPropagation();
 
+    if (!cardId) {
+      console.error('ShareButton: cardId is missing, cannot build share URL');
+      return;
+    }
+
     const url = `${window.location.origin}/card/${cardId}`;
 
     if (navigator.share) {
       try {
+        console.log('Sharing URL:', url);
         await navigator.share({
           title,
           text: description ?? title,
@@ -46,8 +52,9 @@ export default function ShareButton({ cardId, title = "Roadmap", description, la
   return (
     <button
       onClick={handleShare}
-      title="Поделиться"
-      className={`relative flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-400 ${className}`}
+      disabled={!cardId}
+      title={cardId ? 'Поделиться' : 'ID карточки недоступен'}
+      className={`relative flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       <Share2 className="h-3.5 w-3.5" />
       {label && <span>{copied ? 'Скопировано!' : label}</span>}

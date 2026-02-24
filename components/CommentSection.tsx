@@ -11,6 +11,8 @@ type Comment = {
   created_at: string
   user_id: string
   parent_id: string | null
+  parentAuthorName?: string
+  parentAuthorUserId?: string
   author: {
     username: string
     avatar?: string
@@ -93,16 +95,20 @@ function CommentItem({
   onLike: (id: string, wasLiked: boolean) => void
 }) {
   const isReplying = replyingTo === comment.id
-  const maxDepth = 3
+  // ml-6 за каждый уровень, максимум 3 уровня вложенности
+  const marginLeft = Math.min(depth, 3) * 24 // px
 
   return (
-    <li className={depth > 0 ? 'ml-8 border-l-2 border-slate-700 pl-4' : ''}>
+    <li
+      style={marginLeft > 0 ? { marginLeft: `${marginLeft}px` } : undefined}
+      className={depth > 0 ? 'ml-2 border-l-2 border-slate-700 pl-4' : ''}
+    >
       <div className="group rounded-xl border border-white/10 bg-slate-800/50 p-4 backdrop-blur-sm transition-colors hover:border-white/15 hover:bg-slate-800/70">
         {/* Шапка */}
         <div className="flex items-start justify-between gap-3">
           <Link
             href={`/profile/${comment.user_id}`}
-            className="flex items-center gap-3 group/author"
+            className="flex items-center gap-2.5 group/author"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-700 transition-opacity group-hover/author:opacity-80">
@@ -113,7 +119,7 @@ function CommentItem({
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-200 transition-colors group-hover/author:text-blue-400">
+              <p className="text-sm font-semibold text-slate-200 underline-offset-2 transition-colors group-hover/author:text-blue-400 group-hover/author:underline">
                 {comment.author.username}
               </p>
               <p className="text-xs text-slate-500">{formatDate(comment.created_at)}</p>
@@ -132,12 +138,22 @@ function CommentItem({
           )}
         </div>
 
-        {/* Текст */}
-        <p className="mt-2.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{comment.content}</p>
+        {/* Текст: перед содержимым — @упоминание синим */}
+        <p className="mt-2.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+          {comment.parent_id && comment.parentAuthorName && (
+            <Link
+              href={`/profile/${comment.parentAuthorUserId}`}
+              className="mr-1 font-medium text-blue-400 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              @{comment.parentAuthorName}
+            </Link>
+          )}
+          {comment.content}
+        </p>
 
         {/* Футер: лайк + ответить */}
         <div className="mt-2.5 flex items-center justify-between">
-          {/* Кнопка лайка */}
           <button
             onClick={() => onLike(comment.id, comment.isLiked)}
             disabled={!currentUserId}
@@ -150,14 +166,13 @@ function CommentItem({
           >
             <Heart
               className={`h-3.5 w-3.5 transition-all duration-200 ${
-                comment.isLiked ? 'fill-rose-400 scale-110' : ''
+                comment.isLiked ? 'scale-110 fill-rose-400' : ''
               }`}
             />
             {comment.likesCount > 0 && <span>{comment.likesCount}</span>}
           </button>
 
-          {/* Кнопка «Ответить» */}
-          {currentUserId && depth < maxDepth && (
+          {currentUserId && (
             <button
               onClick={() => onReplyClick(comment.id)}
               className="flex items-center gap-1 text-xs text-slate-500 transition-colors hover:text-blue-400"
@@ -249,7 +264,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   async function fetchComments() {
     const { data, error } = await supabase
       .from('comments')
-      .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar)')
+      .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar), parentComment:parent_id(user_id, profiles:user_id(username))')
       .eq('roadmap_id', roadmapId)
       .order('created_at', { ascending: true })
 
@@ -281,18 +296,24 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     })
     const likedSet = new Set<string>((myLikes ?? []).map((l: any) => l.comment_id as string))
 
-    const flat: Comment[] = (data ?? []).map((c: any) => ({
-      id: c.id,
-      content: c.content,
-      created_at: c.created_at,
-      user_id: c.user_id,
-      parent_id: c.parent_id ?? null,
-      author: Array.isArray(c.profiles)
-        ? (c.profiles[0] ?? { username: 'Unknown' })
-        : (c.profiles ?? { username: 'Unknown' }),
-      likesCount: countMap.get(c.id) ?? 0,
-      isLiked: likedSet.has(c.id),
-    }))
+    const flat: Comment[] = (data ?? []).map((c: any) => {
+      const pc = c.parentComment
+      const pcProfiles = pc ? (Array.isArray(pc.profiles) ? pc.profiles[0] : pc.profiles) : null
+      return {
+        id: c.id,
+        content: c.content,
+        created_at: c.created_at,
+        user_id: c.user_id,
+        parent_id: c.parent_id ?? null,
+        parentAuthorName: pcProfiles?.username ?? undefined,
+        parentAuthorUserId: pc?.user_id ?? undefined,
+        author: Array.isArray(c.profiles)
+          ? (c.profiles[0] ?? { username: 'Unknown' })
+          : (c.profiles ?? { username: 'Unknown' }),
+        likesCount: countMap.get(c.id) ?? 0,
+        isLiked: likedSet.has(c.id),
+      }
+    })
 
     setTotalCount(flat.length)
     setTree(buildTree(flat))

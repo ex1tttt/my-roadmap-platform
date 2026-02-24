@@ -130,7 +130,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const [{ data, error }, { data: { user: currentUser } }] = await Promise.all([
     supabaseServer
       .from("cards")
-      .select("*, steps(*), resources(*), profiles:user_id(username, avatar)")
+      .select("*, steps(*), resources(*), profiles:user_id(*)")
       .eq("id", id)
       .maybeSingle(),
     supabaseAuth.auth.getUser(),
@@ -234,22 +234,27 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               />
             </div>
 
-            {/* Бейдж автора */}
-            <div className="flex items-center gap-2.5">
+            {/* Блок автора */}
+            <Link
+              href={`/profile/${data.user_id}`}
+              className="group flex w-fit items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-2.5 transition-colors hover:border-blue-500/30 hover:bg-blue-500/5"
+            >
               {authorAvatar ? (
                 <img
                   src={authorAvatar}
                   alt={authorName}
-                  className="h-9 w-9 shrink-0 rounded-full object-cover"
+                  className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-white/10 transition-all group-hover:ring-blue-500/40"
                 />
               ) : (
-                <UserAvatar username={authorName} size={36} />
+                <UserAvatar username={authorName} size={32} />
               )}
-              <div>
-                <p className="text-sm font-medium text-slate-200">{authorName}</p>
-                <p className="text-xs text-slate-500">Автор</p>
-              </div>
-            </div>
+              <span className="flex items-baseline gap-1.5 text-sm">
+                <span className="text-slate-500">Автор:</span>
+                <span className="font-medium text-slate-200 underline-offset-2 transition-colors group-hover:text-blue-400 group-hover:underline">
+                  {authorName}
+                </span>
+              </span>
+            </Link>
 
             {data.description && (
               <p className="mt-2 max-w-2xl text-base text-slate-400 leading-relaxed">
