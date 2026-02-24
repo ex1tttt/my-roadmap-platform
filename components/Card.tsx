@@ -76,12 +76,10 @@ export default function Card({
         // Уведомление владельцу карточки (не себе)
         if (card.user.id !== userId) {
           await supabase.from('notifications').insert({
-            user_id: card.user.id,
+            receiver_id: card.user.id,
             actor_id: userId,
             type: 'like',
             card_id: card.id,
-            card_title: card.title,
-            is_read: false,
           });
         }
       }

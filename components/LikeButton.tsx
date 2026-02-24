@@ -89,12 +89,10 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
 
         if (card && card.user_id !== userId) {
           await supabase.from('notifications').insert({
-            user_id: card.user_id,
+            receiver_id: card.user_id,
             actor_id: userId,
             type: 'like',
             card_id: cardId,
-            card_title: card.title,
-            is_read: false,
           })
         }
       }
