@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const [favoriteCards, setFavoriteCards] = useState<CardType[]>([])
   const [favoritesLoaded, setFavoritesLoaded] = useState(false)
   const [favoritesLoading, setFavoritesLoading] = useState(false)
+  const [favoritesCount, setFavoritesCount] = useState(0)
   const [tab, setTab] = useState<Tab>('my')
   const [loading, setLoading] = useState(true)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
@@ -68,6 +69,8 @@ export default function ProfilePage() {
       const [myCardsRes, likedRes] = await Promise.all([
         supabase.from('cards').select('*').eq('user_id', userId),
         supabase.from('likes').select('card_id').eq('user_id', userId),
+        supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+          .then(({ count }) => setFavoritesCount(count ?? 0)),
       ])
 
       const myCardsRaw = myCardsRes.data ?? []
@@ -187,6 +190,7 @@ export default function ProfilePage() {
           steps: stepsByCard.get(c.id) ?? [],
         }))
       )
+      setFavoritesCount(cardsRaw.length)
       setFavoritesLoaded(true)
       setFavoritesLoading(false)
     }
@@ -207,7 +211,7 @@ export default function ProfilePage() {
   const tabs: { key: Tab; label: string; icon: React.ReactNode; count: number }[] = [
     { key: 'my', label: 'Мои дорожные карты', icon: <MapIcon className="w-4 h-4" />, count: myCards.length },
     { key: 'liked', label: 'Понравилось', icon: <Heart className="w-4 h-4" />, count: likedCards.length },
-    { key: 'favorites', label: 'Избранное', icon: <Bookmark className="w-4 h-4" />, count: favoriteCards.length },
+    { key: 'favorites', label: 'Избранное', icon: <Bookmark className="w-4 h-4" />, count: favoritesCount },
   ]
 
   const displayed = tab === 'my' ? myCards : tab === 'liked' ? likedCards : favoriteCards

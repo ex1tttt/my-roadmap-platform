@@ -18,6 +18,7 @@ type CardType = {
   likesCount: number;
   isLiked: boolean;
   isFavorite: boolean;
+  averageRating: number;
 };
 
 export default function Home() {
@@ -70,13 +71,14 @@ export default function Home() {
         const cardIds = cardsData.map((c: any) => c.id);
         const userIds = Array.from(new Set(cardsData.map((c: any) => c.user_id)));
 
-        // Параллельно грузим шаги, профили, лайки и избранное
-        const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes] = await Promise.all([
+        // Параллельно грузим шаги, профили, лайки, избранное и рейтинги
+        const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes] = await Promise.all([
           supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
           supabase.from("profiles").select("*").in("id", userIds),
           supabase.from("likes").select("card_id").in("card_id", cardIds),
           userId ? supabase.from("likes").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
           userId ? supabase.from("favorites").select("roadmap_id").eq("user_id", userId).in("roadmap_id", cardIds) : Promise.resolve({ data: [] }),
+          supabase.from("ratings").select("roadmap_id, value").in("roadmap_id", cardIds),
         ]);
 
         if (stepsRes.error) throw stepsRes.error;
@@ -101,6 +103,19 @@ export default function Home() {
         const userLikedSet = new Set<string>((userLikesRes.data || []).map((l: any) => l.card_id));
         const userFavSet = new Set<string>((userFavsRes.data || []).map((f: any) => f.roadmap_id));
 
+        // Среднее рейтинга per card
+        const ratingsMap = new Map<string, number[]>();
+        (ratingsRes.data || []).forEach((r: any) => {
+          const arr = ratingsMap.get(r.roadmap_id) || [];
+          arr.push(r.value);
+          ratingsMap.set(r.roadmap_id, arr);
+        });
+        const avgRatingMap = new Map<string, number>();
+        ratingsMap.forEach((values, cardId) => {
+          const avg = values.reduce((a, b) => a + b, 0) / values.length;
+          avgRatingMap.set(cardId, avg);
+        });
+
         const merged = (cardsData || []).map((c: any) => ({
           id: c.id,
           title: c.title,
@@ -111,6 +126,7 @@ export default function Home() {
           likesCount: likesCountMap.get(c.id) || 0,
           isLiked: userLikedSet.has(c.id),
           isFavorite: userFavSet.has(c.id),
+          averageRating: avgRatingMap.get(c.id) ?? 0,
         }));
 
         if (mounted) setCards(merged);
@@ -202,6 +218,7 @@ export default function Home() {
                     initialLikesCount={c.likesCount}
                     initialIsLiked={c.isLiked}
                     initialIsFavorite={c.isFavorite}
+                    initialAverageRating={c.averageRating}
                   />
                 </Link>
               ))}

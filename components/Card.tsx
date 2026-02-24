@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Heart, Bookmark } from 'lucide-react';
+import { Heart, Bookmark, Star } from 'lucide-react';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -21,6 +21,7 @@ type CardProps = {
   initialLikesCount?: number;
   initialIsLiked?: boolean;
   initialIsFavorite?: boolean;
+  initialAverageRating?: number;
   actions?: React.ReactNode;
 };
 
@@ -30,6 +31,7 @@ export default function Card({
   initialLikesCount = 0,
   initialIsLiked = false,
   initialIsFavorite = false,
+  initialAverageRating = 0,
   actions,
 }: CardProps) {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
@@ -111,7 +113,7 @@ export default function Card({
           ))}
       </ol>
 
-      {/* Лайки и избранное */}
+      {/* Лайки, рейтинг и избранное */}
       <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2.5">
         <button
           onClick={handleLike}
@@ -128,6 +130,14 @@ export default function Card({
           />
           <span>{likesCount > 0 ? likesCount : ''}</span>
         </button>
+
+        {/* Средний рейтинг */}
+        {initialAverageRating > 0 && (
+          <div className="flex items-center gap-1 text-xs text-amber-400">
+            <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
+            <span>{initialAverageRating.toFixed(1)}</span>
+          </div>
+        )}
 
         <button
           onClick={handleFavorite}

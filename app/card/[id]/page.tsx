@@ -5,6 +5,8 @@ import { cookies } from "next/headers";
 import { ExternalLink, ArrowLeft, BookOpen, Pencil } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import DeleteButton from "@/components/DeleteButton";
+import CommentSection from "@/components/CommentSection";
+import StarRating from "@/components/StarRating";
 
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
@@ -192,6 +194,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                 {data.description}
               </p>
             )}
+
+            {/* Рейтинг */}
+            <div className="mt-1">
+              <StarRating roadmapId={id} />
+            </div>
           </div>
         </div>
       </div>
@@ -272,6 +279,13 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </div>
           </aside>
         )}
+      </div>
+
+      {/* Разделитель + Комментарии */}
+      <div className="mx-auto max-w-5xl px-6 pb-16">
+        <div className="border-t border-slate-700/60 pt-10">
+          <CommentSection roadmapId={id} />
+        </div>
       </div>
     </div>
   );
