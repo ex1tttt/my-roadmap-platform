@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Trash2, MessageSquare, Send, User, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Comment = {
   id: string
@@ -275,7 +276,7 @@ function RootCommentRow({
         </div>
 
         {/* Текст */}
-        <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+        <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
           {comment.content}
         </p>
 
@@ -348,7 +349,7 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
         </div>
 
         {/* Текст с @упоминанием */}
-        <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+        <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
           {comment.parentAuthorName && (
             <Link
               href={`/profile/${comment.parentAuthorUserId}`}
@@ -666,13 +667,13 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       {/* Список комментариев */}
       {loading ? (
         <div className="space-y-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse flex gap-3">
-              <div className="h-8 w-8 shrink-0 rounded-full bg-slate-700" />
+          {Array(4).fill(0).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
               <div className="flex-1 space-y-2 pt-1">
-                <div className="h-3 w-32 rounded bg-slate-700" />
-                <div className="h-3 w-3/4 rounded bg-slate-700" />
-                <div className="h-3 w-1/2 rounded bg-slate-700" />
+                <Skeleton className="h-3 w-36 rounded" />
+                <Skeleton className="h-3 w-3/4 rounded" />
+                <Skeleton className="h-3 w-1/2 rounded" />
               </div>
             </div>
           ))}

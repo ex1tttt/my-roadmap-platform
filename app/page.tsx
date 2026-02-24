@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import Card from "../components/Card";
 import Link from "next/link";
 import { Check, Search, SlidersHorizontal } from "lucide-react";
+import { CardSkeleton } from "@/components/ui/CardSkeleton";
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -30,8 +31,11 @@ export default function Home() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Закрываем дропдаун при клике вне него
@@ -60,6 +64,11 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Сбрасываем страницу при смене поиска, категории или сортировки
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedQuery, activeCategory, sortBy]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -67,7 +76,12 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
-        let query = supabase.from("cards").select("*").order("created_at", { ascending: false });
+        const PAGE_SIZE = 16;
+        let query = supabase
+          .from("cards")
+          .select("*", { count: 'exact' })
+          .order("created_at", { ascending: false })
+          .range((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE - 1);
         if (debouncedQuery) {
           query = query.ilike("title", `%${debouncedQuery}%`);
         }
@@ -75,8 +89,9 @@ export default function Home() {
           query = query.eq("category", activeCategory);
         }
 
-        const { data: cardsData, error: cardsError } = await query;
+        const { data: cardsData, error: cardsError, count } = await query;
         if (cardsError) throw cardsError;
+        if (mounted) setTotalCount(count ?? 0);
         if (!cardsData || cardsData.length === 0) {
           if (mounted) setCards([]);
           return;
@@ -167,7 +182,12 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [debouncedQuery, activeCategory, sortBy, userId]);
+  }, [debouncedQuery, activeCategory, sortBy, userId, currentPage]);
+
+  function handlePageChange(next: number) {
+    setCurrentPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 py-12 px-6">
@@ -253,7 +273,25 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="rounded-xl border border-white/10 bg-slate-900/50 p-6 text-center text-slate-400 backdrop-blur-md">Загрузка...</div>
+          <section>
+            <div ref={cardsRef} className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array(16).fill(0).map((_, i) => (
+                <CardSkeleton key={'skeleton-' + i} />
+              ))}
+            </div>
+            {/* Пагинация во время загрузки */}
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button disabled className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
+                ← Назад
+              </button>
+              <span className="min-w-20 text-center text-sm font-medium text-slate-400">
+                Страница {currentPage}
+              </span>
+              <button disabled className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
+                Вперёд →
+              </button>
+            </div>
+          </section>
         ) : error ? (
           <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-6 text-center text-red-400">{error}</div>
         ) : cards.length === 0 ? (
@@ -267,7 +305,7 @@ export default function Home() {
           </div>
         ) : (
           <section>
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            <div ref={cardsRef} className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
               {cards.map((c) => (
                 <div key={c.id} className="h-full">
                   <Card
@@ -295,6 +333,27 @@ export default function Home() {
                   />
                 </div>
               ))}
+            </div>
+
+            {/* Пагинация */}
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ← Назад
+              </button>
+              <span className="min-w-20 text-center text-sm font-medium text-slate-400">
+                Страница {currentPage}
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage * 16 >= totalCount}
+                className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Вперёд →
+              </button>
             </div>
           </section>
         )}
