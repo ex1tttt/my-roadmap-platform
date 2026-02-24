@@ -88,7 +88,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const [{ data, error }, { data: { user: currentUser } }] = await Promise.all([
     supabaseServer
       .from("cards")
-      .select("*, steps(*), resources(*), profiles!cards_user_id_fkey(*)")
+      .select("*, steps(*), resources(*), profiles:user_id(username, avatar)")
       .eq("id", id)
       .maybeSingle(),
     supabaseAuth.auth.getUser(),
@@ -132,6 +132,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     author = profileFallback ?? null;
   }
   const authorName = author?.username ?? 'Автор неизвестен';
+  const authorAvatar: string | null = author?.avatar ?? null;
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
   const isOwner = !!currentUser && currentUser.id === data.user_id;
@@ -182,7 +183,15 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
             {/* Бейдж автора */}
             <div className="flex items-center gap-2.5">
-              <UserAvatar username={authorName} size={36} />
+              {authorAvatar ? (
+                <img
+                  src={authorAvatar}
+                  alt={authorName}
+                  className="h-9 w-9 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <UserAvatar username={authorName} size={36} />
+              )}
               <div>
                 <p className="text-sm font-medium text-slate-200">{authorName}</p>
                 <p className="text-xs text-slate-500">Автор</p>

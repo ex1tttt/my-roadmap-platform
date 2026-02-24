@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Card from "../components/Card";
 import Link from "next/link";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Check, Search, SlidersHorizontal } from "lucide-react";
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -27,9 +27,21 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Закрываем дропдаун при клике вне него
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   // Получаем текущего пользователя один раз при монтировании
   useEffect(() => {
@@ -57,8 +69,8 @@ export default function Home() {
         if (debouncedQuery) {
           query = query.ilike("title", `%${debouncedQuery}%`);
         }
-        if (selectedCategory) {
-          query = query.eq("category", selectedCategory);
+        if (activeCategory) {
+          query = query.eq("category", activeCategory);
         }
 
         const { data: cardsData, error: cardsError } = await query;
@@ -142,7 +154,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [debouncedQuery, selectedCategory, userId]);
+  }, [debouncedQuery, activeCategory, userId]);
 
   return (
     <div className="min-h-screen bg-zinc-950 py-12 px-6">
@@ -152,8 +164,8 @@ export default function Home() {
           <p className="text-sm text-slate-400">Карточки достижений от пользователей</p>
         </header>
 
-        {/* Поиск + Фильтры */}
-        <div className="mb-8 flex items-center gap-4 w-full">
+        {/* Поиск + Фильтр */}
+        <div className="mb-8 flex items-center gap-3 w-full">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -161,32 +173,48 @@ export default function Home() {
               placeholder="Поиск по названию..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 w-full"
+              className="w-full rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
-          <div className="relative">
+          {/* Дропдаун категорий */}
+          <div className="relative shrink-0" ref={filterRef}>
             <button
-              onClick={() => setFiltersOpen((p) => !p)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900/80 border border-slate-800 rounded-lg text-slate-300 hover:text-white transition-all whitespace-nowrap"
+              onClick={() => setFilterOpen((o) => !o)}
+              className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeCategory
+                  ? 'border-blue-500/60 bg-blue-600/20 text-blue-300'
+                  : 'border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800'
+              }`}
             >
-              <SlidersHorizontal size={18} />
-              <span>Фильтры{selectedCategory ? `: ${selectedCategory}` : ''}</span>
+              <SlidersHorizontal className="h-4 w-4" />
+              {activeCategory ? `Фильтр: ${activeCategory}` : 'Фильтры'}
             </button>
 
-            {filtersOpen && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900/90 p-2 backdrop-blur-md shadow-xl">
-                {['', 'frontend', 'datascience', 'devops'].map((cat) => (
+            {filterOpen && (
+              <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-700 bg-slate-900 py-1 shadow-xl z-50">
+                {[
+                  { value: '', label: 'Все категории' },
+                  { value: 'Frontend', label: 'Frontend' },
+                  { value: 'Backend', label: 'Backend' },
+                  { value: 'Mobile Development', label: 'Mobile Development' },
+                  { value: 'Data Science', label: 'Data Science' },
+                  { value: 'Design', label: 'Design' },
+                  { value: 'DevOps', label: 'DevOps' },
+                  { value: 'Marketing', label: 'Marketing' },
+                  { value: 'GameDev', label: 'GameDev' },
+                  { value: 'Cybersecurity', label: 'Cybersecurity' },
+                  { value: 'Soft Skills', label: 'Soft Skills' },
+                ].map((cat) => (
                   <button
-                    key={cat}
-                    onClick={() => { setSelectedCategory(cat); setFiltersOpen(false); }}
-                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                      selectedCategory === cat
-                        ? 'bg-blue-500/20 text-blue-300'
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                    }`}
+                    key={cat.value}
+                    onClick={() => { setActiveCategory(cat.value); setFilterOpen(false); }}
+                    className="flex w-full items-center justify-between px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-800"
                   >
-                    {cat === '' ? 'Все категории' : cat === 'frontend' ? 'Frontend' : cat === 'datascience' ? 'Data Science' : 'DevOps'}
+                    {cat.label}
+                    {activeCategory === cat.value && (
+                      <Check className="h-4 w-4 text-blue-400" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -201,9 +229,9 @@ export default function Home() {
         ) : cards.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-slate-900/50 p-8 text-center backdrop-blur-md">
             <h2 className="text-lg font-medium text-slate-200">
-              {debouncedQuery || selectedCategory ? `Ничего не найдено` : "Пока нет ни одной дорожной карты"}
+              {debouncedQuery || activeCategory ? `Ничего не найдено` : "Пока нет ни одной дорожной карты"}
             </h2>
-            {!debouncedQuery && !selectedCategory && (
+            {!debouncedQuery && !activeCategory && (
               <p className="mt-2 text-sm text-slate-400">Создайте первую дорожную карту на странице создания.</p>
             )}
           </div>

@@ -214,26 +214,40 @@ export default function EditPage() {
         <form onSubmit={handleUpdate} className="space-y-6">
           {/* Основная информация */}
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <label className="sm:col-span-2">
-                <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
-                  <span>Заголовок</span>
-                  <span className={`text-xs tabular-nums ${title.length >= 45 ? 'text-red-400' : 'text-slate-500'}`}>
-                    {title.length}/50
-                  </span>
-                </div>
-                <input className={INPUT_CLS} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={50} required />
-              </label>
+            <label className="block">
+              <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
+                <span>Заголовок</span>
+                <span className={`text-xs tabular-nums ${title.length >= 45 ? 'text-red-400' : 'text-slate-500'}`}>
+                  {title.length}/50
+                </span>
+              </div>
+              <input className={INPUT_CLS} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={50} required />
+            </label>
 
-              <label>
-                <div className="mb-1 text-sm font-medium text-slate-200">Категория</div>
-                <select className={INPUT_CLS} value={category} onChange={(e) => setCategory(e.target.value)}>
-                  <option value="">Выберите категорию</option>
-                  <option value="frontend">Frontend</option>
-                  <option value="datascience">Data Science</option>
-                  <option value="devops">DevOps</option>
-                </select>
-              </label>
+            <div className="mt-4">
+              <div className="mb-2 text-sm font-medium text-slate-200">Категория</div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Frontend', 'Backend', 'Mobile Development', 'Data Science',
+                  'Design', 'DevOps', 'Marketing', 'GameDev', 'Cybersecurity', 'Soft Skills',
+                ].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategory(cat)}
+                    className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                      category === cat
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              {!category && (
+                <p className="mt-1.5 text-xs text-slate-500">Выберите одну категорию</p>
+              )}
             </div>
 
             <label className="mt-4 block">

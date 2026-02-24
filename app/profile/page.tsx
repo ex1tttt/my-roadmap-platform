@@ -8,7 +8,7 @@ import Card from '@/components/Card'
 import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil } from 'lucide-react'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
-type Profile = { id: string; username: string; avatar?: string }
+type Profile = { id: string; username: string; avatar?: string; bio?: string | null }
 type CardType = {
   id: string
   title: string
@@ -245,6 +245,11 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {myCards.length} карт · {likedCards.length} лайков
               </p>
+              {profile?.bio ? (
+                <p className="mt-2 text-sm text-slate-300 max-w-md">{profile.bio}</p>
+              ) : (
+                <p className="mt-2 text-xs text-slate-600 italic">Описание не добавлено</p>
+              )}
             </div>
           </div>
           <Link

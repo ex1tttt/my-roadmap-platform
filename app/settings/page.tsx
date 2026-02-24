@@ -18,6 +18,7 @@ type Profile = {
   id: string;
   username: string;
   avatar: string | null;
+  bio: string | null;
 };
 
 export default function SettingsPage() {
@@ -26,6 +27,7 @@ export default function SettingsPage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -78,6 +80,7 @@ export default function SettingsPage() {
       } else if (data) {
         setProfile(data);
         setUsername(data.username ?? "");
+        setBio(data.bio ?? "");
         setAvatarUrl(data.avatar ?? null);
       } else {
         // Профиль ещё не создан — создаём с дефолтными значениями
@@ -92,6 +95,7 @@ export default function SettingsPage() {
         } else if (newProfile) {
           setProfile(newProfile);
           setUsername(newProfile.username ?? "");
+          setBio(newProfile.bio ?? "");
           setAvatarUrl(newProfile.avatar ?? null);
         }
       }
@@ -190,12 +194,12 @@ export default function SettingsPage() {
 
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: user.id, username: trimmed, avatar: avatarUrl });
+        .upsert({ id: user.id, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null });
 
       if (error) throw error;
 
       toast.success("Профиль успешно обновлён!");
-      setProfile((prev) => prev ? { ...prev, username: trimmed, avatar: avatarUrl } : prev);
+      setProfile((prev) => prev ? { ...prev, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null } : prev);
     } catch (err: any) {
       console.error("Save profile error:", err);
       toast.error("Ошибка сохранения: " + (err?.message ?? "Неизвестная ошибка"));
@@ -403,6 +407,21 @@ export default function SettingsPage() {
                 />
               )}
               <p className="mt-1.5 text-xs text-slate-600">Чтобы изменить почту, используйте раздел «Изменить почту» ниже.</p>
+            </label>
+
+            <label className="mt-4 block">
+              <div className="mb-1.5 text-sm font-medium text-slate-300">О себе</div>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={200}
+                rows={3}
+                placeholder="Напишите немного о себе..."
+                className="box-border w-full resize-none rounded-lg border border-slate-800 bg-zinc-900 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+              <p className="mt-1 text-right text-xs text-slate-600">
+                <span className={bio.length >= 180 ? 'text-amber-400' : ''}>{bio.length}</span>/200
+              </p>
             </label>
             <div className="mt-4 flex justify-end">
               <button type="submit" disabled={saving || uploading} className={BTN_PRIMARY}>

@@ -155,36 +155,46 @@ export default function CreatePage() {
 
         <form onSubmit={handlePublish} className="space-y-6">
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <label className="sm:col-span-2">
-                <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
-                  <span>Title</span>
-                  <span className={`text-xs tabular-nums ${title.length >= 35 ? 'text-red-400' : 'text-slate-500'}`}>
-                    {title.length}/40
-                  </span>
-                </div>
-                <input
-                  className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  maxLength={40}
-                  required
-                />
-              </label>
+            <label className="block">
+              <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
+                <span>Title</span>
+                <span className={`text-xs tabular-nums ${title.length >= 35 ? 'text-red-400' : 'text-slate-500'}`}>
+                  {title.length}/40
+                </span>
+              </div>
+              <input
+                className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={40}
+                required
+              />
+            </label>
 
-              <label>
-                <div className="mb-1 text-sm font-medium text-slate-200">Category</div>
-                <select
-                  className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  <option value="">Выберите категорию</option>
-                  <option value="frontend">Frontend</option>
-                  <option value="datascience">Data Science</option>
-                  <option value="devops">DevOps</option>
-                </select>
-              </label>
+            <div className="mt-4">
+              <div className="mb-2 text-sm font-medium text-slate-200">Категория</div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Frontend', 'Backend', 'Mobile Development', 'Data Science',
+                  'Design', 'DevOps', 'Marketing', 'GameDev', 'Cybersecurity', 'Soft Skills',
+                ].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategory(cat)}
+                    className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                      category === cat
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              {!category && (
+                <p className="mt-1.5 text-xs text-slate-500">Выберите одну категорию</p>
+              )}
             </div>
 
             <label className="mt-4 block">
