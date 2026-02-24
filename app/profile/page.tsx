@@ -16,6 +16,11 @@ type CardType = {
   category?: string
   user: Profile
   steps?: Step[]
+  likesCount: number
+  isLiked: boolean
+  isFavorite: boolean
+  averageRating: number
+  commentsCount: number
 }
 
 type Tab = 'my' | 'liked' | 'favorites'
@@ -99,10 +104,15 @@ export default function ProfilePage() {
         return
       }
 
-      // Загружаем шаги и профили параллельно
-      const [stepsRes, profilesRes] = await Promise.all([
+      // Загружаем шаги, профили и социальные данные параллельно
+      const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
         supabase.from('steps').select('*').in('card_id', allCardIds).order('order', { ascending: true }),
         supabase.from('profiles').select('*').in('id', allUserIds),
+        supabase.from('likes').select('card_id').in('card_id', allCardIds),
+        supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', allCardIds),
+        supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', allCardIds),
+        supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', allCardIds),
+        supabase.from('comments').select('roadmap_id').in('roadmap_id', allCardIds),
       ])
 
       const profilesMap: Map<string, Profile> = new Map()
@@ -117,6 +127,29 @@ export default function ProfilePage() {
         stepsByCard.set(s.card_id, arr)
       })
 
+      const likesCountMap = new Map<string, number>()
+      ;(likesRes.data ?? []).forEach((l: any) =>
+        likesCountMap.set(l.card_id, (likesCountMap.get(l.card_id) ?? 0) + 1)
+      )
+      const userLikedSet = new Set<string>((userLikesRes.data ?? []).map((l: any) => l.card_id))
+      const userFavSet = new Set<string>((userFavsRes.data ?? []).map((f: any) => f.roadmap_id))
+
+      const ratingsMap = new Map<string, number[]>()
+      ;(ratingsRes.data ?? []).forEach((r: any) => {
+        const arr = ratingsMap.get(r.roadmap_id) ?? []
+        arr.push(r.rate)
+        ratingsMap.set(r.roadmap_id, arr)
+      })
+      const avgRatingMap = new Map<string, number>()
+      ratingsMap.forEach((values, cardId) => {
+        avgRatingMap.set(cardId, values.reduce((a, b) => a + b, 0) / values.length)
+      })
+
+      const commentsCountMap = new Map<string, number>()
+      ;(commentsRes.data ?? []).forEach((cm: any) =>
+        commentsCountMap.set(cm.roadmap_id, (commentsCountMap.get(cm.roadmap_id) ?? 0) + 1)
+      )
+
       const toCardType = (c: any): CardType => ({
         id: c.id,
         title: c.title,
@@ -124,6 +157,11 @@ export default function ProfilePage() {
         category: c.category,
         user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: 'Unknown' },
         steps: stepsByCard.get(c.id) ?? [],
+        likesCount: likesCountMap.get(c.id) ?? 0,
+        isLiked: userLikedSet.has(c.id),
+        isFavorite: userFavSet.has(c.id),
+        averageRating: avgRatingMap.get(c.id) ?? 0,
+        commentsCount: commentsCountMap.get(c.id) ?? 0,
       })
 
       setMyCards(myCardsRaw.map(toCardType))
@@ -163,9 +201,14 @@ export default function ProfilePage() {
       const cardIds = cardsRaw.map((c: any) => c.id)
       const userIds = Array.from(new Set(cardsRaw.map((c: any) => c.user_id)))
 
-      const [stepsRes, profilesRes] = await Promise.all([
+      const [stepsRes, profilesRes, likesRes2, userLikesRes2, userFavsRes2, ratingsRes2, commentsRes2] = await Promise.all([
         supabase.from('steps').select('*').in('card_id', cardIds).order('order', { ascending: true }),
         supabase.from('profiles').select('*').in('id', userIds),
+        supabase.from('likes').select('card_id').in('card_id', cardIds),
+        supabase.from('likes').select('card_id').eq('user_id', user.id).in('card_id', cardIds),
+        supabase.from('favorites').select('roadmap_id').eq('user_id', user.id).in('roadmap_id', cardIds),
+        supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', cardIds),
+        supabase.from('comments').select('roadmap_id').in('roadmap_id', cardIds),
       ])
 
       const profilesMap = new Map<string, Profile>()
@@ -180,6 +223,29 @@ export default function ProfilePage() {
         stepsByCard.set(s.card_id, arr)
       })
 
+      const likesCountMap2 = new Map<string, number>()
+      ;(likesRes2.data ?? []).forEach((l: any) =>
+        likesCountMap2.set(l.card_id, (likesCountMap2.get(l.card_id) ?? 0) + 1)
+      )
+      const userLikedSet2 = new Set<string>((userLikesRes2.data ?? []).map((l: any) => l.card_id))
+      const userFavSet2 = new Set<string>((userFavsRes2.data ?? []).map((f: any) => f.roadmap_id))
+
+      const ratingsMap2 = new Map<string, number[]>()
+      ;(ratingsRes2.data ?? []).forEach((r: any) => {
+        const arr = ratingsMap2.get(r.roadmap_id) ?? []
+        arr.push(r.rate)
+        ratingsMap2.set(r.roadmap_id, arr)
+      })
+      const avgRatingMap2 = new Map<string, number>()
+      ratingsMap2.forEach((values, cardId) => {
+        avgRatingMap2.set(cardId, values.reduce((a, b) => a + b, 0) / values.length)
+      })
+
+      const commentsCountMap2 = new Map<string, number>()
+      ;(commentsRes2.data ?? []).forEach((cm: any) =>
+        commentsCountMap2.set(cm.roadmap_id, (commentsCountMap2.get(cm.roadmap_id) ?? 0) + 1)
+      )
+
       setFavoriteCards(
         cardsRaw.map((c: any) => ({
           id: c.id,
@@ -188,6 +254,11 @@ export default function ProfilePage() {
           category: c.category,
           user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: 'Unknown' },
           steps: stepsByCard.get(c.id) ?? [],
+          likesCount: likesCountMap2.get(c.id) ?? 0,
+          isLiked: userLikedSet2.has(c.id),
+          isFavorite: userFavSet2.has(c.id),
+          averageRating: avgRatingMap2.get(c.id) ?? 0,
+          commentsCount: commentsCountMap2.get(c.id) ?? 0,
         }))
       )
       setFavoritesCount(cardsRaw.length)
@@ -197,6 +268,26 @@ export default function ProfilePage() {
 
     loadFavorites()
   }, [tab, favoritesLoaded, favoritesLoading])
+
+  function handleCardLike(cardId: string, isLiked: boolean) {
+    const update = (arr: CardType[]) =>
+      arr.map((c) =>
+        c.id === cardId
+          ? { ...c, isLiked, likesCount: Math.max(0, isLiked ? c.likesCount + 1 : c.likesCount - 1) }
+          : c
+      )
+    setMyCards(update)
+    setLikedCards(update)
+    setFavoriteCards(update)
+  }
+
+  function handleCardFavorite(cardId: string, isFavorite: boolean) {
+    const update = (arr: CardType[]) =>
+      arr.map((c) => (c.id === cardId ? { ...c, isFavorite } : c))
+    setMyCards(update)
+    setLikedCards(update)
+    setFavoriteCards(update)
+  }
 
   async function handleDelete(cardId: string) {
     if (!window.confirm('Вы уверены, что хотите удалить эту карточку?')) return
@@ -318,9 +409,16 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             {displayed.map((c) => (
               <div key={c.id} className="relative">
-                <Link href={`/card/${c.id}`} className="cursor-pointer h-full block">
-                  <Card
+                <Card
                     card={c}
+                    userId={profile?.id}
+                    initialLikesCount={c.likesCount}
+                    initialIsLiked={c.isLiked}
+                    initialIsFavorite={c.isFavorite}
+                    initialAverageRating={c.averageRating}
+                    initialCommentsCount={c.commentsCount}
+                    onLike={handleCardLike}
+                    onFavorite={handleCardFavorite}
                     actions={tab === 'my' ? (
                       <div ref={openMenuId === c.id ? menuRef : undefined}>
                         <button
@@ -352,7 +450,6 @@ export default function ProfilePage() {
                       </div>
                     ) : undefined}
                   />
-                </Link>
               </div>
             ))}
           </div>

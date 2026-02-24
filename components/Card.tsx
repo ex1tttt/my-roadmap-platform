@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { Heart, Bookmark, MessageSquare, Star } from 'lucide-react';
@@ -26,6 +27,8 @@ type CardProps = {
   initialAverageRating?: number;
   initialCommentsCount?: number;
   actions?: React.ReactNode;
+  onLike?: (cardId: string, isLiked: boolean) => void;
+  onFavorite?: (cardId: string, isFavorite: boolean) => void;
 };
 
 export default function Card({
@@ -37,7 +40,10 @@ export default function Card({
   initialAverageRating = 0,
   initialCommentsCount = 0,
   actions,
+  onLike,
+  onFavorite,
 }: CardProps) {
+  const router = useRouter();
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -48,17 +54,28 @@ export default function Card({
     e.preventDefault();
     e.stopPropagation();
     if (!userId || likeLoading) return;
+
+    const wasLiked = isLiked;
+    const newLiked = !wasLiked;
+    // Оптимистичное обновление до запроса
+    setIsLiked(newLiked);
+    setLikesCount((c) => Math.max(0, newLiked ? c + 1 : c - 1));
+    onLike?.(card.id, newLiked);
+
     setLikeLoading(true);
     try {
-      if (isLiked) {
-        await supabase.from('likes').delete().eq('user_id', userId).eq('card_id', card.id);
-        setIsLiked(false);
-        setLikesCount((c) => c - 1);
+      if (wasLiked) {
+        const { error } = await supabase.from('likes').delete().eq('user_id', userId).eq('card_id', card.id);
+        if (error) throw error;
       } else {
-        await supabase.from('likes').insert({ user_id: userId, card_id: card.id });
-        setIsLiked(true);
-        setLikesCount((c) => c + 1);
+        const { error } = await supabase.from('likes').insert({ user_id: userId, card_id: card.id });
+        if (error) throw error;
       }
+    } catch {
+      // Откатываем при ошибке
+      setIsLiked(wasLiked);
+      setLikesCount((c) => Math.max(0, wasLiked ? c + 1 : c - 1));
+      onLike?.(card.id, wasLiked);
     } finally {
       setLikeLoading(false);
     }
@@ -68,34 +85,60 @@ export default function Card({
     e.preventDefault();
     e.stopPropagation();
     if (!userId || favLoading) return;
+
+    const wasFavorite = isFavorite;
+    const newFavorite = !wasFavorite;
+    // Оптимистичное обновление
+    setIsFavorite(newFavorite);
+    onFavorite?.(card.id, newFavorite);
+
     setFavLoading(true);
     try {
-      if (isFavorite) {
-        await supabase.from('favorites').delete().eq('user_id', userId).eq('roadmap_id', card.id);
-        setIsFavorite(false);
+      if (wasFavorite) {
+        const { error } = await supabase.from('favorites').delete().eq('user_id', userId).eq('roadmap_id', card.id);
+        if (error) throw error;
       } else {
-        await supabase.from('favorites').insert({ user_id: userId, roadmap_id: card.id });
-        setIsFavorite(true);
+        const { error } = await supabase.from('favorites').insert({ user_id: userId, roadmap_id: card.id });
+        if (error) throw error;
       }
+    } catch {
+      // Откатываем
+      setIsFavorite(wasFavorite);
+      onFavorite?.(card.id, wasFavorite);
     } finally {
       setFavLoading(false);
     }
   }
 
   return (
-    <article className="relative w-full h-full flex flex-col min-h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70">
+    <article
+      className="relative w-full h-full flex flex-col min-h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70 cursor-pointer"
+      onClick={() => router.push(`/card/${card.id}`)}
+    >
       {actions && (
         <div className="absolute top-2 right-2 z-10">{actions}</div>
       )}
       <header className="mb-2 flex items-center gap-2">
-        <img
-          src={card.user.avatar || '/placeholder-avatar.png'}
-          alt={card.user.username}
-          className="h-8 w-8 flex-none rounded-full object-cover"
-        />
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${card.user.id}`); }}
+          className="flex shrink-0 items-center gap-2 text-left hover:opacity-80 transition-opacity"
+        >
+          <img
+            src={card.user.avatar || '/placeholder-avatar.png'}
+            alt={card.user.username}
+            className="h-8 w-8 rounded-full object-cover"
+          />
+        </button>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold text-white">{card.title}</h3>
-          <p className="text-xs text-slate-400">by {card.user.username}</p>
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${card.user.id}`); }}
+            className="text-xs text-slate-400 hover:text-blue-400 hover:underline transition-colors"
+          >
+            by {card.user.username}
+          </button>
         </div>
       </header>
 

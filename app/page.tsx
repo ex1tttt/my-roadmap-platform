@@ -29,6 +29,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
+  const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -149,6 +150,10 @@ export default function Home() {
           commentsCount: commentsCountMap.get(c.id) ?? 0,
         }));
 
+        if (sortBy === 'popular') {
+          merged.sort((a, b) => b.averageRating - a.averageRating);
+        }
+
         if (mounted) setCards(merged);
       } catch (err) {
         console.error(err);
@@ -162,7 +167,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [debouncedQuery, activeCategory, userId]);
+  }, [debouncedQuery, activeCategory, sortBy, userId]);
 
   return (
     <div className="min-h-screen bg-zinc-950 py-12 px-6">
@@ -172,7 +177,7 @@ export default function Home() {
           <p className="text-sm text-slate-400">Карточки достижений от пользователей</p>
         </header>
 
-        {/* Поиск + Фильтр */}
+        {/* Поиск + Фильтр + Сортировка */}
         <div className="mb-8 flex items-center gap-3 w-full">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -183,6 +188,23 @@ export default function Home() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             />
+          </div>
+
+          {/* Переключатель сортировки */}
+          <div className="flex shrink-0 items-center rounded-lg border border-slate-700 bg-slate-900/50 p-0.5">
+            {([['newest', 'Новые'], ['popular', 'Популярные']] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setSortBy(val)}
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  sortBy === val
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Дропдаун категорий */}
@@ -247,7 +269,7 @@ export default function Home() {
           <section>
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
               {cards.map((c) => (
-                <Link key={c.id} href={`/card/${c.id}`} className="cursor-pointer h-full block">
+                <div key={c.id} className="h-full">
                   <Card
                     card={c}
                     userId={userId}
@@ -255,9 +277,23 @@ export default function Home() {
                     initialIsLiked={c.isLiked}
                     initialIsFavorite={c.isFavorite}
                     initialAverageRating={c.averageRating}
-                  initialCommentsCount={c.commentsCount}
+                    initialCommentsCount={c.commentsCount}
+                    onLike={(cardId, isLiked) =>
+                      setCards((prev) =>
+                        prev.map((x) =>
+                          x.id === cardId
+                            ? { ...x, isLiked, likesCount: Math.max(0, isLiked ? x.likesCount + 1 : x.likesCount - 1) }
+                            : x
+                        )
+                      )
+                    }
+                    onFavorite={(cardId, isFavorite) =>
+                      setCards((prev) =>
+                        prev.map((x) => (x.id === cardId ? { ...x, isFavorite } : x))
+                      )
+                    }
                   />
-                </Link>
+                </div>
               ))}
             </div>
           </section>
