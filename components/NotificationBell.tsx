@@ -48,7 +48,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     const { data } = await supabase
       .from('notifications')
       .select('id, type, is_read, created_at, card_id, card_title, actor:actor_id(id, username)')
-      .eq('user_id', userId)
+      .eq('receiver_id', userId)
       .order('created_at', { ascending: false })
       .limit(20)
 
@@ -63,7 +63,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     await supabase
       .from('notifications')
       .update({ is_read: true })
-      .eq('user_id', userId)
+      .eq('receiver_id', userId)
       .eq('is_read', false)
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
     setHasUnread(false)
@@ -74,7 +74,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     await supabase
       .from('notifications')
       .delete()
-      .eq('user_id', userId)
+      .eq('receiver_id', userId)
       .eq('is_read', true)
     setNotifications((prev) => prev.filter((n) => !n.is_read))
   }
@@ -85,7 +85,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
+      .eq('receiver_id', userId)
       .eq('is_read', false)
       .then(({ count }) => setHasUnread((count ?? 0) > 0))
   }, [userId])
@@ -102,7 +102,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${userId}`,
+          filter: `receiver_id=eq.${userId}`,
         },
         () => {
           // Мгновенно зажигаем красный индикатор
@@ -114,7 +114,9 @@ export default function NotificationBell({ userId }: { userId: string }) {
           })
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Realtime статус:', status)
+      })
 
     return () => { supabase.removeChannel(channel) }
   }, [userId])
