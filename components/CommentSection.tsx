@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Trash2, MessageSquare, Send, User, CornerDownRight, Heart } from 'lucide-react'
+import { Trash2, MessageSquare, Send, User, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react'
 
 type Comment = {
   id: string
@@ -19,7 +19,8 @@ type Comment = {
   }
   likesCount: number
   isLiked: boolean
-  replies?: Comment[]
+  dislikesCount: number
+  isDisliked: boolean
 }
 
 function formatDate(iso: string): string {
@@ -32,115 +33,323 @@ function formatDate(iso: string): string {
   })
 }
 
-/** Рекурсивно обновляет лайк в дереве (без мутации) */
-function updateTree(
+/** Оптимистично обновляет реакцию (лайк/дизлайк) с YouTube-логикой */
+function updateFlatReaction(
   nodes: Comment[],
   commentId: string,
-  isLiked: boolean,
-  delta: number,
+  type: 'like' | 'dislike',
 ): Comment[] {
   return nodes.map((c) => {
-    if (c.id === commentId) {
-      return { ...c, isLiked, likesCount: Math.max(0, c.likesCount + delta) }
-    }
-    if (c.replies?.length) {
-      return { ...c, replies: updateTree(c.replies, commentId, isLiked, delta) }
-    }
-    return c
-  })
-}
-
-/** Строим дерево из плоского массива */
-function buildTree(flat: Comment[]): Comment[] {
-  const map = new Map<string, Comment>()
-  flat.forEach((c) => map.set(c.id, { ...c, replies: [] }))
-
-  const roots: Comment[] = []
-  map.forEach((c) => {
-    if (c.parent_id && map.has(c.parent_id)) {
-      map.get(c.parent_id)!.replies!.push(c)
+    if (c.id !== commentId) return c
+    if (type === 'like') {
+      if (c.isLiked) {
+        return { ...c, isLiked: false, likesCount: Math.max(0, c.likesCount - 1) }
+      }
+      return {
+        ...c,
+        isLiked: true,
+        likesCount: c.likesCount + 1,
+        isDisliked: false,
+        dislikesCount: c.isDisliked ? Math.max(0, c.dislikesCount - 1) : c.dislikesCount,
+      }
     } else {
-      roots.push(c)
+      if (c.isDisliked) {
+        return { ...c, isDisliked: false, dislikesCount: Math.max(0, c.dislikesCount - 1) }
+      }
+      return {
+        ...c,
+        isDisliked: true,
+        dislikesCount: c.dislikesCount + 1,
+        isLiked: false,
+        likesCount: c.isLiked ? Math.max(0, c.likesCount - 1) : c.likesCount,
+      }
     }
   })
-  return roots
 }
 
-/* ─── Один комментарий (рекурсивный) ─────────────────────────────── */
-function CommentItem({
-  comment,
-  currentUserId,
-  deletingId,
-  replyingTo,
-  replyText,
-  replySending,
-  depth,
-  onDelete,
-  onReplyClick,
-  onReplyTextChange,
-  onReplySubmit,
-  onReplyCancel,  onLike,}: {
+/** Все потомки комментария (BFS по плоскому массиву) */
+function getDescendants(flat: Comment[], rootId: string): Comment[] {
+  const childIds = new Set<string>()
+  const queue = [rootId]
+  while (queue.length) {
+    const id = queue.shift()!
+    flat.filter((c) => c.parent_id === id).forEach((c) => {
+      childIds.add(c.id)
+      queue.push(c.id)
+    })
+  }
+  // Порядок совпадает с порядком в flat (created_at desc — новые первые)
+  return flat.filter((c) => childIds.has(c.id))
+}
+
+/** Склонение слова «ответ» */
+function pluralReplies(n: number): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return 'ответ'
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'ответа'
+  return 'ответов'
+}
+
+/* ─── Общие пропсы ─────────────────────────────────────────────── */
+type CommentRowProps = {
   comment: Comment
   currentUserId: string | null
   deletingId: string | null
   replyingTo: string | null
   replyText: string
   replySending: boolean
-  depth: number
   onDelete: (id: string) => void
   onReplyClick: (id: string) => void
   onReplyTextChange: (t: string) => void
   onReplySubmit: (parentId: string) => void
   onReplyCancel: () => void
-  onLike: (id: string, wasLiked: boolean) => void
-}) {
-  const isReplying = replyingTo === comment.id
-  // ml-6 за каждый уровень, максимум 3 уровня вложенности
-  const marginLeft = Math.min(depth, 3) * 24 // px
+  onReaction: (id: string, type: 'like' | 'dislike') => void
+}
 
+/* ─── Аватар ────────────────────────────────────────────────────── */
+function Avatar({
+  author,
+  userId,
+  size = 8,
+}: {
+  author: Comment['author']
+  userId: string
+  size?: 6 | 8 | 10
+}) {
+  const dim = { 6: 'h-6 w-6', 8: 'h-8 w-8', 10: 'h-10 w-10' }[size]
+  const icon = { 6: 'h-3 w-3', 8: 'h-4 w-4', 10: 'h-5 w-5' }[size]
   return (
-    <li
-      style={marginLeft > 0 ? { marginLeft: `${marginLeft}px` } : undefined}
-      className={depth > 0 ? 'ml-2 border-l-2 border-slate-700 pl-4' : ''}
-    >
-      <div className="group rounded-xl border border-white/10 bg-slate-800/50 p-4 backdrop-blur-sm transition-colors hover:border-white/15 hover:bg-slate-800/70">
-        {/* Шапка */}
-        <div className="flex items-start justify-between gap-3">
+    <Link href={`/profile/${userId}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
+      <div className={`${dim} flex items-center justify-center overflow-hidden rounded-full bg-slate-700 transition-opacity hover:opacity-75`}>
+        {author.avatar ? (
+          <img src={author.avatar} alt={author.username} className="h-full w-full object-cover" />
+        ) : (
+          <User className={`${icon} text-slate-400`} />
+        )}
+      </div>
+    </Link>
+  )
+}
+
+/* ─── Панель действий (лайк / дизлайк / ответить) ──────────────── */
+function ActionBar({
+  comment,
+  currentUserId,
+  onReaction,
+  onReplyClick,
+}: {
+  comment: Comment
+  currentUserId: string | null
+  onReaction: (id: string, type: 'like' | 'dislike') => void
+  onReplyClick: (id: string) => void
+}) {
+  return (
+    <div className="mt-2 flex items-center gap-3">
+      {/* Лайк */}
+      <button
+        onClick={() => onReaction(comment.id, 'like')}
+        disabled={!currentUserId}
+        title={comment.isLiked ? 'Убрать лайк' : 'Понравилось'}
+        className={`flex items-center gap-1.5 text-xs transition-colors disabled:cursor-default ${
+          comment.isLiked
+            ? 'text-blue-400'
+            : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+        }`}
+      >
+        <ThumbsUp size={16} className={comment.isLiked ? 'fill-blue-400' : ''} />
+        {comment.likesCount > 0 && <span>{comment.likesCount}</span>}
+      </button>
+
+      {/* Дизлайк */}
+      <button
+        onClick={() => onReaction(comment.id, 'dislike')}
+        disabled={!currentUserId}
+        title={comment.isDisliked ? 'Убрать дизлайк' : 'Не нравится'}
+        className={`flex items-center gap-1.5 text-xs transition-colors disabled:cursor-default ${
+          comment.isDisliked
+            ? 'text-slate-200'
+            : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+        }`}
+      >
+        <ThumbsDown size={16} className={comment.isDisliked ? 'fill-slate-200' : ''} />
+        {comment.dislikesCount > 0 && <span>{comment.dislikesCount}</span>}
+      </button>
+
+      {/* Ответить */}
+      {currentUserId && (
+        <button
+          onClick={() => onReplyClick(comment.id)}
+          className="text-xs font-semibold text-slate-400 transition-colors hover:text-slate-100"
+        >
+          Ответить
+        </button>
+      )}
+    </div>
+  )
+}
+
+/* ─── Форма ответа ──────────────────────────────────────────────── */
+function ReplyForm({
+  replyText,
+  replySending,
+  parentId,
+  onReplyTextChange,
+  onReplySubmit,
+  onReplyCancel,
+}: {
+  replyText: string
+  replySending: boolean
+  parentId: string
+  onReplyTextChange: (t: string) => void
+  onReplySubmit: (id: string) => void
+  onReplyCancel: () => void
+}) {
+  return (
+    <div className="mt-3 rounded-lg border border-blue-500/30 bg-slate-900/60 p-3">
+      <textarea
+        autoFocus
+        value={replyText}
+        onChange={(e) => onReplyTextChange(e.target.value)}
+        placeholder="Ваш ответ..."
+        rows={2}
+        className="w-full resize-none bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none"
+      />
+      <div className="mt-2 flex items-center justify-end gap-2 border-t border-white/5 pt-2">
+        <button
+          onClick={onReplyCancel}
+          className="px-3 py-1 text-xs text-slate-400 transition-colors hover:text-slate-200"
+        >
+          Отмена
+        </button>
+        <button
+          disabled={!replyText.trim() || replySending}
+          onClick={() => onReplySubmit(parentId)}
+          className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Send className="h-3 w-3" />
+          {replySending ? 'Отправка...' : 'Ответить'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Строка корневого комментария ──────────────────────────────── */
+function RootCommentRow({
+  comment,
+  replies,
+  expanded,
+  onToggle,
+  ...rest
+}: CommentRowProps & {
+  replies: Comment[]
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const isReplying = rest.replyingTo === comment.id
+  return (
+    <div className="group flex gap-3">
+      <Avatar author={comment.author} userId={comment.user_id} size={10} />
+      <div className="min-w-0 flex-1">
+        {/* Имя + дата + удалить */}
+        <div className="flex items-center gap-2">
           <Link
             href={`/profile/${comment.user_id}`}
-            className="flex items-center gap-2.5 group/author"
+            className="text-sm font-semibold text-slate-200 underline-offset-2 transition-colors hover:text-blue-400 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-700 transition-opacity group-hover/author:opacity-80">
-              {comment.author.avatar ? (
-                <img src={comment.author.avatar} alt={comment.author.username} className="h-full w-full object-cover" />
-              ) : (
-                <User className="h-3.5 w-3.5 text-slate-400" />
-              )}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-200 underline-offset-2 transition-colors group-hover/author:text-blue-400 group-hover/author:underline">
-                {comment.author.username}
-              </p>
-              <p className="text-xs text-slate-500">{formatDate(comment.created_at)}</p>
-            </div>
+            {comment.author.username}
           </Link>
-
-          {comment.user_id === currentUserId && (
+          <span className="text-xs text-slate-500">{formatDate(comment.created_at)}</span>
+          {comment.user_id === rest.currentUserId && (
             <button
-              onClick={() => onDelete(comment.id)}
-              disabled={deletingId === comment.id}
+              onClick={() => rest.onDelete(comment.id)}
+              disabled={rest.deletingId === comment.id}
               title="Удалить"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed"
+              className="ml-auto flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
-        {/* Текст: перед содержимым — @упоминание синим */}
-        <p className="mt-2.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-          {comment.parent_id && comment.parentAuthorName && (
+        {/* Текст */}
+        <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+          {comment.content}
+        </p>
+
+        {/* Панель действий */}
+        <ActionBar
+          comment={comment}
+          currentUserId={rest.currentUserId}
+          onReaction={rest.onReaction}
+          onReplyClick={rest.onReplyClick}
+        />
+
+        {/* Форма ответа */}
+        {isReplying && (
+          <ReplyForm
+            replyText={rest.replyText}
+            replySending={rest.replySending}
+            parentId={comment.id}
+            onReplyTextChange={rest.onReplyTextChange}
+            onReplySubmit={rest.onReplySubmit}
+            onReplyCancel={rest.onReplyCancel}
+          />
+        )}
+
+        {/* Кнопка «Развернуть ответы» */}
+        {replies.length > 0 && (
+          <button
+            onClick={onToggle}
+            className="mt-2 flex items-center gap-1 text-sm font-medium text-blue-400 transition-colors hover:text-blue-300"
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            />
+            {expanded
+              ? 'Скрыть ответы'
+              : `Показать ответы (${replies.length})`}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Строка ответа (плоская, ml-12) ─────────────────────────── */
+function ReplyRow({ comment, ...rest }: CommentRowProps) {
+  const isReplying = rest.replyingTo === comment.id
+  return (
+    <div className="group ml-12 flex gap-2">
+      <Avatar author={comment.author} userId={comment.user_id} size={6} />
+      <div className="min-w-0 flex-1">
+        {/* Имя + дата + удалить */}
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/profile/${comment.user_id}`}
+            className="text-sm font-semibold text-slate-200 underline-offset-2 transition-colors hover:text-blue-400 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {comment.author.username}
+          </Link>
+          <span className="text-xs text-slate-500">{formatDate(comment.created_at)}</span>
+          {comment.user_id === rest.currentUserId && (
+            <button
+              onClick={() => rest.onDelete(comment.id)}
+              disabled={rest.deletingId === comment.id}
+              title="Удалить"
+              className="ml-auto flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Текст с @упоминанием */}
+        <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+          {comment.parentAuthorName && (
             <Link
               href={`/profile/${comment.parentAuthorUserId}`}
               className="mr-1 font-medium text-blue-400 hover:underline"
@@ -152,98 +361,34 @@ function CommentItem({
           {comment.content}
         </p>
 
-        {/* Футер: лайк + ответить */}
-        <div className="mt-2.5 flex items-center justify-between">
-          <button
-            onClick={() => onLike(comment.id, comment.isLiked)}
-            disabled={!currentUserId}
-            title={comment.isLiked ? 'Убрать лайк' : 'Понравилось'}
-            className={`flex items-center gap-1.5 text-xs transition-all disabled:cursor-default ${
-              comment.isLiked
-                ? 'text-rose-400'
-                : 'text-slate-500 hover:text-rose-400 disabled:opacity-40'
-            }`}
-          >
-            <Heart
-              className={`h-3.5 w-3.5 transition-all duration-200 ${
-                comment.isLiked ? 'scale-110 fill-rose-400' : ''
-              }`}
-            />
-            {comment.likesCount > 0 && <span>{comment.likesCount}</span>}
-          </button>
+        {/* Панель действий */}
+        <ActionBar
+          comment={comment}
+          currentUserId={rest.currentUserId}
+          onReaction={rest.onReaction}
+          onReplyClick={rest.onReplyClick}
+        />
 
-          {currentUserId && (
-            <button
-              onClick={() => onReplyClick(comment.id)}
-              className="flex items-center gap-1 text-xs text-slate-500 transition-colors hover:text-blue-400"
-            >
-              <CornerDownRight className="h-3 w-3" />
-              Ответить
-            </button>
-          )}
-        </div>
-
-        {/* Поле ответа */}
+        {/* Форма ответа */}
         {isReplying && (
-          <div className="mt-3 rounded-lg border border-blue-500/30 bg-slate-900/60 p-3">
-            <textarea
-              autoFocus
-              value={replyText}
-              onChange={(e) => onReplyTextChange(e.target.value)}
-              placeholder="Ваш ответ..."
-              rows={2}
-              className="w-full resize-none bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none"
-            />
-            <div className="mt-2 flex items-center justify-end gap-2 border-t border-white/5 pt-2">
-              <button
-                onClick={onReplyCancel}
-                className="px-3 py-1 text-xs text-slate-400 transition-colors hover:text-slate-200"
-              >
-                Отмена
-              </button>
-              <button
-                disabled={!replyText.trim() || replySending}
-                onClick={() => onReplySubmit(comment.id)}
-                className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Send className="h-3 w-3" />
-                {replySending ? 'Отправка...' : 'Ответить'}
-              </button>
-            </div>
-          </div>
+          <ReplyForm
+            replyText={rest.replyText}
+            replySending={rest.replySending}
+            parentId={comment.id}
+            onReplyTextChange={rest.onReplyTextChange}
+            onReplySubmit={rest.onReplySubmit}
+            onReplyCancel={rest.onReplyCancel}
+          />
         )}
       </div>
-
-      {/* Рекурсивные ответы */}
-      {comment.replies && comment.replies.length > 0 && (
-        <ul className="mt-2 space-y-2">
-          {comment.replies.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              currentUserId={currentUserId}
-              deletingId={deletingId}
-              replyingTo={replyingTo}
-              replyText={replyText}
-              replySending={replySending}
-              depth={depth + 1}
-              onDelete={onDelete}
-              onReplyClick={onReplyClick}
-              onReplyTextChange={onReplyTextChange}
-              onReplySubmit={onReplySubmit}
-              onReplyCancel={onReplyCancel}
-              onLike={onLike}
-            />
-          ))}
-        </ul>
-      )}
-    </li>
+    </div>
   )
 }
 
 /* ─── Основной компонент ────────────────────────────────────────── */
 export default function CommentSection({ roadmapId }: { roadmapId: string }) {
-  const [tree, setTree] = useState<Comment[]>([])
+  const [flat, setFlat] = useState<Comment[]>([])
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
@@ -266,7 +411,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       .from('comments')
       .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar), parentComment:parent_id(user_id, profiles:user_id(username))')
       .eq('roadmap_id', roadmapId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Ошибка загрузки комментариев:', error)
@@ -276,27 +421,33 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
     const ids = (data ?? []).map((c: any) => c.id as string)
 
-    // Загружаем лайки параллельно: общее количество + лайки текущего пользователя
-    const [{ data: allLikes }, { data: myLikes }] = await Promise.all([
+    const [{ data: allLikes }, { data: myLikes }, { data: allDislikes }, { data: myDislikes }] = await Promise.all([
       ids.length
         ? supabase.from('comment_likes').select('comment_id').in('comment_id', ids)
         : Promise.resolve({ data: [] as any[] }),
       ids.length && currentUserId
-        ? supabase
-            .from('comment_likes')
-            .select('comment_id')
-            .in('comment_id', ids)
-            .eq('user_id', currentUserId)
+        ? supabase.from('comment_likes').select('comment_id').in('comment_id', ids).eq('user_id', currentUserId)
+        : Promise.resolve({ data: [] as any[] }),
+      ids.length
+        ? supabase.from('comment_dislikes').select('comment_id').in('comment_id', ids)
+        : Promise.resolve({ data: [] as any[] }),
+      ids.length && currentUserId
+        ? supabase.from('comment_dislikes').select('comment_id').in('comment_id', ids).eq('user_id', currentUserId)
         : Promise.resolve({ data: [] as any[] }),
     ])
 
-    const countMap = new Map<string, number>()
+    const likesMap = new Map<string, number>()
     ;(allLikes ?? []).forEach((l: any) => {
-      countMap.set(l.comment_id, (countMap.get(l.comment_id) ?? 0) + 1)
+      likesMap.set(l.comment_id, (likesMap.get(l.comment_id) ?? 0) + 1)
+    })
+    const dislikesMap = new Map<string, number>()
+    ;(allDislikes ?? []).forEach((l: any) => {
+      dislikesMap.set(l.comment_id, (dislikesMap.get(l.comment_id) ?? 0) + 1)
     })
     const likedSet = new Set<string>((myLikes ?? []).map((l: any) => l.comment_id as string))
+    const dislikedSet = new Set<string>((myDislikes ?? []).map((l: any) => l.comment_id as string))
 
-    const flat: Comment[] = (data ?? []).map((c: any) => {
+    const result: Comment[] = (data ?? []).map((c: any) => {
       const pc = c.parentComment
       const pcProfiles = pc ? (Array.isArray(pc.profiles) ? pc.profiles[0] : pc.profiles) : null
       return {
@@ -310,13 +461,15 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         author: Array.isArray(c.profiles)
           ? (c.profiles[0] ?? { username: 'Unknown' })
           : (c.profiles ?? { username: 'Unknown' }),
-        likesCount: countMap.get(c.id) ?? 0,
+        likesCount: likesMap.get(c.id) ?? 0,
         isLiked: likedSet.has(c.id),
+        dislikesCount: dislikesMap.get(c.id) ?? 0,
+        isDisliked: dislikedSet.has(c.id),
       }
     })
 
-    setTotalCount(flat.length)
-    setTree(buildTree(flat))
+    setTotalCount(result.length)
+    setFlat(result)
     setLoading(false)
   }
 
@@ -329,18 +482,32 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed || !currentUserId || sending) return
-
     setSending(true)
-    const { error } = await supabase.from('comments').insert({
-      roadmap_id: roadmapId,
-      user_id: currentUserId,
-      content: trimmed,
-    })
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({ roadmap_id: roadmapId, user_id: currentUserId, content: trimmed })
+      .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar)')
+      .single()
     if (error) {
       console.error(error)
     } else {
+      const newComment: Comment = {
+        id: data.id,
+        content: data.content,
+        created_at: data.created_at,
+        user_id: data.user_id,
+        parent_id: null,
+        author: Array.isArray(data.profiles)
+          ? (data.profiles[0] ?? { username: 'Unknown' })
+          : (data.profiles ?? { username: 'Unknown' }),
+        likesCount: 0,
+        isLiked: false,
+        dislikesCount: 0,
+        isDisliked: false,
+      }
       setText('')
-      await fetchComments()
+      setFlat((prev) => [newComment, ...prev])
+      setTotalCount((prev) => prev + 1)
       textareaRef.current?.focus()
     }
     setSending(false)
@@ -349,38 +516,74 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   async function handleReplySubmit(parentId: string) {
     const trimmed = replyText.trim()
     if (!trimmed || !currentUserId || replySending) return
-
     setReplySending(true)
-    const { error } = await supabase.from('comments').insert({
-      roadmap_id: roadmapId,
-      user_id: currentUserId,
-      content: trimmed,
-      parent_id: parentId,
-    })
+    // Запоминаем автора родителя до отправки
+    const parentComment = flat.find((c) => c.id === parentId)
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({ roadmap_id: roadmapId, user_id: currentUserId, content: trimmed, parent_id: parentId })
+      .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar)')
+      .single()
     if (error) {
       console.error(error)
     } else {
+      const newReply: Comment = {
+        id: data.id,
+        content: data.content,
+        created_at: data.created_at,
+        user_id: data.user_id,
+        parent_id: parentId,
+        parentAuthorName: parentComment?.author.username,
+        parentAuthorUserId: parentComment?.user_id,
+        author: Array.isArray(data.profiles)
+          ? (data.profiles[0] ?? { username: 'Unknown' })
+          : (data.profiles ?? { username: 'Unknown' }),
+        likesCount: 0,
+        isLiked: false,
+        dislikesCount: 0,
+        isDisliked: false,
+      }
       setReplyText('')
       setReplyingTo(null)
-      await fetchComments()
+      // Новый ответ — в начало flat; getDescendants вернёт его первым (новые сверху)
+      setFlat((prev) => [newReply, ...prev])
+      setTotalCount((prev) => prev + 1)
+      // Авто-раскрываем ветку родителя
+      setExpandedIds((prev) => new Set([...prev, parentId]))
     }
     setReplySending(false)
   }
 
-  async function handleLike(commentId: string, wasLiked: boolean) {
+  async function handleReaction(commentId: string, type: 'like' | 'dislike') {
     if (!currentUserId) return
-    // Оптимистичное обновление UI
-    setTree((prev) => updateTree(prev, commentId, !wasLiked, wasLiked ? -1 : 1))
-    if (wasLiked) {
-      await supabase
-        .from('comment_likes')
-        .delete()
-        .eq('comment_id', commentId)
-        .eq('user_id', currentUserId)
+    // Снимаем состояние ДО обновления для правильной логики
+    const current = flat.find((c) => c.id === commentId)
+    if (!current) return
+    // Оптимистичное обновление
+    setFlat((prev) => updateFlatReaction(prev, commentId, type))
+
+    if (type === 'like') {
+      if (current.isLiked) {
+        await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', currentUserId)
+      } else {
+        await Promise.all([
+          supabase.from('comment_likes').upsert({ comment_id: commentId, user_id: currentUserId }),
+          current.isDisliked
+            ? supabase.from('comment_dislikes').delete().eq('comment_id', commentId).eq('user_id', currentUserId)
+            : Promise.resolve(),
+        ])
+      }
     } else {
-      await supabase
-        .from('comment_likes')
-        .upsert({ comment_id: commentId, user_id: currentUserId })
+      if (current.isDisliked) {
+        await supabase.from('comment_dislikes').delete().eq('comment_id', commentId).eq('user_id', currentUserId)
+      } else {
+        await Promise.all([
+          supabase.from('comment_dislikes').upsert({ comment_id: commentId, user_id: currentUserId }),
+          current.isLiked
+            ? supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', currentUserId)
+            : Promise.resolve(),
+        ])
+      }
     }
   }
 
@@ -395,6 +598,32 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   function handleReplyClick(id: string) {
     setReplyingTo((prev) => (prev === id ? null : id))
     setReplyText('')
+  }
+
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  // Корневые комментарии (без parent_id)
+  const roots = flat.filter((c) => c.parent_id === null)
+
+  // Общие пропсы для строк
+  const rowProps = {
+    currentUserId,
+    deletingId,
+    replyingTo,
+    replyText,
+    replySending,
+    onDelete: handleDelete,
+    onReplyClick: handleReplyClick,
+    onReplyTextChange: setReplyText,
+    onReplySubmit: handleReplySubmit,
+    onReplyCancel: () => { setReplyingTo(null); setReplyText('') },
+    onReaction: handleReaction,
   }
 
   return (
@@ -434,46 +663,50 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         </div>
       </form>
 
-      {/* Дерево комментариев */}
+      {/* Список комментариев */}
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse rounded-xl border border-white/5 bg-slate-800/40 p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-7 w-7 rounded-full bg-slate-700" />
-                <div className="space-y-1.5">
-                  <div className="h-3 w-24 rounded bg-slate-700" />
-                  <div className="h-2.5 w-16 rounded bg-slate-700" />
-                </div>
+            <div key={i} className="animate-pulse flex gap-3">
+              <div className="h-8 w-8 shrink-0 rounded-full bg-slate-700" />
+              <div className="flex-1 space-y-2 pt-1">
+                <div className="h-3 w-32 rounded bg-slate-700" />
+                <div className="h-3 w-3/4 rounded bg-slate-700" />
+                <div className="h-3 w-1/2 rounded bg-slate-700" />
               </div>
-              <div className="mt-3 h-3 w-3/4 rounded bg-slate-700" />
             </div>
           ))}
         </div>
-      ) : tree.length === 0 ? (
+      ) : roots.length === 0 ? (
         <div className="rounded-xl border border-white/5 bg-slate-900/30 p-8 text-center text-slate-500">
           Комментариев пока нет. Будьте первым!
         </div>
       ) : (
-        <ul className="space-y-3">
-          {tree.map((c) => (
-            <CommentItem
-              key={c.id}
-              comment={c}
-              currentUserId={currentUserId}
-              deletingId={deletingId}
-              replyingTo={replyingTo}
-              replyText={replyText}
-              replySending={replySending}
-              depth={0}
-              onDelete={handleDelete}
-              onReplyClick={handleReplyClick}
-              onReplyTextChange={setReplyText}
-              onReplySubmit={handleReplySubmit}
-              onReplyCancel={() => { setReplyingTo(null); setReplyText('') }}
-              onLike={handleLike}
-            />
-          ))}
+        <ul className="space-y-6">
+          {roots.map((root) => {
+            const replies = getDescendants(flat, root.id)
+            const expanded = expandedIds.has(root.id)
+            return (
+              <li key={root.id}>
+                <RootCommentRow
+                  comment={root}
+                  replies={replies}
+                  expanded={expanded}
+                  onToggle={() => toggleExpanded(root.id)}
+                  {...rowProps}
+                />
+                {expanded && replies.length > 0 && (
+                  <ul className="mt-4 space-y-5">
+                    {replies.map((reply) => (
+                      <li key={reply.id}>
+                        <ReplyRow comment={reply} {...rowProps} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>
