@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell } from 'lucide-react'
+import { Bell, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Notification = {
@@ -86,6 +86,31 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .eq('receiver_id', userId)
       .eq('is_read', true)
     setNotifications((prev) => prev.filter((n) => !n.is_read))
+  }
+
+  // Очищаем все уведомления
+  async function clearAll() {
+    // Оптимистичное обновление — очищаем мгновенно
+    setNotifications([])
+    setHasUnread(false)
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('receiver_id', userId)
+  }
+
+  // Удаляем одно уведомление по id
+  async function deleteOne(id: string) {
+    // Оптимистичное обновление — убираем из списка мгновенно
+    setNotifications((prev) => {
+      const next = prev.filter((n) => n.id !== id)
+      setHasUnread(next.some((n) => !n.is_read))
+      return next
+    })
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id)
   }
 
   // Проверка непрочитанных при монтировании
@@ -172,6 +197,14 @@ export default function NotificationBell({ userId }: { userId: string }) {
         <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-white/10 bg-slate-900 shadow-2xl">
           <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
             <span className="text-sm font-semibold text-slate-200">Уведомления</span>
+            {notifications.length > 0 && (
+              <button
+                onClick={clearAll}
+                className="text-xs text-slate-500 transition-colors hover:text-red-400"
+              >
+                Очистить всё
+              </button>
+            )}
           </div>
 
           {notifications.length === 0 ? (
@@ -180,12 +213,20 @@ export default function NotificationBell({ userId }: { userId: string }) {
             <>
               <ul className="max-h-96 divide-y divide-white/5 overflow-y-auto">
                 {notifications.map((n) => (
-                  <li key={n.id}>
+                  <li key={n.id} className="group relative">
+                    {/* Кнопка удаления одного уведомления */}
+                    <button
+                      onClick={() => deleteOne(n.id)}
+                      title="Удалить"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 z-10"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                     {n.actor ? (
                       <Link
                         href={n.card_id ? `/card/${n.card_id}` : `/profile/${n.actor.id}`}
                         onClick={() => setOpen(false)}
-                        className={`flex flex-col gap-0.5 px-4 py-3 text-sm transition-colors hover:bg-white/5 ${
+                        className={`flex flex-col gap-0.5 px-4 py-3 pr-8 text-sm transition-colors hover:bg-white/5 ${
                           !n.is_read ? 'bg-blue-500/5' : ''
                         }`}
                       >
@@ -195,7 +236,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
                         <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
                       </Link>
                     ) : (
-                      <div className={`flex flex-col gap-0.5 px-4 py-3 text-sm ${!n.is_read ? 'bg-blue-500/5' : ''}`}>
+                      <div className={`flex flex-col gap-0.5 px-4 py-3 pr-8 text-sm ${!n.is_read ? 'bg-blue-500/5' : ''}`}>
                         <span className="text-slate-400">{formatNotification(n)}</span>
                         <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
                       </div>
