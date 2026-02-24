@@ -53,6 +53,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .limit(20)
 
     if (data) {
+      console.log('Список уведомлений в UI:', data)
       setNotifications(data as unknown as Notification[])
       setHasUnread(data.some((n: any) => !n.is_read))
     }
