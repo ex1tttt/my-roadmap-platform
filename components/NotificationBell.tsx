@@ -47,7 +47,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
   async function fetchNotifications() {
     const { data, error } = await supabase
       .from('notifications')
-      .select('id, type, is_read, created_at, card_id')
+      .select('id, type, is_read, created_at, card_id, actor_id')
       .eq('receiver_id', userId)
       .order('created_at', { ascending: false })
       .limit(20)
