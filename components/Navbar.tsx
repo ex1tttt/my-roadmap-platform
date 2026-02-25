@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import ThemeToggle from '@/components/ThemeToggle'
 import { useTranslation } from 'react-i18next'
@@ -101,6 +101,15 @@ export default function Navbar() {
             <>
               {/* Колокольчик уведомлений */}
               <NotificationBell userId={session.user.id} />
+
+              {/* Лента */}
+              <Link
+                href="/feed"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                <Rss className="w-4 h-4" />
+                {t('nav.feed')}
+              </Link>
 
               {/* Кнопка Создать */}
               <Link

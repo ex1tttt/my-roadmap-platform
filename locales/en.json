@@ -14,7 +14,8 @@
     "lightTheme": "Light Theme",
     "systemTheme": "System Theme",
     "subscriptions": "Subscriptions",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "feed": "Feed"
   },
   "profile": {
     "title": "Profile",
@@ -352,5 +353,16 @@
     "copied": "Copied!",
     "copyLink": "Copy link:",
     "linkCopied": "Link copied!"
+  },
+  "feed": {
+    "title": "My Feed",
+    "subtitle": "Latest roadmaps from authors you follow",
+    "emptyTitle": "Your feed is empty",
+    "emptyHint": "Subscribe to interesting authors and their new roadmaps will appear here.",
+    "discoverAuthors": "Discover authors",
+    "count": "{{count}} roadmaps in your feed",
+    "suggestedTitle": "Recommended authors",
+    "followers": "{{count}} followers",
+    "noSuggested": "No recommended authors at the moment."
   }
 }

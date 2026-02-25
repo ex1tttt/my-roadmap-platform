@@ -14,7 +14,8 @@
     "lightTheme": "Jasny motyw",
     "systemTheme": "Motyw systemowy",
     "subscriptions": "Obserwowani",
-    "backToHome": "Stróna główna"
+    "backToHome": "Stróna główna",
+    "feed": "Feed"
   },
   "profile": {
     "title": "Profil",
@@ -354,5 +355,16 @@
     "copied": "Skopiowano!",
     "copyLink": "Skopiuj link:",
     "linkCopied": "Link skopiowany!"
+  },
+  "feed": {
+    "title": "Mój feed",
+    "subtitle": "Najnowsze roadmapy od autorów, których obserwujesz",
+    "emptyTitle": "Twój feed jest pusty",
+    "emptyHint": "Zasubskrybuj interesujących autorów — ich nowe roadmapy pojawią się tutaj.",
+    "discoverAuthors": "Znajdź autorów",
+    "count": "{{count}} roadmap w feedzie",
+    "suggestedTitle": "Polecani autorzy",
+    "followers": "{{count}} obserwujących",
+    "noSuggested": "Brak polecanych autorów w tej chwili."
   }
 }
