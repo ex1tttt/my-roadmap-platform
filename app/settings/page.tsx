@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { saveLanguage, type SupportedLanguage } from "@/lib/i18n";
 
 const INPUT_CLS =
   "box-border w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
@@ -19,11 +21,20 @@ type Profile = {
   username: string;
   avatar: string | null;
   bio: string | null;
+  language: string | null;
 };
+
+const LANGUAGE_OPTIONS: { value: SupportedLanguage; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "uk", label: "Ukrainian" },
+  { value: "pl", label: "Polish" },
+  { value: "ru", label: "Russian" },
+];
 
 export default function SettingsPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { i18n } = useTranslation();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState("");
@@ -33,6 +44,7 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [language, setLanguage] = useState<SupportedLanguage>("en");
 
   // Смена почты
   const [newEmail, setNewEmail] = useState("");
@@ -82,11 +94,15 @@ export default function SettingsPage() {
         setUsername(data.username ?? "");
         setBio(data.bio ?? "");
         setAvatarUrl(data.avatar ?? null);
+        const lang = (data.language ?? "en") as SupportedLanguage;
+        setLanguage(lang);
+        i18n.changeLanguage(lang);
+        saveLanguage(lang);
       } else {
         // Профиль ещё не создан — создаём с дефолтными значениями
         const { data: newProfile, error: upsertError } = await supabase
           .from("profiles")
-          .upsert({ id: user.id, username: user.email?.split("@")[0] ?? "user", avatar: null })
+          .upsert({ id: user.id, username: user.email?.split("@")[0] ?? "user", avatar: null, language: "en" })
           .select()
           .single();
 
@@ -97,6 +113,7 @@ export default function SettingsPage() {
           setUsername(newProfile.username ?? "");
           setBio(newProfile.bio ?? "");
           setAvatarUrl(newProfile.avatar ?? null);
+          setLanguage("en");
         }
       }
 
@@ -193,7 +210,7 @@ export default function SettingsPage() {
 
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: user.id, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null });
+        .upsert({ id: user.id, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null, language });
 
       if (error) throw error;
 
@@ -422,6 +439,35 @@ export default function SettingsPage() {
                 <span className={bio.length >= 180 ? 'text-amber-400' : ''}>{bio.length}</span>/200
               </p>
             </label>
+
+            {/* ── Язык интерфейса ── */}
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Globe className="h-4 w-4" />
+                Язык интерфейса
+              </div>
+              <div className="relative">
+                <select
+                  value={language}
+                  onChange={(e) => {
+                    const lang = e.target.value as SupportedLanguage;
+                    setLanguage(lang);
+                    i18n.changeLanguage(lang);
+                    saveLanguage(lang);
+                  }}
+                  className={INPUT_CLS + " cursor-pointer appearance-none pr-10"}
+                >
+                  {LANGUAGE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+              <p className="mt-1.5 text-xs text-slate-500">Язык будет сохранён в вашем профиле и применён на всех устройствах.</p>
+            </div>
+
             <div className="mt-4 flex justify-end">
               <button type="submit" disabled={saving || uploading} className={BTN_PRIMARY}>
                 {saving

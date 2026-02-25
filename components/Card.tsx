@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Heart, Bookmark, MessageSquare, Star, Download } from 'lucide-react';
 import ShareButton from './ShareButton';
 import UserAvatar from './UserAvatar';
+import { useTranslation } from 'react-i18next';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -46,6 +47,7 @@ export default function Card({
 }: CardProps) {
   const router = useRouter();
   const cardRef = useRef<HTMLElement>(null);
+  const { t } = useTranslation();
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -208,7 +210,7 @@ export default function Card({
           <button
             onClick={handleLike}
             disabled={!userId || likeLoading}
-            title={userId ? (isLiked ? 'Убрать лайк' : 'Лайк') : 'Войдите, чтобы лайкнуть'}
+            title={userId ? (isLiked ? t('comments.dislike') : t('comments.like')) : t('auth.login')}
             className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
               isLiked ? 'text-red-400' : 'text-slate-400 dark:text-slate-500 hover:text-red-400'
             }`}
@@ -243,7 +245,7 @@ export default function Card({
           <button
             onClick={handleFavorite}
             disabled={!userId || favLoading}
-            title={userId ? (isFavorite ? 'Убрать из избранного' : 'В избранное') : 'Войдите, чтобы добавить в избранное'}
+            title={userId ? (isFavorite ? t('card.removeFromFavorites') : t('card.addToFavorites')) : t('auth.login')}
             className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
               isFavorite ? 'text-amber-400' : 'text-slate-400 dark:text-slate-500 hover:text-amber-400'
             }`}
@@ -259,7 +261,7 @@ export default function Card({
 
           <button
             onClick={handleDownload}
-            title="Скачать как изображение"
+            title={t('card.download')}
             className="flex items-center gap-1 text-xs text-slate-400 transition-all duration-150 hover:scale-110 hover:text-sky-400"
           >
             <Download className="h-3.5 w-3.5" />

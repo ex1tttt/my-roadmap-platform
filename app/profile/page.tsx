@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
 import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
 type Profile = { id: string; username: string; avatar?: string; bio?: string | null }
@@ -28,6 +29,7 @@ type Tab = 'my' | 'liked' | 'favorites'
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [myCards, setMyCards] = useState<CardType[]>([])
   const [likedCards, setLikedCards] = useState<CardType[]>([])
@@ -301,7 +303,7 @@ export default function ProfilePage() {
   }
 
   async function handleDelete(cardId: string) {
-    if (!window.confirm('Вы уверены, что хотите удалить эту карточку?')) return
+    if (!window.confirm(t('card.deleteConfirm'))) return
     const { error } = await supabase.from('cards').delete().eq('id', cardId)
     if (error) {
       alert('Ошибка при удалении: ' + error.message)
@@ -311,9 +313,9 @@ export default function ProfilePage() {
   }
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode; count: number }[] = [
-    { key: 'my', label: 'Мои дорожные карты', icon: <MapIcon className="w-4 h-4" />, count: myCards.length },
-    { key: 'liked', label: 'Понравилось', icon: <Heart className="w-4 h-4" />, count: likedCards.length },
-    { key: 'favorites', label: 'Избранное', icon: <Bookmark className="w-4 h-4" />, count: favoritesCount },
+    { key: 'my', label: t('profile.myCards'), icon: <MapIcon className="w-4 h-4" />, count: myCards.length },
+    { key: 'liked', label: t('profile.liked'), icon: <Heart className="w-4 h-4" />, count: likedCards.length },
+    { key: 'favorites', label: t('nav.favorites'), icon: <Bookmark className="w-4 h-4" />, count: favoritesCount },
   ]
 
   const displayed = tab === 'my' ? myCards : tab === 'liked' ? likedCards : favoriteCards
@@ -321,7 +323,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] flex items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Загрузка...</p>
+        <p className="text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
       </div>
     )
   }
@@ -345,14 +347,14 @@ export default function ProfilePage() {
                 {profile?.username ?? '—'}
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {myCards.length} карт · {likedCards.length} лайков
+                {myCards.length} {t('profile.cards')} · {likedCards.length} {t('profile.liked').toLowerCase()}
                 {' · '}
                 <button
                   type="button"
                   onClick={() => setModalMode('followers')}
                   className="font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-400 transition-colors"
                 >
-                  {followersCount} подписчиков
+                  {followersCount} {t('follow.followers').toLowerCase()}
                 </button>
                 {' · '}
                 <button
@@ -360,13 +362,13 @@ export default function ProfilePage() {
                   onClick={() => setModalMode('following')}
                   className="font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-400 transition-colors"
                 >
-                  {followingCount} подписок
+                  {followingCount} {t('follow.following').toLowerCase()}
                 </button>
               </p>
               {profile?.bio ? (
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 max-w-md">{profile.bio}</p>
               ) : (
-                <p className="mt-2 text-xs text-slate-600 italic">Описание не добавлено</p>
+                <p className="mt-2 text-xs text-slate-600 italic">{t('profile.noBio')}</p>
               )}
             </div>
           </div>
@@ -375,7 +377,7 @@ export default function ProfilePage() {
             className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             <Settings className="h-4 w-4" />
-            Настройки профиля
+            {t('profile.settings')}
           </Link>
         </section>
 
@@ -412,24 +414,24 @@ export default function ProfilePage() {
         {/* Карточки */}
         {tab === 'favorites' && favoritesLoading ? (
           <div className="rounded-lg bg-white p-10 text-center shadow-sm dark:bg-gray-900">
-            <p className="text-gray-500 dark:text-gray-400">Загрузка...</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
           </div>
         ) : displayed.length === 0 ? (
           <div className="rounded-lg bg-white p-10 text-center shadow-sm dark:bg-gray-900">
             {tab === 'my' ? (
               <>
-                <p className="text-gray-500 dark:text-gray-400">У вас пока нет дорожных карт.</p>
+                <p className="text-gray-500 dark:text-gray-400">{t('profile.noCards')}</p>
                 <Link
                   href="/create"
                   className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
                 >
-                  Создать первую
+                  {t('nav.create')}
                 </Link>
               </>
             ) : tab === 'liked' ? (
-              <p className="text-gray-500 dark:text-gray-400">Вы ещё не поставили ни одного лайка.</p>
+              <p className="text-gray-500 dark:text-gray-400">{t('profile.noLikes')}</p>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">В избранном пока ничего нет.</p>
+              <p className="text-gray-500 dark:text-gray-400">{t('favorites.empty')}</p>
             )}
           </div>
         ) : (
@@ -463,14 +465,14 @@ export default function ProfilePage() {
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-colors"
                             >
                               <Pencil className="h-4 w-4" />
-                              Редактировать
+                              {t('card.edit')}
                             </Link>
                             <button
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenMenuId(null); handleDelete(c.id) }}
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
                             >
                               <Trash2 className="h-4 w-4" />
-                              Удалить
+                              {t('card.delete')}
                             </button>
                           </div>
                         )}
