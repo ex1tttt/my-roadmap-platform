@@ -31,10 +31,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6 dark:bg-black">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-md">
-        <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">Войти</h1>
-        <form onSubmit={handleLogin} className="space-y-4 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
+        <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">Войти</h1>
+        <form onSubmit={handleLogin} className="space-y-4 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
           {error && <div className="text-sm text-red-600">{error}</div>}
           <label className="block">
             <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">Email</div>

@@ -138,10 +138,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (error) {
     console.error("Full fetch error:", error);
     return (
-      <div className="min-h-screen bg-zinc-950 py-12 px-6">
+      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
         <main className="mx-auto max-w-4xl">
-          <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-6 space-y-1">
-            <p className="font-semibold text-red-400">Ошибка при загрузке карточки</p>
+          <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-950/40 p-6 space-y-1">
+            <p className="font-semibold text-red-600 dark:text-red-400">Ошибка при загрузке карточки</p>
             <p className="text-sm text-red-300">{error.message}</p>
             {error.details && <p className="text-xs text-red-500">{error.details}</p>}
           </div>
@@ -152,9 +152,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-zinc-950 py-12 px-6">
+      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
         <main className="mx-auto max-w-4xl">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-10 text-center text-slate-400">
+          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-10 text-center text-slate-500 dark:text-slate-400">
             Карточка с таким ID не найдена.
           </div>
         </main>
@@ -190,10 +190,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     initialDoneArr = (progressRows ?? []).map((r: any) => r.step_id as string)
   }
   return (
-    <div className="min-h-screen bg-zinc-950 text-slate-100">
+    <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100">
 
       {/* Hero-секция */}
-      <div className="relative overflow-hidden border-b border-white/10 bg-linear-to-br from-zinc-900 via-zinc-950 to-blue-950/30">
+      <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/10 bg-linear-to-br from-slate-50 via-white to-blue-50/50 dark:from-zinc-900 dark:via-zinc-950 dark:to-blue-950/30">
         {/* Декоративное свечение */}
         <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 right-0 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
@@ -201,7 +201,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <div className="relative mx-auto max-w-5xl px-6 py-14">
           <Link
             href="/"
-            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
+            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-4 w-4" />
             Назад
@@ -215,7 +215,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             )}
 
             <div className="flex items-start justify-between gap-4">
-              <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl">
+              <h1 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white sm:text-5xl">
                 {data.title}
               </h1>
 
@@ -247,7 +247,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             {/* Блок автора */}
             <Link
               href={`/profile/${data.user_id}`}
-              className="group flex w-fit items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-2.5 transition-colors hover:border-blue-500/30 hover:bg-blue-500/5"
+              className="group flex w-fit items-center gap-3 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 px-4 py-2.5 transition-colors hover:border-blue-500/30 hover:bg-blue-500/5"
             >
               {authorAvatar ? (
                 <img
@@ -267,7 +267,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </Link>
 
             {data.description && (
-              <p className="mt-2 max-w-2xl text-base text-slate-400 leading-relaxed">
+              <p className="mt-2 max-w-2xl text-base text-slate-600 dark:text-slate-400 leading-relaxed">
                 {data.description}
               </p>
             )}
@@ -285,7 +285,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
         {/* Timeline шагов */}
         <section>
-          <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-200">
+          <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
             <BookOpen className="h-5 w-5 text-blue-400" />
             Дорожная карта
             <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
@@ -304,8 +304,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         {/* Sidebar: ресурсы */}
         {resources.length > 0 && (
           <aside className="mt-12 lg:mt-0">
-            <div className="sticky top-20 rounded-xl border border-white/10 bg-white/5 p-5">
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-400">
+            <div className="sticky top-20 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 <ExternalLink className="h-4 w-4" />
                 Материалы
               </h2>
@@ -316,7 +316,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                       href={normalizeUrl(r.url!)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between gap-2 rounded-lg border border-white/0 px-3 py-2.5 text-sm text-slate-300 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-300"
+                      className="flex items-center justify-between gap-2 rounded-lg border border-white/0 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-300"
                     >
                       <span className="truncate">{r.label || r.url}</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-500" />
@@ -332,7 +332,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       {/* Разделитель + Комментарии */}
       <ScrollToHash />
       <div id="comments" className="mx-auto max-w-5xl px-6 pb-16">
-        <div className="border-t border-slate-700/60 pt-10">
+        <div className="border-t border-slate-200 dark:border-slate-700/60 pt-10">
           <CommentSection roadmapId={id} />
         </div>
       </div>

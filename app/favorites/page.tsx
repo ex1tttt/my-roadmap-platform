@@ -109,20 +109,20 @@ export default function FavoritesPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#020617]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-6xl">
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Bookmark className="h-5 w-5 text-amber-400 fill-amber-400" />
-              <h1 className="text-2xl font-bold text-white">Избранное</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Избранное</h1>
             </div>
             <p className="text-sm text-slate-400">Сохранённые дорожные карты</p>
           </div>
@@ -136,9 +136,9 @@ export default function FavoritesPage() {
         </header>
 
         {cards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-slate-900/50 px-6 py-20 text-center backdrop-blur-md">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-20 text-center backdrop-blur-md">
             <Bookmark className="mb-4 h-12 w-12 text-slate-600" />
-            <h2 className="text-lg font-medium text-slate-200">
+            <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200">
               У вас пока нет сохранённых дорожных карт
             </h2>
             <p className="mt-2 text-sm text-slate-500">

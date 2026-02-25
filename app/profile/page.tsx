@@ -320,14 +320,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-[#020617] flex items-center justify-center">
         <p className="text-gray-500 dark:text-gray-400">Загрузка...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-7xl">
 
         {/* Шапка профиля */}
@@ -350,7 +350,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setModalMode('followers')}
-                  className="font-semibold text-slate-300 hover:text-blue-400 transition-colors"
+                  className="font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-400 transition-colors"
                 >
                   {followersCount} подписчиков
                 </button>
@@ -358,13 +358,13 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setModalMode('following')}
-                  className="font-semibold text-slate-300 hover:text-blue-400 transition-colors"
+                  className="font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-400 transition-colors"
                 >
                   {followingCount} подписок
                 </button>
               </p>
               {profile?.bio ? (
-                <p className="mt-2 text-sm text-slate-300 max-w-md">{profile.bio}</p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 max-w-md">{profile.bio}</p>
               ) : (
                 <p className="mt-2 text-xs text-slate-600 italic">Описание не добавлено</p>
               )}
@@ -372,7 +372,7 @@ export default function ProfilePage() {
           </div>
           <Link
             href="/settings"
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             <Settings className="h-4 w-4" />
             Настройки профиля
@@ -450,17 +450,17 @@ export default function ProfilePage() {
                       <div ref={openMenuId === c.id ? menuRef : undefined}>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenMenuId(openMenuId === c.id ? null : c.id) }}
-                          className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-white bg-black/40 hover:bg-white/10 backdrop-blur-sm transition-colors"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-slate-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
                           title="Действия"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
                         {openMenuId === c.id && (
-                          <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-white/10 bg-slate-900/95 p-1 shadow-xl backdrop-blur-md">
+                          <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-1 shadow-xl backdrop-blur-md">
                             <Link
                               href={`/card/${c.id}/edit`}
                               onClick={() => setOpenMenuId(null)}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-colors"
                             >
                               <Pencil className="h-4 w-4" />
                               Редактировать

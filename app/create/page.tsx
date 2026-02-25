@@ -155,9 +155,9 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6 dark:bg-black">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-4xl">
-        <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">Создать карточку</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">Создать карточку</h1>
 
         <form onSubmit={handlePublish} className="space-y-6">
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">

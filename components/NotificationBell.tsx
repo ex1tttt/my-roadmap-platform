@@ -219,7 +219,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
       <button
         onClick={handleOpen}
         aria-label="Уведомления"
-        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
       >
         <Bell className="h-4 w-4" />
         {hasUnread && (
@@ -232,9 +232,9 @@ export default function NotificationBell({ userId }: { userId: string }) {
 
       {/* Дропдаун */}
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-white/10 bg-slate-900 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
-            <span className="text-sm font-semibold text-slate-200">Уведомления</span>
+        <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 px-4 py-2.5">
+            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Уведомления</span>
             {notifications.length > 0 && (
               <button
                 onClick={clearAll}
@@ -249,7 +249,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
             <p className="px-4 py-6 text-center text-sm text-slate-500">Нет уведомлений</p>
           ) : (
             <>
-              <ul className="max-h-96 divide-y divide-white/5 overflow-y-auto">
+                <ul className="max-h-96 divide-y divide-slate-100 dark:divide-white/5 overflow-y-auto">
                 {notifications.map((n) => (
                   <li key={n.id} className="group relative">
                     {/* Кнопка удаления одного уведомления */}
@@ -264,28 +264,28 @@ export default function NotificationBell({ userId }: { userId: string }) {
                       <Link
                         href={getNotificationHref(n)}
                         onClick={() => setOpen(false)}
-                        className={`flex items-start gap-3 px-4 py-3 pr-8 text-sm transition-colors hover:bg-white/5 ${
+                        className={`flex items-start gap-3 px-4 py-3 pr-8 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${
                           !n.is_read ? 'bg-blue-500/5' : ''
                         }`}
                       >
-                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5">
+                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5">
                           {getNotificationIcon(n.type)}
                         </span>
                         <span className="flex flex-col gap-0.5">
-                          <span className={!n.is_read ? 'text-slate-200' : 'text-slate-400'}>
+                          <span className={!n.is_read ? 'text-slate-700 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}>
                             {renderNotificationText(n)}
                           </span>
-                          <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-600">{timeAgo(n.created_at)}</span>
                         </span>
                       </Link>
                     ) : (
                       <div className={`flex items-start gap-3 px-4 py-3 pr-8 text-sm ${!n.is_read ? 'bg-blue-500/5' : ''}`}>
-                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5">
+                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5">
                           {getNotificationIcon(n.type)}
                         </span>
                         <span className="flex flex-col gap-0.5">
-                          <span className="text-slate-400">{renderNotificationText(n)}</span>
-                          <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
+                          <span className="text-slate-500 dark:text-slate-400">{renderNotificationText(n)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-600">{timeAgo(n.created_at)}</span>
                         </span>
                       </div>
                     )}
@@ -293,10 +293,10 @@ export default function NotificationBell({ userId }: { userId: string }) {
                 ))}
               </ul>
               {notifications.some((n) => n.is_read) && (
-                <div className="border-t border-white/5 px-4 py-2">
+                <div className="border-t border-slate-100 dark:border-white/5 px-4 py-2">
                   <button
                     onClick={clearRead}
-                    className="w-full rounded-lg px-3 py-1.5 text-xs text-slate-500 transition-colors hover:bg-white/5 hover:text-slate-300"
+                    className="w-full rounded-lg px-3 py-1.5 text-xs text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-slate-300"
                   >
                     Очистить прочитанные
                   </button>

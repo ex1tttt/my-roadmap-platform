@@ -153,7 +153,7 @@ export default function Card({
   return (
     <article
       ref={cardRef}
-      className="group relative w-full h-full flex flex-col min-h-45 rounded-xl border border-white/10 bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-white/20 hover:bg-slate-900/70 cursor-pointer"
+      className="group relative w-full h-full flex flex-col min-h-45 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer"
       onClick={() => router.push(`/card/${card.id}`)}
     >
       {actions && (
@@ -172,7 +172,7 @@ export default function Card({
           />
         </button>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-white">{card.title}</h3>
+          <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h3>
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${card.user.id}`); }}
@@ -183,7 +183,7 @@ export default function Card({
         </div>
       </header>
 
-      <div className="grow min-h-12 line-clamp-2 text-sm text-slate-400">
+      <div className="grow min-h-12 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
         {card.description || '\u00a0'}
       </div>
 
@@ -193,16 +193,16 @@ export default function Card({
           .sort((a, b) => a.order - b.order)
           .map((step) => (
             <li key={step.id} className="flex gap-2">
-              <div className="min-w-5.5 flex-none rounded bg-white/5 px-1 py-0.5 text-center font-medium text-slate-300">
+              <div className="min-w-5.5 flex-none rounded bg-slate-100 dark:bg-white/5 px-1 py-0.5 text-center font-medium text-slate-600 dark:text-slate-300">
                 {step.order}
               </div>
-              <div className="truncate font-medium text-slate-200">{step.title}</div>
+              <div className="truncate font-medium text-slate-700 dark:text-slate-200">{step.title}</div>
             </li>
           ))}
       </ol>
 
       {/* Лайки | Комментарии → Рейтинг | Избранное */}
-      <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2.5">
+      <div className="mt-3 flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-2.5">
         {/* Левая группа: лайки + комментарии */}
         <div className="flex items-center gap-3">
           <button
@@ -210,7 +210,7 @@ export default function Card({
             disabled={!userId || likeLoading}
             title={userId ? (isLiked ? 'Убрать лайк' : 'Лайк') : 'Войдите, чтобы лайкнуть'}
             className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
-              isLiked ? 'text-red-400' : 'text-slate-500 hover:text-red-400'
+              isLiked ? 'text-red-400' : 'text-slate-400 dark:text-slate-500 hover:text-red-400'
             }`}
           >
             <Heart
@@ -224,7 +224,7 @@ export default function Card({
           <Link
             href={`/card/${card.id}#comments`}
             onClick={(e) => e.stopPropagation()}
-            className={`flex items-center gap-1 text-xs transition-colors hover:text-blue-400 ${ initialCommentsCount > 0 ? 'text-slate-400' : 'text-slate-600' }`}
+            className={`flex items-center gap-1 text-xs transition-colors hover:text-blue-400 ${ initialCommentsCount > 0 ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600' }`}
           >
             <MessageSquare className="h-3.5 w-3.5" />
             <span>{initialCommentsCount}</span>
@@ -245,7 +245,7 @@ export default function Card({
             disabled={!userId || favLoading}
             title={userId ? (isFavorite ? 'Убрать из избранного' : 'В избранное') : 'Войдите, чтобы добавить в избранное'}
             className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
-              isFavorite ? 'text-amber-400' : 'text-slate-500 hover:text-amber-400'
+              isFavorite ? 'text-amber-400' : 'text-slate-400 dark:text-slate-500 hover:text-amber-400'
             }`}
           >
             <Bookmark

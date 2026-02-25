@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4: dark mode по классу .dark на <html> (эквивалент darkMode: 'class') */
+@custom-variant dark (&:where(.dark, .dark *));
+
 html {
   scroll-behavior: smooth;
 }
@@ -16,16 +19,16 @@ html {
   --font-mono: var(--font-geist-mono);
 }
 
+/* Отключено: управление темой идёт через класс .dark (next-themes), а не через prefers-color-scheme
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  /* background и color убраны — управляются Tailwind-классами в layout.tsx */
   font-family: Arial, Helvetica, sans-serif;
 }
 

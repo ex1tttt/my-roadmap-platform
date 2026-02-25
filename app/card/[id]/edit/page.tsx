@@ -14,7 +14,7 @@ function uid() {
 }
 
 const INPUT_CLS =
-  "w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
+  "w-full rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
 
 export default function EditPage() {
   const params = useParams();
@@ -177,7 +177,7 @@ export default function EditPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#020617]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
       </div>
     );
@@ -185,11 +185,11 @@ export default function EditPage() {
 
   if (forbidden) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
-        <div className="rounded-xl border border-red-500/30 bg-red-950/40 px-8 py-10 text-center">
-          <p className="text-lg font-semibold text-red-400">Доступ запрещён</p>
-          <p className="mt-1 text-sm text-red-300">Вы не являетесь автором этой карточки.</p>
-          <Link href="/" className="mt-4 inline-block text-sm text-slate-400 hover:text-slate-200 underline">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#020617]">
+        <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-950/40 px-8 py-10 text-center">
+          <p className="text-lg font-semibold text-red-600 dark:text-red-400">Доступ запрещён</p>
+          <p className="mt-1 text-sm text-red-500 dark:text-red-300">Вы не являетесь автором этой карточки.</p>
+          <Link href="/" className="mt-4 inline-block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline">
             На главную
           </Link>
         </div>
@@ -198,24 +198,24 @@ export default function EditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-12 px-6 text-slate-100">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6 text-slate-900 dark:text-slate-100">
       <main className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center gap-3">
           <Link
             href={`/card/${cardId}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             К карточке
           </Link>
-          <h1 className="text-2xl font-semibold text-slate-100">Редактировать карточку</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Редактировать карточку</h1>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-6">
           {/* Основная информация */}
-          <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
+          <section className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-6">
             <label className="block">
-              <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
+              <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
                 <span>Заголовок</span>
                 <span className={`text-xs tabular-nums ${title.length >= 45 ? 'text-red-400' : 'text-slate-500'}`}>
                   {title.length}/50
@@ -225,7 +225,7 @@ export default function EditPage() {
             </label>
 
             <div className="mt-4">
-              <div className="mb-2 text-sm font-medium text-slate-200">Категория</div>
+              <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Категория</div>
               <div className="flex flex-wrap gap-2">
                 {[
                   'Frontend', 'Backend', 'Mobile Development', 'Data Science',
@@ -238,7 +238,7 @@ export default function EditPage() {
                     className={`rounded-full px-3 py-1 text-sm transition-colors ${
                       category === cat
                         ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     {cat}
@@ -264,22 +264,22 @@ export default function EditPage() {
           {/* Шаги */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-200">Шаги</h2>
-              <button type="button" onClick={addStep} className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700">
+              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">Шаги</h2>
+              <button type="button" onClick={addStep} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
                 + Добавить шаг
               </button>
             </div>
 
             <div className="space-y-3">
               {steps.map((s, idx) => (
-                <div key={s.id} className="box-border w-full rounded-lg border border-white/10 bg-slate-900/50 p-4">
+                <div key={s.id} className="box-border w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4">
                   <div className="mb-3 text-xs font-semibold text-slate-500">Шаг {idx + 1}</div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {/* Левая колонка: текстовые поля */}
                     <div className="flex flex-col gap-3">
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-200">Заголовок</div>
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">Заголовок</div>
                         <input
                           className={INPUT_CLS}
                           value={s.title}
@@ -288,7 +288,7 @@ export default function EditPage() {
                         />
                       </label>
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-200">Описание</div>
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">Описание</div>
                         <textarea
                           className={INPUT_CLS}
                           rows={3}
@@ -297,7 +297,7 @@ export default function EditPage() {
                         />
                       </label>
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-200">Ссылка на ресурс</div>
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">Ссылка на ресурс</div>
                         <input
                           className={INPUT_CLS}
                           placeholder="Ссылка на ресурс (YouTube, статья и т.д.)"
@@ -309,7 +309,7 @@ export default function EditPage() {
 
                     {/* Правая колонка: медиа */}
                     <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-slate-200">Медиа (изображение)</div>
+                      <div className="text-sm font-medium text-slate-700 dark:text-slate-200">Медиа (изображение)</div>
                       <input
                         type="file"
                         accept="image/*"
@@ -340,13 +340,13 @@ export default function EditPage() {
           </section>
 
           {/* Ресурсы */}
-          <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
+          <section className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-6">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-200">Полезные ссылки</h2>
+              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">Полезные ссылки</h2>
               <button
                 type="button"
                 onClick={addResource}
-                className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700"
+                className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               >
                 + Добавить ссылку
               </button>
@@ -354,15 +354,15 @@ export default function EditPage() {
 
             <div className="space-y-3">
               {resources.map((r) => (
-                <div key={r.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-900/40 px-3 py-2">
+                <div key={r.id} className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/40 px-3 py-2">
                   <input
-                    className="w-1/3 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="w-1/3 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     placeholder="Название"
                     value={r.label}
                     onChange={(e) => updateResource(r.id, { label: e.target.value })}
                   />
                   <input
-                    className="flex-1 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="flex-1 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     placeholder="https://..."
                     value={r.url}
                     onChange={(e) => updateResource(r.id, { url: e.target.value })}
@@ -383,7 +383,7 @@ export default function EditPage() {
           <div className="flex items-center justify-end gap-3">
             <Link
               href={`/card/${cardId}`}
-              className="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
+              className="rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
             >
               Отмена
             </Link>

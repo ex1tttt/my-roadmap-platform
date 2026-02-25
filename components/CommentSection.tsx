@@ -97,6 +97,7 @@ function pluralReplies(n: number): string {
 type CommentRowProps = {
   comment: Comment
   currentUserId: string | null
+  cardOwnerId: string | null
   deletingId: string | null
   replyingTo: string | null
   replyText: string
@@ -162,7 +163,7 @@ function ActionBar({
         className={`flex items-center gap-1.5 text-xs transition-colors disabled:cursor-default ${
           comment.isLiked
             ? 'text-blue-400'
-            : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-40'
         }`}
       >
         <ThumbsUp size={16} className={comment.isLiked ? 'fill-blue-400' : ''} />
@@ -176,8 +177,8 @@ function ActionBar({
         title={comment.isDisliked ? 'Убрать дизлайк' : 'Не нравится'}
         className={`flex items-center gap-1.5 text-xs transition-colors disabled:cursor-default ${
           comment.isDisliked
-            ? 'text-slate-200'
-            : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+            ? 'text-slate-600 dark:text-slate-200'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-40'
         }`}
       >
         <ThumbsDown size={16} className={comment.isDisliked ? 'fill-slate-200' : ''} />
@@ -188,7 +189,7 @@ function ActionBar({
       {currentUserId && (
         <button
           onClick={() => onReplyClick(comment.id)}
-          className="text-xs font-semibold text-slate-400 transition-colors hover:text-slate-100"
+          className="text-xs font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:text-slate-800 dark:hover:text-slate-100"
         >
           Ответить
         </button>
@@ -214,19 +215,19 @@ function ReplyForm({
   onReplyCancel: () => void
 }) {
   return (
-    <div className="mt-3 rounded-lg border border-blue-500/30 bg-slate-900/60 p-3">
+    <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-50 dark:bg-slate-900/60 p-3">
       <textarea
         autoFocus
         value={replyText}
         onChange={(e) => onReplyTextChange(e.target.value)}
         placeholder="Ваш ответ..."
         rows={2}
-        className="w-full resize-none bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none"
+        className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
       />
-      <div className="mt-2 flex items-center justify-end gap-2 border-t border-white/5 pt-2">
+      <div className="mt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/5 pt-2">
         <button
           onClick={onReplyCancel}
-          className="px-3 py-1 text-xs text-slate-400 transition-colors hover:text-slate-200"
+          className="px-3 py-1 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:text-slate-800 dark:hover:text-slate-200"
         >
           Отмена
         </button>
@@ -270,7 +271,7 @@ function RootCommentRow({
             {comment.author.username}
           </Link>
           <span className="text-xs text-slate-500">{formatDate(comment.created_at)}</span>
-          {comment.user_id === rest.currentUserId && (
+          {(comment.user_id === rest.currentUserId || (rest.currentUserId !== null && rest.currentUserId === rest.cardOwnerId)) && (
             <button
               onClick={() => rest.onDelete(comment.id)}
               disabled={rest.deletingId === comment.id}
@@ -283,7 +284,7 @@ function RootCommentRow({
         </div>
 
         {/* Текст */}
-        <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+          <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           {comment.content}
         </p>
 
@@ -337,13 +338,13 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
         <div className="flex items-center gap-2">
           <Link
             href={`/profile/${comment.user_id}`}
-            className="text-sm font-semibold text-slate-200 underline-offset-2 transition-colors hover:text-blue-400 hover:underline"
+            className="text-sm font-semibold text-slate-700 dark:text-slate-200 underline-offset-2 transition-colors hover:text-blue-500 dark:hover:text-blue-400 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             {comment.author.username}
           </Link>
           <span className="text-xs text-slate-500">{formatDate(comment.created_at)}</span>
-          {comment.user_id === rest.currentUserId && (
+          {(comment.user_id === rest.currentUserId || (rest.currentUserId !== null && rest.currentUserId === rest.cardOwnerId)) && (
             <button
               onClick={() => rest.onDelete(comment.id)}
               disabled={rest.deletingId === comment.id}
@@ -356,7 +357,7 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
         </div>
 
         {/* Текст с @упоминанием */}
-        <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+        <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           {comment.parentAuthorName && (
             <Link
               href={`/profile/${comment.parentAuthorUserId}`}
@@ -403,6 +404,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const [sending, setSending] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [currentUserProfile, setCurrentUserProfile] = useState<{ username: string; avatar?: string } | null>(null)
+  const [cardOwnerId, setCardOwnerId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
@@ -410,6 +412,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
+    // Загружаем автора карточки
+    supabase.from('cards').select('user_id').eq('id', roadmapId).maybeSingle()
+      .then(({ data }) => setCardOwnerId(data?.user_id ?? null))
+
     supabase.auth.getSession().then(async ({ data }) => {
       const userId = data.session?.user?.id ?? null
       setCurrentUserId(userId)
@@ -669,6 +675,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   // Общие пропсы для строк
   const rowProps = {
     currentUserId,
+    cardOwnerId,
     deletingId,
     replyingTo,
     replyText,
@@ -683,7 +690,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
   return (
     <section className="mt-12">
-      <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-200">
+      <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
         <MessageSquare className="h-5 w-5 text-blue-400" />
         Комментарии
         {!loading && (
@@ -695,7 +702,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
       {/* Форма верхнего уровня */}
       <form onSubmit={handleSubmit} className="mb-8">
-        <div className="rounded-xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-sm transition-colors focus-within:border-blue-500/40">
+        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/60 p-4 backdrop-blur-sm transition-colors focus-within:border-blue-500/40">
           <textarea
             ref={textareaRef}
             value={text}
@@ -703,9 +710,9 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             placeholder={currentUserId ? 'Напишите комментарий...' : 'Войдите, чтобы оставить комментарий'}
             disabled={!currentUserId || sending}
             rows={3}
-            className="w-full resize-none bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
-          <div className="mt-3 flex justify-end border-t border-white/5 pt-3">
+          <div className="mt-3 flex justify-end border-t border-slate-200 dark:border-white/5 pt-3">
             <button
               type="submit"
               disabled={!currentUserId || !text.trim() || sending}
@@ -733,7 +740,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
           ))}
         </div>
       ) : roots.length === 0 ? (
-        <div className="rounded-xl border border-white/5 bg-slate-900/30 p-8 text-center text-slate-500">
+        <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/30 p-8 text-center text-slate-500">
           Комментариев пока нет. Будьте первым!
         </div>
       ) : (

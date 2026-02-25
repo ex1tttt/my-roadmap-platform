@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import { Map, Plus, LogIn, UserPlus, LogOut, User } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
@@ -73,12 +74,12 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-black/50 backdrop-blur-md border-b border-white/10">
+    <header className="sticky top-0 z-50 w-full bg-white/70 dark:bg-[#020617]/70 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Логотип */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-white font-bold text-xl hover:text-blue-400 transition-colors"
+          className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xl hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
         >
           <Map className="w-6 h-6 text-blue-400" />
           Roadmaps
@@ -86,6 +87,7 @@ export default function Navbar() {
 
         {/* Правая часть */}
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {session ? (
             <>
               {/* Колокольчик уведомлений */}
@@ -103,7 +105,7 @@ export default function Navbar() {
               {/* Имя пользователя */}
               <Link
                 href="/profile"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
               >
                 <User className="w-4 h-4" />
                 {usernameLoading ? (
@@ -116,7 +118,7 @@ export default function Navbar() {
               {/* Кнопка Выйти */}
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-1.5 text-gray-300 hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 Выйти
@@ -127,7 +129,7 @@ export default function Navbar() {
               {/* Войти */}
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 Войти

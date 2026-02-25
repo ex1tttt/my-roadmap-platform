@@ -2,7 +2,7 @@ import { Skeleton } from './Skeleton'
 
 export function CardSkeleton() {
   return (
-    <div className="flex h-full min-h-45 flex-col rounded-xl border border-white/10 bg-slate-900/50 p-3">
+    <div className="flex h-full min-h-45 flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-3">
       {/* Шапка: аватар + заголовок */}
       <div className="mb-3 flex items-center gap-2">
         <Skeleton className="h-8 w-8 shrink-0 rounded-full" />

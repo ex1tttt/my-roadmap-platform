@@ -105,14 +105,14 @@ export default function ProfileHeader({
 
   return (
     <>
-    <div className="mb-8 flex flex-col gap-6 rounded-2xl border border-white/10 bg-slate-900/50 p-6 sm:flex-row sm:items-start">
+    <div className="mb-8 flex flex-col gap-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-6 sm:flex-row sm:items-start">
       {/* Аватар */}
       <div className="shrink-0">
         {profile.avatar ? (
           <img
             src={profile.avatar}
             alt={profile.username}
-            className="h-20 w-20 rounded-full object-cover ring-2 ring-white/10"
+            className="h-20 w-20 rounded-full object-cover ring-2 ring-slate-200 dark:ring-white/10"
           />
         ) : (
           <UserAvatar username={profile.username} size={80} />
@@ -123,12 +123,12 @@ export default function ProfileHeader({
       <div className="flex flex-1 flex-col gap-2">
         {/* Имя + кнопка действия */}
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-white">{profile.username}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{profile.username}</h1>
 
           {isOwner ? (
             <Link
               href="/settings"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
             >
               <Settings className="h-4 w-4" />
               Настройки
@@ -154,15 +154,15 @@ export default function ProfileHeader({
 
         {/* Био */}
         {profile.bio ? (
-          <p className="text-sm text-slate-400">{profile.bio}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{profile.bio}</p>
         ) : (
-          <p className="text-sm italic text-slate-600">Описание не добавлено</p>
+          <p className="text-sm italic text-slate-400 dark:text-slate-600">Описание не добавлено</p>
         )}
 
         {/* Статистика */}
         <div className="mt-2 flex flex-wrap items-center gap-5 text-sm">
-          <span className="text-slate-400">
-            <span className="font-bold text-white">{cardsCount}</span>{' '}
+          <span className="text-slate-500 dark:text-slate-400">
+            <span className="font-bold text-slate-900 dark:text-white">{cardsCount}</span>{' '}
             {plural(cardsCount, 'карточка', 'карточки', 'карточек')}
           </span>
 
@@ -172,10 +172,10 @@ export default function ProfileHeader({
             className="group flex items-baseline gap-1 transition-colors"
             title="Подписчики"
           >
-            <span className="font-bold text-white group-hover:text-blue-400 transition-colors">
+            <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-400 transition-colors">
               {followersCount}
             </span>
-            <span className="text-slate-400">
+            <span className="text-slate-500 dark:text-slate-400">
               {plural(followersCount, 'подписчик', 'подписчика', 'подписчиков')}
             </span>
           </button>
@@ -186,10 +186,10 @@ export default function ProfileHeader({
             className="group flex items-baseline gap-1 transition-colors"
             title="Подписки"
           >
-            <span className="font-bold text-white group-hover:text-blue-400 transition-colors">
+            <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-400 transition-colors">
               {followingCountState}
             </span>
-            <span className="text-slate-400">подписок</span>
+            <span className="text-slate-500 dark:text-slate-400">подписок</span>
           </button>
         </div>
       </div>

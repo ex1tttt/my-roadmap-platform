@@ -124,9 +124,9 @@ export default async function PublicProfilePage({
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
         <div className="text-center">
-          <p className="text-lg text-slate-400">Пользователь не найден</p>
+          <p className="text-lg text-slate-500 dark:text-slate-400">Пользователь не найден</p>
           <Link href="/" className="mt-4 inline-block text-sm text-blue-400 hover:underline">
             На главную
           </Link>
@@ -136,13 +136,13 @@ export default async function PublicProfilePage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-10 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-10 px-6">
       <main className="mx-auto max-w-5xl">
 
         {/* Назад */}
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-200"
+          className="mb-8 inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
         >
           <ArrowLeft className="h-4 w-4" />
           На главную
@@ -161,13 +161,13 @@ export default async function PublicProfilePage({
 
         {/* Карточки */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-slate-200">
+          <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">
             {isOwner ? "Мои карточки" : `Карточки пользователя`}
           </h2>
 
           {!cards || cards.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-slate-900/50 p-8 text-center">
-              <p className="text-slate-400">
+            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-8 text-center">
+              <p className="text-slate-600 dark:text-slate-400">
                 {isOwner ? "У вас пока нет карточек" : "Пользователь ещё не создал карточек"}
               </p>
               {isOwner && (

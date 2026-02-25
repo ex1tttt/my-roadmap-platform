@@ -104,11 +104,11 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
       {/* Прогресс-бар */}
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="font-medium text-slate-300">
+          <span className="font-medium text-slate-700 dark:text-slate-300">
             {userId ? 'Ваш прогресс' : 'Шаги дорожной карты'}
           </span>
           {userId && (
-            <span className="tabular-nums text-slate-400">
+            <span className="tabular-nums text-slate-500 dark:text-slate-400">
               {completedCount} / {total}
               <span className="ml-1.5 font-semibold text-blue-400">{percent}%</span>
             </span>
@@ -116,7 +116,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
         </div>
 
         {userId && (
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
             <div
               className="h-full rounded-full bg-linear-to-r from-blue-500 to-indigo-500 transition-all duration-500"
               style={{ width: `${percent}%` }}
@@ -138,7 +138,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
             <li key={s.id} className="relative">
               {/* Кружок на линии */}
               <div
-                className={`absolute -left-8 flex h-7 w-7 items-center justify-center rounded-full border-2 bg-zinc-950 text-xs font-bold shadow-md transition-all duration-300 ${
+                className={`absolute -left-8 flex h-7 w-7 items-center justify-center rounded-full border-2 bg-white dark:bg-zinc-950 text-xs font-bold shadow-md transition-all duration-300 ${
                   isDone
                     ? 'border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.4)]'
                     : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.4)]'
@@ -151,8 +151,8 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
               <div
                 className={`rounded-xl border p-6 transition-all duration-300 ${
                   isDone
-                    ? 'border-emerald-500/30 bg-emerald-950/20'
-                    : 'border-white/10 bg-white/5 hover:border-blue-500/50 hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(59,130,246,0.08)]'
+                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20'
+                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(59,130,246,0.08)]'
                 }`}
               >
                 {/* Заголовок + чекбокс */}
@@ -166,12 +166,12 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
                   <span className={`mt-0.5 shrink-0 transition-colors ${isLoading ? 'opacity-40' : ''}`}>
                     {isDone
                       ? <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                      : <Circle className={`h-5 w-5 ${userId ? 'text-slate-600 hover:text-slate-400' : 'text-slate-700'}`} />
+                      : <Circle className={`h-5 w-5 ${userId ? 'text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400' : 'text-slate-500 dark:text-slate-700'}`} />
                     }
                   </span>
                   <h3
                     className={`text-base font-semibold transition-all duration-200 ${
-                      isDone ? 'text-slate-500 line-through decoration-emerald-600/60' : 'text-slate-100'
+                      isDone ? 'text-slate-400 dark:text-slate-500 line-through decoration-emerald-600/60' : 'text-slate-800 dark:text-slate-100'
                     }`}
                   >
                     {s.title}
@@ -181,7 +181,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
                 {/* Описание */}
                 {s.content && (
                   <p className={`mt-2 pl-8 text-sm leading-relaxed transition-colors duration-200 ${
-                    isDone ? 'text-slate-600' : 'text-slate-400'
+                    isDone ? 'text-slate-400 dark:text-slate-600' : 'text-slate-600 dark:text-slate-400'
                   }`}>
                     {s.content}
                   </p>

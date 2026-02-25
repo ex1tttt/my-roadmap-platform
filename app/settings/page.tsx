@@ -9,8 +9,8 @@ import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loade
 import { toast } from "sonner";
 
 const INPUT_CLS =
-  "box-border w-full rounded-lg border border-slate-800 bg-zinc-900 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
-const CARD_CLS = "rounded-xl border border-slate-800 bg-slate-900/50 p-6";
+  "box-border w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
+const CARD_CLS = "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6";
 const BTN_PRIMARY =
   "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -306,16 +306,16 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-slate-100">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
       {/* Шапка */}
-      <div className="border-b border-slate-800 bg-zinc-900">
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
           <Link
             href="/"
@@ -336,7 +336,7 @@ export default function SettingsPage() {
 
       {/* Контент */}
       <main className="mx-auto max-w-2xl space-y-6 px-6 py-12">
-        <h1 className="text-2xl font-bold text-white">Настройки профиля</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Настройки профиля</h1>
 
         {/* ── Аватар ── */}
         <div className={CARD_CLS}>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
                 type="button"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-white/5 px-4 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/5 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {uploading
                   ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -382,7 +382,7 @@ export default function SettingsPage() {
           <div className={CARD_CLS}>
             <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">Данные</h2>
             <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-300">Имя пользователя</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Имя пользователя</div>
               <input
                 type="text"
                 value={username}
@@ -394,29 +394,29 @@ export default function SettingsPage() {
             </label>
 
             <label className="mt-4 block">
-              <div className="mb-1.5 text-sm font-medium text-slate-300">Электронная почта</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Электронная почта</div>
               {loading ? (
-                <div className="h-10 animate-pulse rounded-lg bg-slate-800/60" />
+                <div className="h-10 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800/60" />
               ) : (
                 <input
                   type="email"
                   value={userEmail}
                   readOnly
-                  className="box-border w-full cursor-not-allowed rounded-lg border border-slate-800 bg-slate-800/50 px-4 py-2.5 text-sm text-slate-400 outline-none"
+                  className="box-border w-full cursor-not-allowed rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 outline-none"
                 />
               )}
               <p className="mt-1.5 text-xs text-slate-600">Чтобы изменить почту, используйте раздел «Изменить почту» ниже.</p>
             </label>
 
             <label className="mt-4 block">
-              <div className="mb-1.5 text-sm font-medium text-slate-300">О себе</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">О себе</div>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={200}
                 rows={3}
                 placeholder="Напишите немного о себе..."
-                className="box-border w-full resize-none rounded-lg border border-slate-800 bg-zinc-900 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="box-border w-full resize-none rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
               <p className="mt-1 text-right text-xs text-slate-600">
                 <span className={bio.length >= 180 ? 'text-amber-400' : ''}>{bio.length}</span>/200
@@ -441,7 +441,7 @@ export default function SettingsPage() {
               Изменить почту
             </h2>
             <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-300">Новый Email</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Новый Email</div>
               <input
                 type="email"
                 value={newEmail}
@@ -472,7 +472,7 @@ export default function SettingsPage() {
             <div className="space-y-3">
               {/* Текущий пароль */}
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-300">Текущий пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Текущий пароль</div>
                 <div className="relative">
                   <input
                     type={showCurrent ? "text" : "password"}
@@ -494,7 +494,7 @@ export default function SettingsPage() {
 
               {/* Новый пароль */}
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-300">Новый пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Новый пароль</div>
                 <div className="relative">
                   <input
                     type={showNew ? "text" : "password"}
@@ -516,7 +516,7 @@ export default function SettingsPage() {
 
               {/* Подтвердите новый пароль */}
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-300">Подтвердите новый пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Подтвердите новый пароль</div>
                 <div className="relative">
                   <input
                     type={showConfirm ? "text" : "password"}
@@ -524,10 +524,10 @@ export default function SettingsPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    className={`box-border w-full rounded-lg border bg-zinc-900 px-4 py-2.5 pr-10 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 ${
+                    className={`box-border w-full rounded-lg border bg-white dark:bg-zinc-900 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 ${
                       confirmPassword && newPassword !== confirmPassword
                         ? "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/20"
-                        : "border-slate-800 focus:border-blue-500/60 focus:ring-blue-500/20"
+                        : "border-slate-200 dark:border-slate-800 focus:border-blue-500/60 focus:ring-blue-500/20"
                     }`}
                   />
                   <button
@@ -574,7 +574,7 @@ export default function SettingsPage() {
 
             <div className="space-y-3">
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-300">Ваша почта</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Ваша почта</div>
                 <input
                   type="email"
                   value={deleteEmail}
@@ -585,7 +585,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-300">Ваш пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Ваш пароль</div>
                 <div className="relative">
                   <input
                     type={showDeletePassword ? "text" : "password"}

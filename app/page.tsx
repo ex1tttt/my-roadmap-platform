@@ -205,11 +205,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-6xl">
         <header className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Roadmaps</h1>
-          <p className="text-sm text-slate-400">Карточки достижений от пользователей</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Roadmaps</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Карточки достижений от пользователей</p>
         </header>
 
         {/* Поиск + Фильтр + Сортировка */}
@@ -221,20 +221,20 @@ export default function Home() {
               placeholder="Поиск по названию..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           {/* Переключатель сортировки */}
-          <div className="flex shrink-0 items-center rounded-lg border border-slate-700 bg-slate-900/50 p-0.5">
+          <div className="flex shrink-0 items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/50 p-0.5">
             {([['newest', 'Новые'], ['popular', 'Популярные']] as const).map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setSortBy(val)}
                 className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   sortBy === val
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 {label}
@@ -248,8 +248,8 @@ export default function Home() {
               onClick={() => setFilterOpen((o) => !o)}
               className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
                 activeCategory
-                  ? 'border-blue-500/60 bg-blue-600/20 text-blue-300'
-                  : 'border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800'
+                  ? 'border-blue-500/60 bg-blue-600/20 text-blue-600 dark:text-blue-300'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
@@ -257,7 +257,7 @@ export default function Home() {
             </button>
 
             {filterOpen && (
-              <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-700 bg-slate-900 py-1 shadow-xl z-50">
+              <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl z-50">
                 {[
                   { value: '', label: 'Все категории' },
                   { value: 'Frontend', label: 'Frontend' },
@@ -274,7 +274,7 @@ export default function Home() {
                   <button
                     key={cat.value}
                     onClick={() => { setActiveCategory(cat.value); setFilterOpen(false); }}
-                    className="flex w-full items-center justify-between px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-800"
+                    className="flex w-full items-center justify-between px-4 py-2 text-sm text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     {cat.label}
                     {activeCategory === cat.value && (
@@ -296,21 +296,21 @@ export default function Home() {
             </div>
             {/* Пагинация во время загрузки */}
             <div className="mt-8 flex items-center justify-center gap-4">
-              <button disabled className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
+              <button disabled className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-500 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
                 ← Назад
               </button>
-              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-400">
+              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
                 Стр.
                 <input
                   type="number"
                   disabled
                   value={currentPage}
                   readOnly
-                  className="w-12 rounded bg-slate-800 py-1 text-center text-sm text-slate-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none opacity-40 cursor-not-allowed"
+                  className="w-12 rounded bg-slate-200 dark:bg-slate-800 py-1 text-center text-sm text-slate-600 dark:text-slate-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none opacity-40 cursor-not-allowed"
                 />
                 из {Math.ceil(totalCount / PAGE_SIZE) || '…'}
               </span>
-              <button disabled className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
+              <button disabled className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-500 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
                 Вперёд →
               </button>
             </div>
@@ -318,8 +318,8 @@ export default function Home() {
         ) : error ? (
           <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-6 text-center text-red-400">{error}</div>
         ) : cards.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-slate-900/50 p-8 text-center backdrop-blur-md">
-            <h2 className="text-lg font-medium text-slate-200">
+          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-8 text-center backdrop-blur-md">
+            <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200">
               {debouncedQuery || activeCategory ? `Ничего не найдено` : "Пока нет ни одной дорожной карты"}
             </h2>
             {!debouncedQuery && !activeCategory && (
@@ -363,11 +363,11 @@ export default function Home() {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 ← Назад
               </button>
-              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-400">
+              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
                 Стр.
                 <input
                   type="number"
@@ -380,14 +380,14 @@ export default function Home() {
                   }}
                   onKeyDown={handleInputKeyDown}
                   onBlur={() => setInputValue(String(currentPage))}
-                  className="w-12 rounded bg-slate-800 py-1 text-center text-sm text-slate-300 outline-none ring-1 ring-transparent focus:ring-indigo-500 transition-shadow [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-12 rounded bg-slate-100 dark:bg-slate-800 py-1 text-center text-sm text-slate-700 dark:text-slate-300 outline-none ring-1 ring-transparent focus:ring-indigo-500 transition-shadow [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 из {Math.ceil(totalCount / PAGE_SIZE)}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage * 16 >= totalCount}
-                className="rounded-lg border border-slate-700 bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Вперёд →
               </button>
