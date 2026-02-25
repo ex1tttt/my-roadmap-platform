@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell, X } from 'lucide-react'
+import { Bell, X, UserPlus, Heart, MessageSquare, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Notification = {
@@ -18,15 +18,40 @@ type Notification = {
   card_title: string | null
 }
 
-function formatNotification(n: Notification): string {
-  const actor = n.actor?.username ?? 'Кто-то'
+function renderNotificationText(n: Notification): React.ReactNode {
+  const actor = <span className="font-medium">{n.actor?.username ?? 'Кто-то'}</span>
+  const cardTitle = n.card_title
+    ? <> вашей карточке &laquo;<span className="font-bold text-slate-100">{n.card_title}</span>&raquo;</>
+    : <> вашей карточке</>
+
   switch (n.type) {
-    case 'follow':        return `${actor} подписался на вас`
-    case 'like':          return `${actor} лайкнул вашу карту «${n.card_title ?? ''}»`
-    case 'comment':       return `${actor} прокомментировал вашу карту «${n.card_title ?? ''}»`
-    case 'comment_like':  return `${actor} лайкнул ваш комментарий`
-    default:              return `${actor} совершил действие`
+    case 'follow':
+      return <>{actor} подписался на вас</>
+    case 'like':
+      return <>{actor} поставил лайк{cardTitle}</>
+    case 'comment':
+      return <>{actor} прокомментировал{cardTitle}</>
+    case 'comment_like':
+      return <>{actor} лайкнул ваш комментарий</>
+    default:
+      return <>{actor} совершил действие</>
   }
+}
+
+function getNotificationIcon(type: string) {
+  switch (type) {
+    case 'follow':       return <UserPlus className="h-3.5 w-3.5 text-blue-400" />
+    case 'like':         return <Heart className="h-3.5 w-3.5 text-rose-400" />
+    case 'comment':      return <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
+    case 'comment_like': return <Heart className="h-3.5 w-3.5 text-orange-400" />
+    default:             return <Zap className="h-3.5 w-3.5 text-slate-400" />
+  }
+}
+
+function getNotificationHref(n: Notification): string {
+  if (n.type === 'follow') return `/profile/${n.actor?.id ?? ''}`
+  if (n.card_id) return `/card/${n.card_id}`
+  return `/profile/${n.actor?.id ?? ''}`
 }
 
 function timeAgo(iso: string): string {
@@ -52,15 +77,27 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .order('created_at', { ascending: false })
       .limit(20)
 
-    console.log('fetchNotifications result:', { data, error })
-
     if (data) {
-      console.log('Список уведомлений в UI:', data)
-      // actor и card_title пока null — добавим JOIN вторым шагом
+      // Подгружаем профили актёров
+      const actorIds = [...new Set(data.map((n: any) => n.actor_id).filter(Boolean))] as string[]
+      const cardIds  = [...new Set(data.map((n: any) => n.card_id).filter(Boolean))]  as string[]
+
+      const [actorsRes, cardsRes] = await Promise.all([
+        actorIds.length > 0
+          ? supabase.from('profiles').select('id, username').in('id', actorIds)
+          : Promise.resolve({ data: [] as any[] }),
+        cardIds.length > 0
+          ? supabase.from('cards').select('id, title').in('id', cardIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ])
+
+      const actorMap = new Map((actorsRes.data ?? []).map((a: any) => [a.id, a]))
+      const cardMap  = new Map((cardsRes.data  ?? []).map((c: any) => [c.id, c.title]))
+
       const mapped = data.map((n: any) => ({
         ...n,
-        actor: null,
-        card_title: null,
+        actor:      actorMap.get(n.actor_id) ?? null,
+        card_title: cardMap.get(n.card_id)   ?? null,
       }))
       setNotifications(mapped as Notification[])
       setHasUnread(data.some((n: any) => !n.is_read))
@@ -225,21 +262,31 @@ export default function NotificationBell({ userId }: { userId: string }) {
                     </button>
                     {n.actor ? (
                       <Link
-                        href={n.card_id ? `/card/${n.card_id}` : `/profile/${n.actor.id}`}
+                        href={getNotificationHref(n)}
                         onClick={() => setOpen(false)}
-                        className={`flex flex-col gap-0.5 px-4 py-3 pr-8 text-sm transition-colors hover:bg-white/5 ${
+                        className={`flex items-start gap-3 px-4 py-3 pr-8 text-sm transition-colors hover:bg-white/5 ${
                           !n.is_read ? 'bg-blue-500/5' : ''
                         }`}
                       >
-                        <span className={!n.is_read ? 'text-slate-200' : 'text-slate-400'}>
-                          {formatNotification(n)}
+                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5">
+                          {getNotificationIcon(n.type)}
                         </span>
-                        <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
+                        <span className="flex flex-col gap-0.5">
+                          <span className={!n.is_read ? 'text-slate-200' : 'text-slate-400'}>
+                            {renderNotificationText(n)}
+                          </span>
+                          <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
+                        </span>
                       </Link>
                     ) : (
-                      <div className={`flex flex-col gap-0.5 px-4 py-3 pr-8 text-sm ${!n.is_read ? 'bg-blue-500/5' : ''}`}>
-                        <span className="text-slate-400">{formatNotification(n)}</span>
-                        <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
+                      <div className={`flex items-start gap-3 px-4 py-3 pr-8 text-sm ${!n.is_read ? 'bg-blue-500/5' : ''}`}>
+                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5">
+                          {getNotificationIcon(n.type)}
+                        </span>
+                        <span className="flex flex-col gap-0.5">
+                          <span className="text-slate-400">{renderNotificationText(n)}</span>
+                          <span className="text-xs text-slate-600">{timeAgo(n.created_at)}</span>
+                        </span>
                       </div>
                     )}
                   </li>

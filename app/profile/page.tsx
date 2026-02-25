@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/Card'
+import FollowListModal from '@/components/FollowListModal'
 import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil } from 'lucide-react'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
@@ -39,6 +40,7 @@ export default function ProfilePage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
+  const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Закрываем меню при клике вне его
@@ -345,9 +347,21 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {myCards.length} карт · {likedCards.length} лайков
                 {' · '}
-                <span className="font-semibold text-slate-300">{followersCount}</span> подписчиков
+                <button
+                  type="button"
+                  onClick={() => setModalMode('followers')}
+                  className="font-semibold text-slate-300 hover:text-blue-400 transition-colors"
+                >
+                  {followersCount} подписчиков
+                </button>
                 {' · '}
-                <span className="font-semibold text-slate-300">{followingCount}</span> подписок
+                <button
+                  type="button"
+                  onClick={() => setModalMode('following')}
+                  className="font-semibold text-slate-300 hover:text-blue-400 transition-colors"
+                >
+                  {followingCount} подписок
+                </button>
               </p>
               {profile?.bio ? (
                 <p className="mt-2 text-sm text-slate-300 max-w-md">{profile.bio}</p>
@@ -468,6 +482,19 @@ export default function ProfilePage() {
           </div>
         )}
       </main>
+
+      {/* Модалка подписчиков / подписок */}
+      {modalMode && profile && (
+        <FollowListModal
+          mode={modalMode}
+          profileId={profile.id}
+          currentUserId={profile.id}
+          canUnfollow={true}
+          isOpen={true}
+          onClose={() => setModalMode(null)}
+          onUnfollow={() => setFollowingCount((n) => Math.max(0, n - 1))}
+        />
+      )}
     </div>
   )
 }

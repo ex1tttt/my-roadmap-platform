@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Settings } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
+import FollowListModal from '@/components/FollowListModal'
 
 interface Props {
   profile: {
@@ -41,8 +42,10 @@ export default function ProfileHeader({
 }: Props) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
+  const [followingCountState, setFollowingCountState] = useState(followingCount)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
   const router = useRouter()
 
   async function handleFollow() {
@@ -101,6 +104,7 @@ export default function ProfileHeader({
   }
 
   return (
+    <>
     <div className="mb-8 flex flex-col gap-6 rounded-2xl border border-white/10 bg-slate-900/50 p-6 sm:flex-row sm:items-start">
       {/* Аватар */}
       <div className="shrink-0">
@@ -164,6 +168,7 @@ export default function ProfileHeader({
 
           <button
             type="button"
+            onClick={() => setModalMode('followers')}
             className="group flex items-baseline gap-1 transition-colors"
             title="Подписчики"
           >
@@ -177,16 +182,35 @@ export default function ProfileHeader({
 
           <button
             type="button"
+            onClick={() => setModalMode('following')}
             className="group flex items-baseline gap-1 transition-colors"
             title="Подписки"
           >
             <span className="font-bold text-white group-hover:text-blue-400 transition-colors">
-              {followingCount}
+              {followingCountState}
             </span>
             <span className="text-slate-400">подписок</span>
           </button>
         </div>
       </div>
     </div>
+
+    {/* Модальное окно подписчиков / подписок */}
+    {modalMode && (
+      <FollowListModal
+        mode={modalMode}
+        profileId={profile.id}
+        currentUserId={currentUserId}
+        canUnfollow={isOwner}
+        isOpen={true}
+        onClose={() => setModalMode(null)}
+        onUnfollow={
+          modalMode === 'following'
+            ? () => setFollowingCountState((n) => Math.max(0, n - 1))
+            : undefined
+        }
+      />
+    )}
+    </>
   )
 }

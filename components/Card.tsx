@@ -260,7 +260,7 @@ export default function Card({
           <button
             onClick={handleDownload}
             title="Скачать как изображение"
-            className="flex items-center gap-1 text-xs text-slate-500 opacity-0 transition-all duration-150 hover:scale-110 hover:text-sky-400 group-hover:opacity-100"
+            className="flex items-center gap-1 text-xs text-slate-400 transition-all duration-150 hover:scale-110 hover:text-sky-400"
           >
             <Download className="h-3.5 w-3.5" />
           </button>

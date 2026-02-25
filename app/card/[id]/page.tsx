@@ -9,8 +9,7 @@ import DeleteButton from "@/components/DeleteButton";
 import CommentSection from "@/components/CommentSection";
 import StarRating from "@/components/StarRating";
 import ScrollToHash from "@/components/ScrollToHash";
-import ShareButton from "@/components/ShareButton";
-
+import ShareButton from "@/components/ShareButton";import StepsProgress from "@/components/StepsProgress"
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -178,7 +177,18 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
   const isOwner = !!currentUser && currentUser.id === data.user_id;
-
+  // Загружаем прогресс текущего пользователя (пустой Set если не залогинен)
+  const stepIds = steps.map((s) => s.id)
+  let initialDoneArr: string[] = []
+  if (currentUser && stepIds.length > 0) {
+    const { data: progressRows } = await supabaseServer
+      .from('user_progress')
+      .select('step_id')
+      .eq('user_id', currentUser.id)
+      .eq('card_id', id)
+      .in('step_id', stepIds)
+    initialDoneArr = (progressRows ?? []).map((r: any) => r.step_id as string)
+  }
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-100">
 
@@ -283,41 +293,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </span>
           </h2>
 
-          <ol className="relative space-y-6 pl-8">
-            {/* Вертикальная линия */}
-            <div className="absolute left-3.5 top-3 bottom-3 w-px bg-linear-to-b from-blue-500/60 via-slate-700 to-slate-800" />
-
-            {steps.map((s, idx) => (
-              <li key={s.id} className="relative">
-                {/* Кружок на линии */}
-                <div className="absolute -left-8 flex h-7 w-7 items-center justify-center rounded-full border-2 border-blue-500 bg-zinc-950 text-xs font-bold text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.4)]">
-                  {s.order ?? idx + 1}
-                </div>
-
-                {/* Карточка шага */}
-                <div className="rounded-xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:border-blue-500/50 hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(59,130,246,0.08)]">
-                  <h3 className="text-base font-semibold text-slate-100">{s.title}</h3>
-                  {s.content && (
-                    <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.content}</p>
-                  )}
-
-                  {s.link && (
-                    <a
-                      href={normalizeUrl(s.link)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400 transition-colors hover:border-blue-400/60 hover:bg-blue-500/20 hover:text-blue-300"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      {s.link}
-                    </a>
-                  )}
-
-                  {renderMedia(s.media_url, s.title)}
-                </div>
-              </li>
-            ))}
-          </ol>
+          <StepsProgress
+            cardId={id}
+            userId={currentUser?.id ?? null}
+            steps={steps}
+            initialDone={initialDoneArr}
+          />
         </section>
 
         {/* Sidebar: ресурсы */}
