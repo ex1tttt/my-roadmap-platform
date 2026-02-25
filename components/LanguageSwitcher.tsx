@@ -17,6 +17,7 @@ interface LanguageSwitcherProps {
 
 export default function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
   const { i18n, t } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -38,6 +39,9 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
     saveLanguage(lang);
     setOpen(false);
   }
+
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
   return (
     <div ref={ref} className="relative">

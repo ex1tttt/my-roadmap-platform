@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 export default function DeleteButton({ cardId }: { cardId: string }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const mounted = useHasMounted();
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
@@ -39,12 +41,12 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
-          {t('delete.deleting')}
+          {mounted ? t('delete.deleting') : 'Deleting...'}
         </>
       ) : (
         <>
           <Trash2 className="h-4 w-4" />
-          {t('delete.label')}
+          {mounted ? t('delete.label') : 'Delete'}
         </>
       )}
     </button>

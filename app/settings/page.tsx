@@ -8,6 +8,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useHasMounted } from "@/hooks/useHasMounted";
 import { saveLanguage, type SupportedLanguage } from "@/lib/i18n";
 
 const INPUT_CLS =
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, i18n } = useTranslation();
+  const mounted = useHasMounted();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState("");
@@ -340,6 +342,8 @@ export default function SettingsPage() {
     router.push("/");
     router.refresh();
   }
+
+  if (!mounted) return <div className="opacity-0" />;
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useHasMounted } from '@/hooks/useHasMounted'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
   const [username, setUsername] = useState('')
   const [usernameLoading, setUsernameLoading] = useState(false)
+  const mounted = useHasMounted()
   const router = useRouter()
   const { t, i18n } = useTranslation()
 
@@ -105,41 +107,45 @@ export default function Navbar() {
               {/* Лента */}
               <Link
                 href="/feed"
+                suppressHydrationWarning
                 className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <Rss className="w-4 h-4" />
-                {t('nav.feed')}
+                {mounted ? t('nav.feed') : ''}
               </Link>
 
               {/* Кнопка Создать */}
               <Link
                 href="/create"
+                suppressHydrationWarning
                 className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                {t('nav.create')}
+                {mounted ? t('nav.create') : ''}
               </Link>
 
               {/* Имя пользователя */}
               <Link
                 href="/profile"
+                suppressHydrationWarning
                 className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <User className="w-4 h-4" />
                 {usernameLoading ? (
                   <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
                 ) : (
-                  username || session.user.email?.split('@')[0] || t('nav.profile')
+                  username || session.user.email?.split('@')[0] || (mounted ? t('nav.profile') : '')
                 )}
               </Link>
 
               {/* Кнопка Выйти */}
               <button
                 onClick={handleSignOut}
+                suppressHydrationWarning
                 className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                {t('nav.logout')}
+                {mounted ? t('nav.logout') : ''}
               </button>
             </>
           ) : (
@@ -147,19 +153,21 @@ export default function Navbar() {
               {/* Войти */}
               <Link
                 href="/login"
+                suppressHydrationWarning
                 className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
-                {t('nav.login')}
+                {mounted ? t('nav.login') : ''}
               </Link>
 
               {/* Регистрация */}
               <Link
                 href="/register"
+                suppressHydrationWarning
                 className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
               >
                 <UserPlus className="w-4 h-4" />
-                {t('nav.register')}
+                {mounted ? t('nav.register') : ''}
               </Link>
             </>
           )}

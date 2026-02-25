@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Card from "@/components/Card";
 import { Bookmark, ArrowLeft } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -25,6 +26,7 @@ type CardType = {
 export default function FavoritesPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const mounted = useHasMounted();
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -108,6 +110,8 @@ export default function FavoritesPage() {
   function handleUnfavorite(cardId: string) {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
   }
+
+  if (!mounted) return <div className="opacity-0" />;
 
   if (loading) {
     return (

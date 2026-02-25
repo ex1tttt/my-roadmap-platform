@@ -8,6 +8,7 @@ import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
 import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useHasMounted } from '@/hooks/useHasMounted'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
 type Profile = { id: string; username: string; avatar?: string; bio?: string | null }
@@ -30,6 +31,7 @@ type Tab = 'my' | 'liked' | 'favorites'
 export default function ProfilePage() {
   const router = useRouter()
   const { t } = useTranslation()
+  const mounted = useHasMounted()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [myCards, setMyCards] = useState<CardType[]>([])
   const [likedCards, setLikedCards] = useState<CardType[]>([])
@@ -319,6 +321,8 @@ export default function ProfilePage() {
   ]
 
   const displayed = tab === 'my' ? myCards : tab === 'liked' ? likedCards : favoriteCards
+
+  if (!mounted) return <div className="opacity-0" />;
 
   if (loading) {
     return (

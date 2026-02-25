@@ -348,7 +348,10 @@
     "loginToRate": "Zaloguj się, aby ocenić",
     "yourRating": "ty: {{value}}",
     "count_one": "ocena",
-    "count_other": "ocen"
+    "count_other": "ocen",
+    "unrate": "Usuń ocenę",
+    "hint": "Oceń tę mapę drogową",
+    "hintUnrate": "Twoja ocena: {{value}}. Kliknij tę samą gwiazdek lub ×, aby usunąć"
   },
   "share": {
     "label": "Udostępnij",

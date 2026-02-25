@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Settings } from 'lucide-react'
@@ -34,6 +34,7 @@ export default function ProfileHeader({
   currentUserId,
 }: Props) {
   const { t } = useTranslation()
+  const [mounted, setMounted] = useState(false)
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
   const [followingCountState, setFollowingCountState] = useState(followingCount)
@@ -41,6 +42,8 @@ export default function ProfileHeader({
   const [hovered, setHovered] = useState(false)
   const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
   const router = useRouter()
+
+  useEffect(() => setMounted(true), [])
 
   async function handleFollow() {
     if (loading) return
@@ -96,6 +99,8 @@ export default function ProfileHeader({
 
     setLoading(false)
   }
+
+  if (!mounted) return null
 
   return (
     <>

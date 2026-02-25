@@ -410,6 +410,9 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const [replySending, setReplySending] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { t, i18n } = useTranslation()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     // Загружаем автора карточки
@@ -687,6 +690,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     onReplyCancel: () => { setReplyingTo(null); setReplyText('') },
     onReaction: handleReaction,
   }
+
+  if (!mounted) return null
 
   return (
     <section className="mt-12">

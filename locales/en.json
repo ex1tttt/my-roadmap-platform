@@ -346,7 +346,10 @@
     "loginToRate": "Log in to rate",
     "yourRating": "you: {{value}}",
     "count_one": "rating",
-    "count_other": "ratings"
+    "count_other": "ratings",
+    "unrate": "Remove rating",
+    "hint": "Rate this roadmap",
+    "hintUnrate": "Your rating: {{value}}. Click same star or × to remove"
   },
   "share": {
     "label": "Share",

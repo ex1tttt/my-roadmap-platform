@@ -55,10 +55,13 @@ function timeAgo(iso: string, t: (key: string, opts?: any) => string): string {
 
 export default function NotificationBell({ userId }: { userId: string }) {
   const { t } = useTranslation()
+  const [mounted, setMounted] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => setMounted(true), [])
 
   // Загружаем последние 20 уведомлений
   async function fetchNotifications() {
@@ -204,6 +207,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
     }
     setOpen((o) => !o)
   }
+
+  if (!mounted) return null
 
   return (
     <div ref={ref} className="relative">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
@@ -48,11 +48,14 @@ export default function Card({
   const router = useRouter();
   const cardRef = useRef<HTMLElement>(null);
   const { t } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [likeLoading, setLikeLoading] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   async function handleLike(e: React.MouseEvent) {
     e.preventDefault();
@@ -151,6 +154,8 @@ export default function Card({
       setFavLoading(false);
     }
   }
+
+  if (!mounted) return null;
 
   return (
     <article

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 
@@ -22,10 +22,13 @@ export default function FollowButton({
   followingCount,
 }: Props) {
   const { t } = useTranslation()
+  const [mounted, setMounted] = useState(false)
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   async function handleFollow() {
     if (!currentUserId || loading) return
@@ -54,6 +57,8 @@ export default function FollowButton({
 
     setLoading(false)
   }
+
+  if (!mounted) return null
 
   // Блок статистики: подписчики + подписки + кнопка
   const stats = (

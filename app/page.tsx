@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Check, Search, SlidersHorizontal } from "lucide-react";
 import { CardSkeleton } from "@/components/ui/CardSkeleton";
 import { useTranslation } from 'react-i18next';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -28,6 +29,7 @@ const PAGE_SIZE = 16;
 
 export default function Home() {
   const { t } = useTranslation();
+  const isClient = useHasMounted();
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,12 +208,14 @@ export default function Home() {
     }
   }
 
+  if (!isClient) return <div className="opacity-0" />;
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-6xl">
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Roadmaps</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('home.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{isClient ? t('home.subtitle') : ''}</p>
         </header>
 
         {/* Поиск + Фильтр + Сортировка */}
@@ -220,7 +224,7 @@ export default function Home() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder={t('home.searchPlaceholder')}
+              placeholder={isClient ? t('home.searchPlaceholder') : 'Search...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none backdrop-blur-md transition-colors focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
@@ -239,7 +243,7 @@ export default function Home() {
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                {t(`common.${val}`)}
+                {isClient ? t(`common.${val}`) : val}
               </button>
             ))}
           </div>
@@ -255,13 +259,13 @@ export default function Home() {
               }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
-              {activeCategory ? `${t('home.filterPrefix')}${activeCategory}` : t('home.filters')}
+              {activeCategory ? `${isClient ? t('home.filterPrefix') : ''}${activeCategory}` : (isClient ? t('home.filters') : 'Filters')}
             </button>
 
             {filterOpen && (
               <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl z-50">
                 {[
-                  { value: '', label: t('home.allCategories') },
+                  { value: '', label: isClient ? t('home.allCategories') : 'All categories' },
                   { value: 'Frontend', label: 'Frontend' },
                   { value: 'Backend', label: 'Backend' },
                   { value: 'Mobile Development', label: 'Mobile Development' },
@@ -299,10 +303,10 @@ export default function Home() {
             {/* Пагинация во время загрузки */}
             <div className="mt-8 flex items-center justify-center gap-4">
               <button disabled className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-500 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
-                {t('home.prevPage')}
+                {isClient ? t('home.prevPage') : 'Previous'}
               </button>
               <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
-                {t('home.pageLabel')}
+                {isClient ? t('home.pageLabel') : 'Page'}
                 <input
                   type="number"
                   disabled
@@ -310,10 +314,10 @@ export default function Home() {
                   readOnly
                   className="w-12 rounded bg-slate-200 dark:bg-slate-800 py-1 text-center text-sm text-slate-600 dark:text-slate-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none opacity-40 cursor-not-allowed"
                 />
-                {t('home.of')} {Math.ceil(totalCount / PAGE_SIZE) || '…'}
+                {isClient ? t('home.of') : 'of'} {Math.ceil(totalCount / PAGE_SIZE) || '…'}
               </span>
               <button disabled className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-500 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40">
-                {t('home.nextPage')}
+                {isClient ? t('home.nextPage') : 'Next'}
               </button>
             </div>
           </section>
@@ -322,10 +326,10 @@ export default function Home() {
         ) : cards.length === 0 ? (
           <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-8 text-center backdrop-blur-md">
             <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200">
-              {debouncedQuery || activeCategory ? t('home.noResults') : t('home.noRoadmaps')}
+              {isClient ? (debouncedQuery || activeCategory ? t('home.noResults') : t('home.noRoadmaps')) : ''}
             </h2>
             {!debouncedQuery && !activeCategory && (
-              <p className="mt-2 text-sm text-slate-400">{t('home.createFirst')}</p>
+              <p className="mt-2 text-sm text-slate-400">{isClient ? t('home.createFirst') : ''}</p>
             )}
           </div>
         ) : (
@@ -367,10 +371,10 @@ export default function Home() {
                 disabled={currentPage === 1}
                 className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {t('home.prevPage')}
+                {isClient ? t('home.prevPage') : 'Previous'}
               </button>
               <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
-                {t('home.pageLabel')}
+                {isClient ? t('home.pageLabel') : 'Page'}
                 <input
                   type="number"
                   min={1}
@@ -384,14 +388,14 @@ export default function Home() {
                   onBlur={() => setInputValue(String(currentPage))}
                   className="w-12 rounded bg-slate-100 dark:bg-slate-800 py-1 text-center text-sm text-slate-700 dark:text-slate-300 outline-none ring-1 ring-transparent focus:ring-indigo-500 transition-shadow [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-                {t('home.of')} {Math.ceil(totalCount / PAGE_SIZE)}
+                {isClient ? t('home.of') : 'of'} {Math.ceil(totalCount / PAGE_SIZE)}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage * 16 >= totalCount}
                 className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {t('home.nextPage')}
+                {isClient ? t('home.nextPage') : 'Next'}
               </button>
             </div>
           </section>

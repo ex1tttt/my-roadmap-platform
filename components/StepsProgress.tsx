@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExternalLink, CheckCircle2, Circle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
@@ -62,8 +62,13 @@ function renderMedia(url: string | undefined, title: string) {
 
 export default function StepsProgress({ cardId, userId, steps, initialDone }: Props) {
   const { t } = useTranslation()
+  const [isMounted, setIsMounted] = useState(false)
   const [done, setDone] = useState<Set<string>>(() => new Set(initialDone))
   const [pending, setPending] = useState<Set<string>>(new Set())
+
+  useEffect(() => setIsMounted(true), [])
+
+  if (!isMounted) return null
 
   const total = steps.length
   const completedCount = steps.filter((s) => done.has(s.id)).length
@@ -107,7 +112,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="font-medium text-slate-700 dark:text-slate-300">
-            {userId ? t('steps.yourProgress') : t('steps.roadmapSteps')}
+            {isMounted ? (userId ? t('steps.yourProgress') : t('steps.roadmapSteps')) : ''}
           </span>
           {userId && (
             <span className="tabular-nums text-slate-500 dark:text-slate-400">

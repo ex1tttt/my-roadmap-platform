@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useHasMounted } from "@/hooks/useHasMounted";
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
 type Resource = { id: string; label: string; url: string };
@@ -23,6 +24,7 @@ export default function EditPage() {
   const cardId = Array.isArray(rawId) ? rawId[0] : (rawId ?? "");
   const router = useRouter();
   const { t } = useTranslation();
+  const hasMounted = useHasMounted();
 
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
@@ -177,6 +179,8 @@ export default function EditPage() {
     }
   }
 
+  if (!hasMounted) return <div className="opacity-0" />;
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#020617]">
@@ -189,10 +193,10 @@ export default function EditPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#020617]">
         <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-950/40 px-8 py-10 text-center">
-          <p className="text-lg font-semibold text-red-600 dark:text-red-400">{t('edit.forbidden')}</p>
-          <p className="mt-1 text-sm text-red-500 dark:text-red-300">{t('edit.forbiddenText')}</p>
+          <p className="text-lg font-semibold text-red-600 dark:text-red-400">{hasMounted ? t('edit.forbidden') : 'Access denied'}</p>
+          <p className="mt-1 text-sm text-red-500 dark:text-red-300">{hasMounted ? t('edit.forbiddenText') : ''}</p>
           <Link href="/" className="mt-4 inline-block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline">
-            {t('edit.backToHome')}
+            {hasMounted ? t('edit.backToHome') : 'Back to home'}
           </Link>
         </div>
       </div>
@@ -208,9 +212,9 @@ export default function EditPage() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t('edit.back')}
+            {hasMounted ? t('edit.back') : 'Back'}
           </Link>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t('edit.title')}</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{hasMounted ? t('edit.title') : 'Edit roadmap'}</h1>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-6">
@@ -218,7 +222,7 @@ export default function EditPage() {
           <section className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-6">
             <label className="block">
               <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-200">
-                <span>{t('edit.heading')}</span>
+                <span>{hasMounted ? t('edit.heading') : 'Title'}</span>
                 <span className={`text-xs tabular-nums ${title.length >= 45 ? 'text-red-400' : 'text-slate-500'}`}>
                   {title.length}/50
                 </span>
@@ -227,7 +231,7 @@ export default function EditPage() {
             </label>
 
             <div className="mt-4">
-              <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">{t('edit.category')}</div>
+              <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.category') : 'Category'}</div>
               <div className="flex flex-wrap gap-2">
                 {[
                   'Frontend', 'Backend', 'Mobile Development', 'Data Science',
@@ -248,12 +252,12 @@ export default function EditPage() {
                 ))}
               </div>
               {!category && (
-                <p className="mt-1.5 text-xs text-slate-500">{t('edit.selectCategory')}</p>
+                <p className="mt-1.5 text-xs text-slate-500">{hasMounted ? t('edit.selectCategory') : ''}</p>
               )}
             </div>
 
             <label className="mt-4 block">
-              <div className="mb-1 text-sm font-medium text-slate-200">{t('edit.description')}</div>
+              <div className="mb-1 text-sm font-medium text-slate-200">{hasMounted ? t('edit.description') : 'Description'}</div>
               <textarea
                 className={INPUT_CLS}
                 rows={4}
@@ -266,22 +270,22 @@ export default function EditPage() {
           {/* Шаги */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{t('edit.steps')}</h2>
+              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{hasMounted ? t('edit.steps') : 'Steps'}</h2>
               <button type="button" onClick={addStep} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                {t('edit.addStep')}
+                {hasMounted ? t('edit.addStep') : 'Add step'}
               </button>
             </div>
 
             <div className="space-y-3">
               {steps.map((s, idx) => (
                 <div key={s.id} className="box-border w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4">
-                  <div className="mb-3 text-xs font-semibold text-slate-500">{t('edit.stepLabel', { n: idx + 1 })}</div>
+                  <div className="mb-3 text-xs font-semibold text-slate-500">{hasMounted ? t('edit.stepLabel', { n: idx + 1 }) : `Step ${idx + 1}`}</div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {/* Левая колонка: текстовые поля */}
                     <div className="flex flex-col gap-3">
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{t('edit.stepTitle')}</div>
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepTitle') : 'Step title'}</div>
                         <input
                           className={INPUT_CLS}
                           value={s.title}
@@ -290,7 +294,7 @@ export default function EditPage() {
                         />
                       </label>
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{t('edit.stepContent')}</div>
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepContent') : 'Content'}</div>
                         <textarea
                           className={INPUT_CLS}
                           rows={3}
@@ -299,10 +303,10 @@ export default function EditPage() {
                         />
                       </label>
                       <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{t('edit.stepLink')}</div>
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepLink') : 'Link'}</div>
                         <input
                           className={INPUT_CLS}
-                          placeholder={t('edit.stepLinkPlaceholder')}
+                          placeholder={hasMounted ? t('edit.stepLinkPlaceholder') : ''}
                           value={s.link ?? ""}
                           onChange={(e) => updateStep(s.id, { link: e.target.value })}
                         />
@@ -311,7 +315,7 @@ export default function EditPage() {
 
                     {/* Правая колонка: медиа */}
                     <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('edit.stepMedia')}</div>
+                      <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepMedia') : 'Media'}</div>
                       <input
                         type="file"
                         accept="image/*"
@@ -322,7 +326,7 @@ export default function EditPage() {
                         }}
                       />
                       {uploadingStepId === s.id && (
-                        <p className="text-xs text-blue-400">{t('create.uploading')}</p>
+                        <p className="text-xs text-blue-400">{hasMounted ? t('create.uploading') : 'Uploading...'}</p>
                       )}
                       {s.media_url && (
                         <img src={s.media_url} alt="media" className="mt-1 h-28 w-full rounded-lg object-cover" />
@@ -332,7 +336,7 @@ export default function EditPage() {
                         className="mt-auto w-fit text-sm text-red-500 hover:text-red-400"
                         onClick={() => removeStep(s.id)}
                       >
-                        {t('edit.deleteStep')}
+                        {hasMounted ? t('edit.deleteStep') : 'Delete'}
                       </button>
                     </div>
                   </div>
@@ -344,13 +348,13 @@ export default function EditPage() {
           {/* Ресурсы */}
           <section className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-6">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{t('edit.usefulLinks')}</h2>
+              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{hasMounted ? t('edit.usefulLinks') : 'Useful links'}</h2>
               <button
                 type="button"
                 onClick={addResource}
                 className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               >
-                {t('edit.addLink')}
+                {hasMounted ? t('edit.addLink') : 'Add link'}
               </button>
             </div>
 
@@ -359,7 +363,7 @@ export default function EditPage() {
                 <div key={r.id} className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/40 px-3 py-2">
                   <input
                     className="w-1/3 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                    placeholder={t('create.labelPlaceholder')}
+                    placeholder={hasMounted ? t('create.labelPlaceholder') : 'Label'}
                     value={r.label}
                     onChange={(e) => updateResource(r.id, { label: e.target.value })}
                   />
@@ -374,7 +378,7 @@ export default function EditPage() {
                     className="shrink-0 rounded-md px-2 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
                     onClick={() => removeResource(r.id)}
                   >
-                    {t('delete.label')}
+                    {hasMounted ? t('delete.label') : 'Delete'}
                   </button>
                 </div>
               ))}
@@ -400,12 +404,12 @@ export default function EditPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                   </svg>
-                  {t('edit.saving')}
+                  {hasMounted ? t('edit.saving') : 'Saving...'}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  {t('edit.save')}
+                  {hasMounted ? t('edit.save') : 'Save'}
                 </>
               )}
             </button>

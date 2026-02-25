@@ -8,6 +8,7 @@ import Card from "@/components/Card";
 import UserAvatar from "@/components/UserAvatar";
 import { CardSkeleton } from "@/components/ui/CardSkeleton";
 import { useTranslation } from "react-i18next";
+import { useHasMounted } from "@/hooks/useHasMounted";
 import { Rss, Users, Check, Loader2 } from "lucide-react";
 
 // ─── Типы ─────────────────────────────────────────────────────────────
@@ -126,6 +127,7 @@ function AuthorCard({
 export default function FeedPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const mounted = useHasMounted();
 
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -331,6 +333,8 @@ export default function FeedPage() {
   function handleFavorite(cardId: string, isFavorite: boolean) {
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, isFavorite } : c)));
   }
+
+  if (!mounted) return <div className="opacity-0" />;
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617]">

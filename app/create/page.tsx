@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
+import { useHasMounted } from "@/hooks/useHasMounted";
 
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
@@ -17,6 +18,7 @@ function uid() {
 export default function CreatePage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const mounted = useHasMounted();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -155,6 +157,8 @@ export default function CreatePage() {
       setSaving(false);
     }
   }
+
+  if (!mounted) return <div className="opacity-0" />;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">

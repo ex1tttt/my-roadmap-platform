@@ -1,19 +1,26 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
+
+import { Star, X } from 'lucide-react'
 
 type Props = {
   roadmapId: string
   initialAverageRate?: number
+  compact?: boolean
 }
 
 // Стабильный clipId передаётся снаружи (uid + индекс звезды)
-function StarIcon({ fill, clipId }: { fill: number; clipId: string }) {
+function StarIcon({ fill, clipId, transitioning }: { fill: number; clipId: string; transitioning?: boolean }) {
   const clipped = Math.min(1, Math.max(0, fill))
   return (
-    <svg width={22} height={22} viewBox="0 0 24 24" style={{ display: 'block', flexShrink: 0 }}>
+    <svg
+      width={22} height={22} viewBox="0 0 24 24"
+      style={{ display: 'block', flexShrink: 0, transition: transitioning ? 'opacity 0.2s' : undefined }}
+    >
       <defs>
         <clipPath id={clipId}>
           <rect x="0" y="0" width={24 * clipped} height="24" />
@@ -23,9 +30,10 @@ function StarIcon({ fill, clipId }: { fill: number; clipId: string }) {
       <path
         d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
         fill="none"
-        stroke="#475569"
+        stroke={clipped === 0 ? '#475569' : '#FBBF24'}
         strokeWidth="1.5"
         strokeLinejoin="round"
+        style={{ transition: 'stroke 0.2s' }}
       />
       {/* Залитая звезда — обрезается по ширине */}
       <path
@@ -40,8 +48,9 @@ function StarIcon({ fill, clipId }: { fill: number; clipId: string }) {
   )
 }
 
-export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props) {
+export default function StarRating({ roadmapId, initialAverageRate = 0, compact = false }: Props) {
   const uid = useId() // стабильный уникальный префикс для clipPath id
+  const router = useRouter()
   const { t } = useTranslation()
 
   const [average, setAverage] = useState(initialAverageRate)
@@ -50,6 +59,10 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
   const [hovered, setHovered] = useState<number | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [unrating, setUnrating] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => setIsMounted(true), [])
 
   // Загружаем пользователя + рейтинги за один проход
   useEffect(() => {
@@ -89,7 +102,14 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
   }, [roadmapId])
 
   async function handleRate(value: number) {
+    console.log('Проверка ID перед отправкой:', roadmapId)
     if (!currentUserId || submitting) return
+
+    // Повторный клик на ту же звезду — отмена оценки
+    if (value === userRating) {
+      handleUnrate()
+      return
+    }
 
     // Оптимистичное обновление
     const prevRating = userRating
@@ -98,15 +118,23 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
     setUserRating(value)
     setSubmitting(true)
 
+    console.log('Данные для отправки:', { roadmapId, userId: currentUserId, rating: value })
+
+    // Диагностика: проверяем доступность таблицы ratings перед записью
+    const { data: testData, error: testError } = await supabase.from('ratings').select('*').limit(1)
+    console.log('Диагностика таблицы ratings:', { testData, testError })
+
     const { error: upsertError } = await supabase
       .from('ratings')
-      .upsert(
-        { user_id: currentUserId, roadmap_id: roadmapId, rate: value },
-        { onConflict: 'roadmap_id,user_id' }
-      )
+      .upsert({ roadmap_id: roadmapId, user_id: currentUserId, rate: Math.round(value) })
 
     if (upsertError) {
-      console.error('StarRating: ошибка сохранения оценки:', upsertError)
+      console.error('StarRating: ошибка сохранения оценки:', {
+        message: upsertError.message,
+        details: upsertError.details,
+        hint: upsertError.hint,
+        code: upsertError.code,
+      })
       // Откатываем
       setUserRating(prevRating)
       setAverage(prevAverage)
@@ -122,7 +150,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
       .eq('roadmap_id', roadmapId)
 
     if (fetchError) {
-      console.error('StarRating: ошибка обновления среднего:', fetchError)
+      console.error('StarRating: ошибка обновления среднего (rate):', fetchError)
     } else if (ratings && ratings.length > 0) {
       const values = ratings.map((r: any) => r.rate as number)
       const avg = values.reduce((a: number, b: number) => a + b, 0) / values.length
@@ -130,67 +158,176 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
       setTotalCount(values.length)
     }
 
+    router.refresh()
     setSubmitting(false)
   }
 
+  async function handleUnrate() {
+    if (!currentUserId || submitting) return
+
+    const prevRating = userRating
+    const prevAverage = average
+    const prevCount = totalCount
+
+    // Оптимистично сбрасываем
+    setUserRating(null)
+    setTotalCount((prev) => Math.max(0, prev - 1))
+    if (totalCount <= 1) {
+      setAverage(0)
+    } else {
+      // Пересчитываем среднее без нашей оценки
+      const newAvg = (average * totalCount - (prevRating ?? 0)) / (totalCount - 1)
+      setAverage(newAvg)
+    }
+    setUnrating(true)
+    setSubmitting(true)
+
+    console.log('Отправка данных (delete):', { roadmapId, userId: currentUserId })
+
+    const { error } = await supabase
+      .from('ratings')
+      .delete()
+      .match({ roadmap_id: roadmapId, user_id: currentUserId })
+
+    if (error) {
+      console.error('Детали ошибки Supabase (delete):', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      })
+      setUserRating(prevRating)
+      setAverage(prevAverage)
+      setTotalCount(prevCount)
+      setSubmitting(false)
+      setUnrating(false)
+      return
+    }
+
+    // Пересчитываем среднее после удаления
+    const { data: ratings, error: fetchError } = await supabase
+      .from('ratings')
+      .select('rate')
+      .eq('roadmap_id', roadmapId)
+
+    if (fetchError) {
+      console.error('StarRating: ошибка обновления среднего:', fetchError)
+    } else if (!ratings || ratings.length === 0) {
+      setAverage(0)
+      setTotalCount(0)
+    } else {
+      const values = ratings.map((r: any) => r.rate as number)
+      const avg = values.reduce((a: number, b: number) => a + b, 0) / values.length
+      setAverage(avg)
+      setTotalCount(values.length)
+    }
+
+    router.refresh()
+    setSubmitting(false)
+    setUnrating(false)
+  }
+
+  // До монтирования — ничего не рендерим, чтобы избежать Hydration mismatch
+  if (!isMounted) return null
+
   // Что рисуем в звёздах: hover → оценка пользователя → среднее
   const displayValue = hovered ?? (userRating !== null ? userRating : average)
+  // Во время удаления оценки кнопки всё ещё недоступны, но остальные элементы показываются
   const isInteractive = !!currentUserId && !submitting
 
   function declCount(n: number) {
     return t('rating.count', { count: n })
   }
 
+  // ── Компактный режим: одна строка «⭐ 4.4 · 12 оценок» ──
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+        <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
+        {totalCount > 0 ? (
+          <>
+            <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
+            <span className="text-slate-400">·</span>
+            <span>{totalCount} {declCount(totalCount)}</span>
+            {userRating !== null && (
+              <span className="text-slate-500">({t('rating.yourRating', { value: userRating })})</span>
+            )}
+          </>
+        ) : (
+          <span>{isMounted ? (currentUserId ? t('rating.beFirst') : t('rating.loginToRate')) : ''}</span>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-start gap-1.5">
-      <div
-        className="flex items-center gap-0.5"
-        onMouseLeave={() => setHovered(null)}
-        role="group"
-        aria-label={t('rating.label', { value: average.toFixed(1) })}
-      >
-        {[1, 2, 3, 4, 5].map((star) => {
-          const fill = hovered !== null
-            ? (star <= hovered ? 1 : 0)
-            : Math.min(1, Math.max(0, displayValue - (star - 1)))
 
-          return (
-            <button
-              key={star}
-              type="button"
-              disabled={!isInteractive}
-              onClick={() => handleRate(star)}
-              onMouseEnter={() => currentUserId && setHovered(star)}
-              className={`rounded p-0.5 transition-transform ${
-                isInteractive
-                  ? 'cursor-pointer hover:scale-110 active:scale-95'
-                  : 'cursor-default opacity-75'
-              }`}
-              aria-label={`${t('rating.label', { value: star })}`}
-            >
-              <StarIcon fill={fill} clipId={`${uid}-star-${star}`} />
-            </button>
-          )
-        })}
+      {/* Строка: звёзды + кнопка × */}
+      <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-0.5"
+          onMouseLeave={() => setHovered(null)}
+          role="group"
+          aria-label={t('rating.label', { value: average.toFixed(1) })}
+        >
+          {[1, 2, 3, 4, 5].map((star) => {
+            const fill = hovered !== null
+              ? (star <= hovered ? 1 : 0)
+              : Math.min(1, Math.max(0, displayValue - (star - 1)))
+
+            return (
+              <button
+                key={star}
+                type="button"
+                disabled={!isInteractive}
+                onClick={() => handleRate(star)}
+                onMouseEnter={() => currentUserId && setHovered(star)}
+                className={`rounded p-0.5 transition-all ${
+                  isInteractive
+                    ? 'cursor-pointer hover:scale-110 active:scale-95'
+                    : 'cursor-default opacity-75'
+                }`}
+                aria-label={`${t('rating.label', { value: star })}`}
+              >
+                <StarIcon fill={fill} clipId={`${uid}-star-${star}`} transitioning={submitting} />
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Кнопка × — в той же строке что и звёзды */}
+        {userRating !== null && isInteractive && (
+          <button
+            type="button"
+            onClick={handleUnrate}
+            title={t('rating.unrate')}
+            className="rounded p-0.5 text-slate-400 transition-colors hover:text-red-500 active:scale-95"
+            aria-label={t('rating.unrate')}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
-      {/* Подпись */}
-      <p className="text-xs text-slate-500">
-        {submitting ? (
-          <span className="animate-pulse">{t('rating.saving')}</span>
-        ) : totalCount > 0 ? (
+      {/* Статистика: среднее + количество (всегда видимо, спиннер во время сохранения) */}
+      <p className="flex items-center gap-1.5 text-xs text-slate-500">
+        {totalCount > 0 ? (
           <>
             <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
             {' · '}
             {totalCount} {declCount(totalCount)}
             {userRating !== null && (
-              <span className="ml-1.5 text-slate-600">({t('rating.yourRating', { value: userRating })})</span>
+              <span className="ml-1 text-slate-400">({t('rating.yourRating', { value: userRating })})</span>
             )}
           </>
-        ) : currentUserId ? (
-          t('rating.beFirst')
         ) : (
-          t('rating.loginToRate')
+          <span>{isMounted ? (currentUserId ? t('rating.beFirst') : t('rating.loginToRate')) : ''}</span>
+        )}
+        {submitting && (
+          <span className={`inline-block h-2.5 w-2.5 rounded-full border-2 border-current border-t-transparent animate-spin ${
+            unrating ? 'text-red-400' : 'text-amber-400'
+          }`} />
         )}
       </p>
     </div>

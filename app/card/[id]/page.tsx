@@ -9,7 +9,9 @@ import DeleteButton from "@/components/DeleteButton";
 import CommentSection from "@/components/CommentSection";
 import StarRating from "@/components/StarRating";
 import ScrollToHash from "@/components/ScrollToHash";
-import ShareButton from "@/components/ShareButton";import StepsProgress from "@/components/StepsProgress"
+import ShareButton from "@/components/ShareButton";
+import StepsProgress from "@/components/StepsProgress";
+import ClientOnly from "@/components/ClientOnly";
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -192,91 +194,88 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100">
 
-      {/* Hero-секция */}
-      <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/10 bg-linear-to-br from-slate-50 via-white to-blue-50/50 dark:from-zinc-900 dark:via-zinc-950 dark:to-blue-950/30">
-        {/* Декоративное свечение */}
-        <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 right-0 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
+      {/* ── Компактная шапка ── */}
+      <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur-sm">
+        <div className="mx-auto max-w-5xl px-6 py-4">
 
-        <div className="relative mx-auto max-w-5xl px-6 py-14">
-          <Link
-            href="/"
-            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Назад
-          </Link>
+          {/* Верхняя строка: назад + кнопки */}
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-slate-200"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Назад
+            </Link>
 
-          <div className="flex flex-col gap-4">
-            {data.category && (
-              <span className="w-fit rounded-full bg-blue-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-400">
-                {data.category}
-              </span>
-            )}
-
-            <div className="flex items-start justify-between gap-4">
-              <h1 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white sm:text-5xl">
-                {data.title}
-              </h1>
-
+            <div className="flex items-center gap-2">
+              <ClientOnly fallback={<div className="h-7 w-24" />}>
+                <ShareButton
+                  cardId={id}
+                  title={data.title}
+                  description={data.description ?? undefined}
+                  label="Поделиться"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
+                />
+              </ClientOnly>
               {isOwner && (
-                <div className="mt-1 flex shrink-0 items-center gap-2">
+                <>
                   <Link
                     href={`/card/${id}/edit`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-300"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-3.5 w-3.5" />
                     Редактировать
                   </Link>
                   <DeleteButton cardId={id} />
-                </div>
+                </>
               )}
             </div>
+          </div>
 
-            {/* Кнопка «Поделиться» — всегда видна */}
-            <div className="flex items-center gap-2">
-              <ShareButton
-                cardId={id}
-                title={data.title}
-                description={data.description ?? undefined}
-                label="Поделиться"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-400 hover:border-white/20 hover:text-blue-400"
-              />
-            </div>
+          {/* Заголовок + авто-строка */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            {data.category && (
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
+                {data.category}
+              </span>
+            )}
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {data.title}
+            </h1>
+          </div>
 
-            {/* Блок автора */}
+          {/* Автор + рейтинг в одну строку */}
+          <div className="mt-2 flex flex-wrap items-center gap-4">
             <Link
               href={`/profile/${data.user_id}`}
-              className="group flex w-fit items-center gap-3 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 px-4 py-2.5 transition-colors hover:border-blue-500/30 hover:bg-blue-500/5"
+              className="group flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:text-blue-500 dark:hover:text-blue-400"
             >
               {authorAvatar ? (
                 <img
                   src={authorAvatar}
                   alt={authorName}
-                  className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-white/10 transition-all group-hover:ring-blue-500/40"
+                  className="h-5 w-5 shrink-0 rounded-full object-cover"
                 />
               ) : (
-                <UserAvatar username={authorName} size={32} />
+                <UserAvatar username={authorName} size={20} />
               )}
-              <span className="flex items-baseline gap-1.5 text-sm">
-                <span className="text-slate-500">Автор:</span>
-                <span className="font-medium text-slate-200 underline-offset-2 transition-colors group-hover:text-blue-400 group-hover:underline">
-                  {authorName}
-                </span>
-              </span>
+              <span className="font-medium">{authorName}</span>
             </Link>
 
-            {data.description && (
-              <p className="mt-2 max-w-2xl text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                {data.description}
-              </p>
-            )}
-
-            {/* Рейтинг */}
-            <div className="mt-1">
-              <StarRating roadmapId={id} />
+            <div className="flex items-center">
+              <ClientOnly fallback={<div className="h-5 w-20" />}>
+                <StarRating roadmapId={id} compact />
+              </ClientOnly>
             </div>
           </div>
+
+          {/* Описание — text-sm, максимум 2 строки */}
+          {data.description && (
+            <p className="mt-2 line-clamp-2 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
+              {data.description}
+            </p>
+          )}
         </div>
       </div>
 
@@ -293,40 +292,56 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </span>
           </h2>
 
-          <StepsProgress
-            cardId={id}
-            userId={currentUser?.id ?? null}
-            steps={steps}
-            initialDone={initialDoneArr}
-          />
+          <ClientOnly>
+            <StepsProgress
+              cardId={id}
+              userId={currentUser?.id ?? null}
+              steps={steps}
+              initialDone={initialDoneArr}
+            />
+          </ClientOnly>
         </section>
 
-        {/* Sidebar: ресурсы */}
-        {resources.length > 0 && (
-          <aside className="mt-12 lg:mt-0">
-            <div className="sticky top-20 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                <ExternalLink className="h-4 w-4" />
-                Материалы
+        {/* Sidebar: рейтинг + ресурсы */}
+        <aside className="mt-12 lg:mt-0">
+          <div className="sticky top-20 space-y-4">
+
+            {/* Блок интерактивного рейтинга */}
+            <div className="relative z-10 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                Оценить
               </h2>
-              <ul className="space-y-2">
-                {resources.map((r) => (
-                  <li key={r.id}>
-                    <a
-                      href={normalizeUrl(r.url!)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between gap-2 rounded-lg border border-white/0 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-300"
-                    >
-                      <span className="truncate">{r.label || r.url}</span>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <ClientOnly fallback={<div className="h-16" />}>
+                <StarRating roadmapId={id} />
+              </ClientOnly>
             </div>
-          </aside>
-        )}
+
+            {/* Блок ресурсов */}
+            {resources.length > 0 && (
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
+                <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  <ExternalLink className="h-4 w-4" />
+                  Материалы
+                </h2>
+                <ul className="space-y-2">
+                  {resources.map((r) => (
+                    <li key={r.id}>
+                      <a
+                        href={normalizeUrl(r.url!)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between gap-2 rounded-lg border border-white/0 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-300"
+                      >
+                        <span className="truncate">{r.label || r.url}</span>
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
 
       {/* Разделитель + Комментарии */}
