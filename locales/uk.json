@@ -5,6 +5,7 @@
     "settings": "Налаштування",
     "favorites": "Обрані",
     "create": "Створити",
+    "createRoadmap": "Створити роудмеп",
     "login": "Увійти",
     "register": "Реєстрація",
     "logout": "Вийти",
@@ -12,7 +13,8 @@
     "darkTheme": "Темна тема",
     "lightTheme": "Світла тема",
     "systemTheme": "Системна тема",
-    "subscriptions": "Підписки"
+    "subscriptions": "Підписки",
+    "backToHome": "На головну"
   },
   "profile": {
     "title": "Профіль",
@@ -31,7 +33,13 @@
     "liked": "Вподобані",
     "noLikes": "Ви ще не поставили жодного лайку.",
     "cards_count": "{{count}} карт",
-    "likes_count": "{{count}} лайків"
+    "likes_count": "{{count}} лайків",
+    "statistics": "Статистика",
+    "noDescription": "Опис не додано",
+    "card_one": "картка",
+    "card_few": "картки",
+    "card_many": "карток",
+    "card_other": "карток"
   },
   "settings": {
     "title": "Налаштування",
@@ -51,8 +59,32 @@
     "deleteAccountConfirm": "Ви впевнені, що хочете видалити акаунт? Цю дію не можна скасувати.",
     "changePassword": "Змінити пароль",
     "changeAvatar": "Змінити фото",
+    "statistics": "Статистика",
     "language": "Мова",
-    "theme": "Тема"
+    "theme": "Тема",
+    "language_label": "Мова",
+    "theme_label": "Тема",
+    "appearance": "Зовнішній вигляд",
+    "save_button": "Зберегти зміни",
+    "uploading": "Завантаження...",
+    "deleteAvatarLabel": "Видалити аватар",
+    "avatarHint": "JPG, PNG, WebP \u2014 до 5 МБ",
+    "profileInfo": "Дані профілю",
+    "emailReadonlyHint": "Щоб змінити пошту, використайте розділ \u00abЗмінити пошту\u00bb нижче.",
+    "bioPlaceholder": "Напишіть трохи про себе...",
+    "languageHint": "Мова буде збережена у вашому профілі та застосовуватиметься на всіх пристроях.",
+    "saving": "Збереження...",
+    "changeEmail": "Змінити пошту",
+    "newEmail": "Нова пошта",
+    "sending": "Надсилання...",
+    "updateEmail": "Оновити пошту",
+    "security": "Безпека",
+    "passwordMismatch": "Паролі не збігаються",
+    "dangerHint": "Ця дія незворотня. Усі ваші дорожні карти будуть видалені.",
+    "yourEmail": "Ваша пошта",
+    "yourPassword": "Ваш пароль",
+    "deleting": "Видалення...",
+    "deleteForever": "Видалити назавжди"
   },
   "card": {
     "create": "Створити роудмеп",
@@ -65,6 +97,7 @@
     "publish": "Опублікувати",
     "cancel": "Скасувати",
     "steps": "Кроки",
+    "progress": "Прогрес",
     "resources": "Ресурси",
     "description": "Опис",
     "category": "Категорія",
@@ -81,7 +114,13 @@
     "resourceTitle": "Назва ресурсу",
     "resourceUrl": "Посилання",
     "deleteCard": "Видалити роудмеп",
-    "deleteConfirm": "Ви впевнені, що хочете видалити цей роудмеп?"
+    "deleteConfirm": "Ви впевнені, що хочете видалити цей роудмеп?",
+    "back": "Назад",
+    "roadmap": "Дорожня карта",
+    "materials": "Матеріали",
+    "editCard": "Редагувати",
+    "cardNotFound": "Картку з таким ID не знайдено.",
+    "loadError": "Помилка при завантаженні картки"
   },
   "comments": {
     "title": "Коментарі",
@@ -94,10 +133,19 @@
     "like": "Подобається",
     "dislike": "Не подобається",
     "delete": "Видалити",
-    "loadMore": "Завантажити ще"
+    "loadMore": "Завантажити ще",
+    "sending": "Відправка...",
+    "loginToComment": "Увійдіть, щоб залишити коментар",
+    "showReplies": "Показати відповіді ({{count}})",
+    "hideReplies": "Сховати відповіді",
+    "liked": "Подобається",
+    "unlike": "Прибрати лайк",
+    "disliked": "Не подобається",
+    "undislike": "Прибрати дизлайк"
   },
   "favorites": {
     "title": "Обрані",
+    "saved": "Збережені роудмепи",
     "empty": "Ще немає збережених роудмепів.",
     "emptyHint": "Додайте роудмеп до обраних, щоб побачити його тут."
   },
@@ -139,7 +187,10 @@
     "loginSuccess": "Успішний вхід!",
     "registerSuccess": "Реєстрацію завершено!",
     "logoutSuccess": "Ви вийшли.",
-    "invalidCredentials": "Невірна пошта або пароль."
+    "invalidCredentials": "Невірна пошта або пароль.",
+    "signingIn": "Вхід...",
+    "registering": "Реєстрація...",
+    "username": "Імʼя користувача"
   },
   "notifications": {
     "title": "Сповіщення",
@@ -149,10 +200,27 @@
     "newFollower": "підписався на вас",
     "newComment": "прокоментував ваш роудмеп",
     "newLike": "вподобав ваш роудмеп",
+    "likedYourCard": "вподобав вашу картку",
+    "commentedOn": "прокоментував",
+    "startedFollowing": "почав стежити за вами",
     "justNow": "Тільки-но",
     "minutesAgo": "{{count}} хв тому",
     "hoursAgo": "{{count}} год тому",
-    "daysAgo": "{{count}} дн тому"
+    "daysAgo": "{{count}} дн тому",
+    "clearAll": "Очистити все",
+    "deleteLabel": "Видалити",
+    "liked": "поставив лайк",
+    "commented": "прокоментував",
+    "yourCard": "вашій картці",
+    "didAction": "здійснив дію",
+    "someone": "Хтось"
+  },
+  "notification": {
+    "follow": "{{name}} підписався на вас",
+    "like": "{{name}} вподобав вашу картку \u00ab{{card}}\u00bb",
+    "comment": "{{name}} прокоментував вашу картку \u00ab{{card}}\u00bb",
+    "comment_like": "{{name}} вподобав ваш коментар",
+    "unknown": "{{name}} здійснив дію"
   },
   "follow": {
     "follow": "Підписатися",
@@ -160,7 +228,17 @@
     "followers": "Підписники",
     "following": "Підписки",
     "noFollowers": "Підписників ще немає.",
-    "noFollowing": "Ні на кого не підписані."
+    "noFollowing": "Ні на кого не підписані.",
+    "subscribe": "Підписатись",
+    "subscribed": "Ви підписані",
+    "unsubscribe": "Відписатись",
+    "follower_one": "підписник",
+    "follower_few": "підписники",
+    "follower_many": "підписників",
+    "subscription_one": "підписка",
+    "subscription_few": "підписки",
+    "subscription_many": "підписок",
+    "subscriptionsLabel": "підписок"
   },
   "theme": {
     "dark": "Темна",
@@ -173,5 +251,109 @@
     "uk": "Українська",
     "pl": "Польська",
     "ru": "Російська"
+  },
+  "actions": {
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "share": "Поділитись",
+    "download": "Завантажити",
+    "create": "Створити",
+    "publish": "Опублікувати",
+    "confirm": "Підтвердити",
+    "back": "Назад",
+    "close": "Закрити",
+    "search": "Пошук",
+    "upload": "Завантажити",
+    "remove": "Видалити"
+  },
+  "home": {
+    "subtitle": "Картки досягнень від спільноти",
+    "searchPlaceholder": "Пошук за назвою...",
+    "allCategories": "Всі категорії",
+    "filterPrefix": "Фільтр: ",
+    "filters": "Фільтри",
+    "noRoadmaps": "Ще немає дорожніх карт",
+    "noResults": "Нічого не знайдено",
+    "createFirst": "Створіть першу дорожню карту на сторінці створення.",
+    "pageLabel": "Стр.",
+    "of": "з",
+    "prevPage": "← Назад",
+    "nextPage": "Вперед →"
+  },
+  "steps": {
+    "yourProgress": "Ваш прогрес",
+    "roadmapSteps": "Кроки дорожньої карти",
+    "loginToTrack": "Увійдіть, щоб відзначати кроки",
+    "markDone": "Позначити виконаним",
+    "unmark": "Зняти позначку"
+  },
+  "create": {
+    "title": "Створити картку",
+    "category": "Категорія",
+    "selectCategory": "Виберіть одну категорію",
+    "addStep": "+ Додати крок",
+    "stepTitle": "Заголовок кроку",
+    "description": "Опис",
+    "link": "Посилання (необов’язково)",
+    "media": "Медіа",
+    "uploading": "Завантаження...",
+    "deleteStep": "Видалити крок",
+    "usefulLinks": "Корисні посилання",
+    "addLink": "+ Додати посилання",
+    "labelPlaceholder": "Назва",
+    "publishing": "Збереження...",
+    "publish": "Опублікувати",
+    "publishSuccess": "Картку успішно опубліковано",
+    "publishSuccessDesc": "Тепер вона доступна в загальному списку"
+  },
+  "edit": {
+    "title": "Редагувати картку",
+    "back": "До картки",
+    "heading": "Заголовок",
+    "category": "Категорія",
+    "selectCategory": "Виберіть одну категорію",
+    "description": "Опис",
+    "steps": "Кроки",
+    "stepLabel": "Крок {{n}}",
+    "stepTitle": "Заголовок",
+    "stepContent": "Опис",
+    "stepLink": "Посилання на ресурс",
+    "stepLinkPlaceholder": "Посилання на ресурс (YouTube, стаття тощо)",
+    "stepMedia": "Медіа (зображення)",
+    "deleteStep": "Видалити крок",
+    "addStep": "+ Додати крок",
+    "usefulLinks": "Корисні посилання",
+    "addLink": "+ Додати посилання",
+    "cancel": "Скасувати",
+    "saving": "Завантаження...",
+    "save": "Зберегти зміни",
+    "forbidden": "Доступ заборонено",
+    "forbiddenText": "Ви не є автором цієї картки.",
+    "backToHome": "На головну",
+    "errorNotAuth": "Ви не авторизовані"
+  },
+  "delete": {
+    "confirm": "Ви впевнені, що хочете видалити цю картку?",
+    "deleting": "Видалення...",
+    "label": "Видалити",
+    "error": "Помилка при видаленні"
+  },
+  "rating": {
+    "label": "Рейтинг: {{value}} з 5",
+    "saving": "Збереження...",
+    "beFirst": "Будьте першим, хто оцінить",
+    "loginToRate": "Увійдіть, щоб оцінити",
+    "yourRating": "ви: {{value}}",
+    "count_one": "оцінка",
+    "count_few": "оцінки",
+    "count_many": "оцінок"
+  },
+  "share": {
+    "label": "Поділитись",
+    "copied": "Скопійовано!",
+    "copyLink": "Скопіюйте посилання:",
+    "linkCopied": "Посилання скопійовано!"
   }
 }

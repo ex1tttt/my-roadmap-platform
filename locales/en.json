@@ -5,6 +5,7 @@
     "settings": "Settings",
     "favorites": "Favorites",
     "create": "Create",
+    "createRoadmap": "Create Roadmap",
     "login": "Log In",
     "register": "Sign Up",
     "logout": "Log Out",
@@ -12,7 +13,8 @@
     "darkTheme": "Dark Theme",
     "lightTheme": "Light Theme",
     "systemTheme": "System Theme",
-    "subscriptions": "Subscriptions"
+    "subscriptions": "Subscriptions",
+    "backToHome": "Back to Home"
   },
   "profile": {
     "title": "Profile",
@@ -31,7 +33,11 @@
     "liked": "Liked",
     "noLikes": "You haven't liked any roadmaps yet.",
     "cards_count": "{{count}} cards",
-    "likes_count": "{{count}} likes"
+    "likes_count": "{{count}} likes",
+    "statistics": "Statistics",
+    "noDescription": "No description added",
+    "card_one": "card",
+    "card_other": "cards"
   },
   "settings": {
     "title": "Settings",
@@ -51,8 +57,32 @@
     "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
     "changePassword": "Change Password",
     "changeAvatar": "Change Photo",
+    "statistics": "Statistics",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "language_label": "Language",
+    "theme_label": "Theme",
+    "appearance": "Appearance",
+    "save_button": "Save Changes",
+    "uploading": "Uploading...",
+    "deleteAvatarLabel": "Remove avatar",
+    "avatarHint": "JPG, PNG, WebP \u2014 up to 5 MB",
+    "profileInfo": "Profile Info",
+    "emailReadonlyHint": "To change your email, use the \"Change Email\" section below.",
+    "bioPlaceholder": "Write a bit about yourself...",
+    "languageHint": "Language will be saved to your profile and applied on all devices.",
+    "saving": "Saving...",
+    "changeEmail": "Change Email",
+    "newEmail": "New Email",
+    "sending": "Sending...",
+    "updateEmail": "Update Email",
+    "security": "Security",
+    "passwordMismatch": "Passwords do not match",
+    "dangerHint": "This action is irreversible. All your roadmaps will be deleted.",
+    "yourEmail": "Your email",
+    "yourPassword": "Your password",
+    "deleting": "Deleting...",
+    "deleteForever": "Delete forever"
   },
   "card": {
     "create": "Create Roadmap",
@@ -65,6 +95,7 @@
     "publish": "Publish",
     "cancel": "Cancel",
     "steps": "Steps",
+    "progress": "Progress",
     "resources": "Resources",
     "description": "Description",
     "category": "Category",
@@ -81,7 +112,13 @@
     "resourceTitle": "Resource Title",
     "resourceUrl": "Resource URL",
     "deleteCard": "Delete Roadmap",
-    "deleteConfirm": "Are you sure you want to delete this roadmap?"
+    "deleteConfirm": "Are you sure you want to delete this roadmap?",
+    "back": "Back",
+    "roadmap": "Roadmap",
+    "materials": "Materials",
+    "editCard": "Edit",
+    "cardNotFound": "Card with this ID not found.",
+    "loadError": "Error loading card"
   },
   "comments": {
     "title": "Comments",
@@ -94,10 +131,19 @@
     "like": "Like",
     "dislike": "Dislike",
     "delete": "Delete",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "sending": "Sending...",
+    "loginToComment": "Log in to leave a comment",
+    "showReplies": "Show replies ({{count}})",
+    "hideReplies": "Hide replies",
+    "liked": "Liked",
+    "unlike": "Unlike",
+    "disliked": "Disliked",
+    "undislike": "Remove dislike"
   },
   "favorites": {
     "title": "Favorites",
+    "saved": "Saved roadmaps",
     "empty": "No saved roadmaps yet.",
     "emptyHint": "Add a roadmap to favorites to see it here."
   },
@@ -139,7 +185,10 @@
     "loginSuccess": "Logged in successfully!",
     "registerSuccess": "Registered successfully!",
     "logoutSuccess": "Logged out.",
-    "invalidCredentials": "Invalid email or password."
+    "invalidCredentials": "Invalid email or password.",
+    "signingIn": "Signing in...",
+    "registering": "Registering...",
+    "username": "Username"
   },
   "notifications": {
     "title": "Notifications",
@@ -149,10 +198,27 @@
     "newFollower": "started following you",
     "newComment": "commented on your roadmap",
     "newLike": "liked your roadmap",
+    "likedYourCard": "liked your card",
+    "commentedOn": "commented on",
+    "startedFollowing": "started following you",
     "justNow": "Just now",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
-    "daysAgo": "{{count}}d ago"
+    "daysAgo": "{{count}}d ago",
+    "clearAll": "Clear all",
+    "deleteLabel": "Delete",
+    "liked": "liked",
+    "commented": "commented on",
+    "yourCard": "your card",
+    "didAction": "did something",
+    "someone": "Someone"
+  },
+  "notification": {
+    "follow": "{{name}} started following you",
+    "like": "{{name}} liked your card \u00ab{{card}}\u00bb",
+    "comment": "{{name}} commented on your card \u00ab{{card}}\u00bb",
+    "comment_like": "{{name}} liked your comment",
+    "unknown": "{{name}} did something"
   },
   "follow": {
     "follow": "Follow",
@@ -160,7 +226,17 @@
     "followers": "Followers",
     "following": "Following",
     "noFollowers": "No followers yet.",
-    "noFollowing": "Not following anyone yet."
+    "noFollowing": "Not following anyone yet.",
+    "subscribe": "Follow",
+    "subscribed": "Following",
+    "unsubscribe": "Unfollow",
+    "follower_one": "follower",
+    "follower_few": "followers",
+    "follower_many": "followers",
+    "subscription_one": "subscription",
+    "subscription_few": "subscriptions",
+    "subscription_many": "subscriptions",
+    "subscriptionsLabel": "subscriptions"
   },
   "theme": {
     "dark": "Dark",
@@ -173,5 +249,108 @@
     "uk": "Ukrainian",
     "pl": "Polish",
     "ru": "Russian"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "share": "Share",
+    "download": "Download",
+    "create": "Create",
+    "publish": "Publish",
+    "confirm": "Confirm",
+    "back": "Back",
+    "close": "Close",
+    "search": "Search",
+    "upload": "Upload",
+    "remove": "Remove"
+  },
+  "home": {
+    "subtitle": "Achievement roadmaps from the community",
+    "searchPlaceholder": "Search by title...",
+    "allCategories": "All categories",
+    "filterPrefix": "Filter: ",
+    "filters": "Filters",
+    "noRoadmaps": "No roadmaps yet",
+    "noResults": "Nothing found",
+    "createFirst": "Create the first roadmap on the create page.",
+    "pageLabel": "Page",
+    "of": "of",
+    "prevPage": "← Back",
+    "nextPage": "Next →"
+  },
+  "steps": {
+    "yourProgress": "Your progress",
+    "roadmapSteps": "Roadmap steps",
+    "loginToTrack": "Log in to track steps",
+    "markDone": "Mark as completed",
+    "unmark": "Unmark"
+  },
+  "create": {
+    "title": "Create Roadmap",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "addStep": "+ Add step",
+    "stepTitle": "Step title",
+    "description": "Description",
+    "link": "Link (optional)",
+    "media": "Media",
+    "uploading": "Uploading...",
+    "deleteStep": "Delete step",
+    "usefulLinks": "Useful links",
+    "addLink": "+ Add link",
+    "labelPlaceholder": "Name",
+    "publishing": "Publishing...",
+    "publish": "Publish",
+    "publishSuccess": "Card published successfully",
+    "publishSuccessDesc": "Now it's available in the general list"
+  },
+  "edit": {
+    "title": "Edit Roadmap",
+    "back": "Back to card",
+    "heading": "Title",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "description": "Description",
+    "steps": "Steps",
+    "stepLabel": "Step {{n}}",
+    "stepTitle": "Title",
+    "stepContent": "Description",
+    "stepLink": "Link to resource",
+    "stepLinkPlaceholder": "Link to resource (YouTube, article, etc.)",
+    "stepMedia": "Media (image)",
+    "deleteStep": "Delete step",
+    "addStep": "+ Add step",
+    "usefulLinks": "Useful links",
+    "addLink": "+ Add link",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save changes",
+    "forbidden": "Access denied",
+    "forbiddenText": "You are not the author of this card.",
+    "backToHome": "Back to Home",
+    "errorNotAuth": "You are not authorized"
+  },
+  "delete": {
+    "confirm": "Are you sure you want to delete this card?",
+    "deleting": "Deleting...",
+    "label": "Delete",
+    "error": "Error deleting"
+  },
+  "rating": {
+    "label": "Rating: {{value}} out of 5",
+    "saving": "Saving...",
+    "beFirst": "Be the first to rate",
+    "loginToRate": "Log in to rate",
+    "yourRating": "you: {{value}}",
+    "count_one": "rating",
+    "count_other": "ratings"
+  },
+  "share": {
+    "label": "Share",
+    "copied": "Copied!",
+    "copyLink": "Copy link:",
+    "linkCopied": "Link copied!"
   }
 }

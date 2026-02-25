@@ -5,6 +5,7 @@
     "settings": "Ustawienia",
     "favorites": "Ulubione",
     "create": "Utwórz",
+    "createRoadmap": "Utwórz mapę drogową",
     "login": "Zaloguj się",
     "register": "Zarejestruj się",
     "logout": "Wyloguj się",
@@ -12,7 +13,8 @@
     "darkTheme": "Ciemny motyw",
     "lightTheme": "Jasny motyw",
     "systemTheme": "Motyw systemowy",
-    "subscriptions": "Obserwowani"
+    "subscriptions": "Obserwowani",
+    "backToHome": "Stróna główna"
   },
   "profile": {
     "title": "Profil",
@@ -31,7 +33,13 @@
     "liked": "Polubione",
     "noLikes": "Nie polubyłeś jeszcze żadnej mapy drogowej.",
     "cards_count": "{{count}} kart",
-    "likes_count": "{{count}} lubię"
+    "likes_count": "{{count}} lubię",
+    "statistics": "Statystyki",
+    "noDescription": "Brak opisu",
+    "card_one": "karta",
+    "card_few": "karty",
+    "card_many": "kart",
+    "card_other": "kart"
   },
   "settings": {
     "title": "Ustawienia",
@@ -51,8 +59,32 @@
     "deleteAccountConfirm": "Czy na pewno chcesz usunąć konto? Tej operacji nie można cofnąć.",
     "changePassword": "Zmień hasło",
     "changeAvatar": "Zmień zdjęcie",
+    "statistics": "Statystyki",
     "language": "Język",
-    "theme": "Motyw"
+    "theme": "Motyw",
+    "language_label": "Język",
+    "theme_label": "Motyw",
+    "appearance": "Wygląd",
+    "save_button": "Zapisz zmiany",
+    "uploading": "Przesy\u0142anie...",
+    "deleteAvatarLabel": "Usu\u0144 awatar",
+    "avatarHint": "JPG, PNG, WebP \u2014 do 5 MB",
+    "profileInfo": "Dane profilu",
+    "emailReadonlyHint": "Aby zmieni\u0107 adres e-mail, u\u017cyj sekcji \u00abZmie\u0144 e-mail\u00bb poni\u017cej.",
+    "bioPlaceholder": "Napisz co\u015b o sobie...",
+    "languageHint": "J\u0119zyk zostanie zapisany w Twoim profilu i zastosowany na wszystkich urz\u0105dzeniach.",
+    "saving": "Zapisywanie...",
+    "changeEmail": "Zmie\u0144 e-mail",
+    "newEmail": "Nowy e-mail",
+    "sending": "Wysy\u0142anie...",
+    "updateEmail": "Zaktualizuj e-mail",
+    "security": "Bezpiecze\u0144stwo",
+    "passwordMismatch": "Has\u0142a si\u0119 nie zgadzaj\u0105",
+    "dangerHint": "Ta operacja jest nieodwracalna. Wszystkie Twoje mapy drogowe zostan\u0105 usuni\u0119te.",
+    "yourEmail": "Tw\u00f3j e-mail",
+    "yourPassword": "Twoje has\u0142o",
+    "deleting": "Usuwanie...",
+    "deleteForever": "Usu\u0144 na zawsze"
   },
   "card": {
     "create": "Utwórz mapę drogową",
@@ -65,6 +97,7 @@
     "publish": "Opublikuj",
     "cancel": "Anuluj",
     "steps": "Kroki",
+    "progress": "Postęp",
     "resources": "Zasoby",
     "description": "Opis",
     "category": "Kategoria",
@@ -81,7 +114,13 @@
     "resourceTitle": "Tytuł zasobu",
     "resourceUrl": "URL zasobu",
     "deleteCard": "Usuń mapę drogową",
-    "deleteConfirm": "Czy na pewno chcesz usunąć tę mapę drogową?"
+    "deleteConfirm": "Czy na pewno chcesz usunąć tę mapę drogową?",
+    "back": "Powrót",
+    "roadmap": "Mapa drogowa",
+    "materials": "Materiały",
+    "editCard": "Edytuj",
+    "cardNotFound": "Karta o tym ID nie została znaleziona.",
+    "loadError": "Błąd podczas ładowania karty"
   },
   "comments": {
     "title": "Komentarze",
@@ -94,10 +133,19 @@
     "like": "Lubię to",
     "dislike": "Nie lubię",
     "delete": "Usuń",
-    "loadMore": "Załaduj więcej"
+    "loadMore": "Załaduj więcej",
+    "sending": "Wysyłanie...",
+    "loginToComment": "Zaloguj się, aby zostawić komentarz",
+    "showReplies": "Pokaż odpowiedzi ({{count}})",
+    "hideReplies": "Ukryj odpowiedzi",
+    "liked": "Polubione",
+    "unlike": "Cofnij lajk",
+    "disliked": "Nie lubiane",
+    "undislike": "Cofnij dyslajk"
   },
   "favorites": {
     "title": "Ulubione",
+    "saved": "Zapisane mapy drogowe",
     "empty": "Brak zapisanych map drogowych.",
     "emptyHint": "Dodaj mapę drogową do ulubionych, aby ją tu zobaczyć."
   },
@@ -139,7 +187,10 @@
     "loginSuccess": "Zalogowano pomyślnie!",
     "registerSuccess": "Rejestracja zakończona!",
     "logoutSuccess": "Wylogowano.",
-    "invalidCredentials": "Nieprawidłowy e-mail lub hasło."
+    "invalidCredentials": "Nieprawidłowy e-mail lub hasło.",
+    "signingIn": "Logowanie...",
+    "registering": "Rejestracja...",
+    "username": "Nazwa użytkownika"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -149,10 +200,27 @@
     "newFollower": "zaczął cię obserwować",
     "newComment": "skomentował twoją mapę drogową",
     "newLike": "polubił twoją mapę drogową",
+    "likedYourCard": "polubił twoją kartę",
+    "commentedOn": "skomentował",
+    "startedFollowing": "zaczął cię obserwować",
     "justNow": "Przed chwilą",
     "minutesAgo": "{{count}} min temu",
     "hoursAgo": "{{count}} godz. temu",
-    "daysAgo": "{{count}} dni temu"
+    "daysAgo": "{{count}} dni temu",
+    "clearAll": "Wyczyść wszystko",
+    "deleteLabel": "Usuń",
+    "liked": "polubił",
+    "commented": "skomentował",
+    "yourCard": "twój kartę",
+    "didAction": "zrobił coś",
+    "someone": "Ktoś"
+  },
+  "notification": {
+    "follow": "{{name}} zaczął cię obserwować",
+    "like": "{{name}} polubił twoją kartę \u00ab{{card}}\u00bb",
+    "comment": "{{name}} skomentował twoją kartę \u00ab{{card}}\u00bb",
+    "comment_like": "{{name}} polubił twój komentarz",
+    "unknown": "{{name}} zrobił coś"
   },
   "follow": {
     "follow": "Obserwuj",
@@ -160,7 +228,17 @@
     "followers": "Obserwujący",
     "following": "Obserwowani",
     "noFollowers": "Brak obserwujących.",
-    "noFollowing": "Nikogo nie obserwujesz."
+    "noFollowing": "Nikogo nie obserwujesz.",
+    "subscribe": "Obserwuj",
+    "subscribed": "Obserwujesz",
+    "unsubscribe": "Przestań obserwować",
+    "follower_one": "obserwujący",
+    "follower_few": "obserwujących",
+    "follower_many": "obserwujących",
+    "subscription_one": "obserwowany",
+    "subscription_few": "obserwowanych",
+    "subscription_many": "obserwowanych",
+    "subscriptionsLabel": "obserwowanych"
   },
   "theme": {
     "dark": "Ciemny",
@@ -173,5 +251,108 @@
     "uk": "Ukraiński",
     "pl": "Polski",
     "ru": "Rosyjski"
+  },
+  "actions": {
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "share": "Udostępnij",
+    "download": "Pobierz",
+    "create": "Utwórz",
+    "publish": "Opublikuj",
+    "confirm": "Potwierdź",
+    "back": "Wstecz",
+    "close": "Zamknij",
+    "search": "Szukaj",
+    "upload": "Prześlij",
+    "remove": "Usuń"
+  },
+  "home": {
+    "subtitle": "Mapy drogowe osiągnięć od społeczności",
+    "searchPlaceholder": "Szukaj po tytule...",
+    "allCategories": "Wszystkie kategorie",
+    "filterPrefix": "Filtr: ",
+    "filters": "Filtry",
+    "noRoadmaps": "Brak map drogowych",
+    "noResults": "Nic nie znaleziono",
+    "createFirst": "Utwórz pierwszą mapę drogową na stronie tworzenia.",
+    "pageLabel": "Str.",
+    "of": "z",
+    "prevPage": "← Wstecz",
+    "nextPage": "Następna →"
+  },
+  "steps": {
+    "yourProgress": "Twój postęp",
+    "roadmapSteps": "Kroki mapy drogowej",
+    "loginToTrack": "Zaloguj się, aby śledzić kroki",
+    "markDone": "Oznacz jako wykonane",
+    "unmark": "Odznacz"
+  },
+  "create": {
+    "title": "Utwórz kartę",
+    "category": "Kategoria",
+    "selectCategory": "Wybierz kategorię",
+    "addStep": "+ Dodaj krok",
+    "stepTitle": "Tytuł kroku",
+    "description": "Opis",
+    "link": "Link (opcjonalnie)",
+    "media": "Media",
+    "uploading": "Przesływanie...",
+    "deleteStep": "Usuń krok",
+    "usefulLinks": "Przydatne linki",
+    "addLink": "+ Dodaj link",
+    "labelPlaceholder": "Nazwa",
+    "publishing": "Publikowanie...",
+    "publish": "Opublikuj",
+    "publishSuccess": "Karta opublikowana pomyślnie",
+    "publishSuccessDesc": "Teraz jest dostępna na ogólnej liście"
+  },
+  "edit": {
+    "title": "Edytuj kartę",
+    "back": "Do karty",
+    "heading": "Tytuł",
+    "category": "Kategoria",
+    "selectCategory": "Wybierz kategorię",
+    "description": "Opis",
+    "steps": "Kroki",
+    "stepLabel": "Krok {{n}}",
+    "stepTitle": "Tytuł",
+    "stepContent": "Opis",
+    "stepLink": "Link do zasobu",
+    "stepLinkPlaceholder": "Link do zasobu (YouTube, artykuł itp.)",
+    "stepMedia": "Media (obraz)",
+    "deleteStep": "Usuń krok",
+    "addStep": "+ Dodaj krok",
+    "usefulLinks": "Przydatne linki",
+    "addLink": "+ Dodaj link",
+    "cancel": "Anuluj",
+    "saving": "Ładowanie...",
+    "save": "Zapisz zmiany",
+    "forbidden": "Brak dostępu",
+    "forbiddenText": "Nie jesteś autorem tej karty.",
+    "backToHome": "Stróna główna",
+    "errorNotAuth": "Nie jesteś zalogowany"
+  },
+  "delete": {
+    "confirm": "Czy na pewno chcesz usunąć tę kartę?",
+    "deleting": "Usuwanie...",
+    "label": "Usuń",
+    "error": "Błąd podczas usuwania"
+  },
+  "rating": {
+    "label": "Ocena: {{value}} na 5",
+    "saving": "Zapisywanie...",
+    "beFirst": "Bądź pierwszy, kto oceni",
+    "loginToRate": "Zaloguj się, aby ocenić",
+    "yourRating": "ty: {{value}}",
+    "count_one": "ocena",
+    "count_other": "ocen"
+  },
+  "share": {
+    "label": "Udostępnij",
+    "copied": "Skopiowano!",
+    "copyLink": "Skopiuj link:",
+    "linkCopied": "Link skopiowany!"
   }
 }

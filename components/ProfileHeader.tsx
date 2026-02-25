@@ -7,6 +7,7 @@ import { Settings } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import FollowListModal from '@/components/FollowListModal'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   profile: {
@@ -23,14 +24,6 @@ interface Props {
   currentUserId: string | null
 }
 
-function plural(n: number, one: string, few: string, many: string) {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return one
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few
-  return many
-}
-
 export default function ProfileHeader({
   profile,
   cardsCount,
@@ -40,6 +33,7 @@ export default function ProfileHeader({
   isOwner,
   currentUserId,
 }: Props) {
+  const { t } = useTranslation()
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
   const [followingCountState, setFollowingCountState] = useState(followingCount)
@@ -131,7 +125,7 @@ export default function ProfileHeader({
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
             >
               <Settings className="h-4 w-4" />
-              Настройки
+              {t('profile.settings')}
             </Link>
           ) : currentUserId ? (
             <button
@@ -147,7 +141,7 @@ export default function ProfileHeader({
                   : 'border border-blue-500/40 bg-blue-600 text-white hover:bg-blue-500'
               }`}
             >
-              {isFollowing ? (hovered ? 'Отписаться' : 'Вы подписаны') : 'Подписаться'}
+              {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
             </button>
           ) : null}
         </div>
@@ -156,27 +150,27 @@ export default function ProfileHeader({
         {profile.bio ? (
           <p className="text-sm text-slate-600 dark:text-slate-400">{profile.bio}</p>
         ) : (
-          <p className="text-sm italic text-slate-400 dark:text-slate-600">Описание не добавлено</p>
+          <p className="text-sm italic text-slate-400 dark:text-slate-600">{t('profile.noDescription')}</p>
         )}
 
         {/* Статистика */}
         <div className="mt-2 flex flex-wrap items-center gap-5 text-sm">
           <span className="text-slate-500 dark:text-slate-400">
             <span className="font-bold text-slate-900 dark:text-white">{cardsCount}</span>{' '}
-            {plural(cardsCount, 'карточка', 'карточки', 'карточек')}
+            {t('profile.card', { count: cardsCount })}
           </span>
 
           <button
             type="button"
             onClick={() => setModalMode('followers')}
             className="group flex items-baseline gap-1 transition-colors"
-            title="Подписчики"
+            title={t('follow.followers')}
           >
             <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-400 transition-colors">
               {followersCount}
             </span>
             <span className="text-slate-500 dark:text-slate-400">
-              {plural(followersCount, 'подписчик', 'подписчика', 'подписчиков')}
+              {t('follow.follower', { count: followersCount })}
             </span>
           </button>
 
@@ -184,12 +178,12 @@ export default function ProfileHeader({
             type="button"
             onClick={() => setModalMode('following')}
             className="group flex items-baseline gap-1 transition-colors"
-            title="Подписки"
+            title={t('follow.following')}
           >
             <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-400 transition-colors">
               {followingCountState}
             </span>
-            <span className="text-slate-500 dark:text-slate-400">подписок</span>
+            <span className="text-slate-500 dark:text-slate-400">{t('follow.subscriptionsLabel')}</span>
           </button>
         </div>
       </div>

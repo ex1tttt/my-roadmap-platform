@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ExternalLink, CheckCircle2, Circle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 type Step = {
   id: string
@@ -60,6 +61,7 @@ function renderMedia(url: string | undefined, title: string) {
 }
 
 export default function StepsProgress({ cardId, userId, steps, initialDone }: Props) {
+  const { t } = useTranslation()
   const [done, setDone] = useState<Set<string>>(() => new Set(initialDone))
   const [pending, setPending] = useState<Set<string>>(new Set())
 
@@ -105,7 +107,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="font-medium text-slate-700 dark:text-slate-300">
-            {userId ? 'Ваш прогресс' : 'Шаги дорожной карты'}
+            {userId ? t('steps.yourProgress') : t('steps.roadmapSteps')}
           </span>
           {userId && (
             <span className="tabular-nums text-slate-500 dark:text-slate-400">
@@ -160,7 +162,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
                   type="button"
                   onClick={() => toggleStep(s.id)}
                   disabled={!userId || isLoading}
-                  title={!userId ? 'Войдите, чтобы отмечать шаги' : isDone ? 'Снять отметку' : 'Отметить выполненным'}
+                  title={!userId ? t('steps.loginToTrack') : isDone ? t('steps.unmark') : t('steps.markDone')}
                   className="flex w-full items-start gap-3 text-left disabled:cursor-default"
                 >
                   <span className={`mt-0.5 shrink-0 transition-colors ${isLoading ? 'opacity-40' : ''}`}>

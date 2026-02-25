@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   profileId: string
@@ -12,14 +13,6 @@ interface Props {
   followingCount: number
 }
 
-function plural(n: number, one: string, few: string, many: string) {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return one
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few
-  return many
-}
-
 export default function FollowButton({
   profileId,
   currentUserId,
@@ -28,6 +21,7 @@ export default function FollowButton({
   initialFollowersCount,
   followingCount,
 }: Props) {
+  const { t } = useTranslation()
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
   const [loading, setLoading] = useState(false)
@@ -68,20 +62,20 @@ export default function FollowButton({
       <button
         type="button"
         className="group flex items-baseline gap-1 text-sm transition-colors hover:text-white"
-        title="Подписчики"
+        title={t('follow.followers')}
       >
         <span className="font-bold text-white group-hover:text-blue-400 transition-colors">{followersCount}</span>
-        <span className="text-slate-400">{plural(followersCount, 'подписчик', 'подписчика', 'подписчиков')}</span>
+        <span className="text-slate-400">{t('follow.follower', { count: followersCount })}</span>
       </button>
 
       {/* Подписки */}
       <button
         type="button"
         className="group flex items-baseline gap-1 text-sm transition-colors hover:text-white"
-        title="Подписки"
+        title={t('follow.following')}
       >
         <span className="font-bold text-white group-hover:text-blue-400 transition-colors">{followingCount}</span>
-        <span className="text-slate-400">подписок</span>
+        <span className="text-slate-400">{t('follow.subscriptionsLabel')}</span>
       </button>
 
       {/* Кнопка подписки (только если не хозяин и залогинен) */}
@@ -99,7 +93,7 @@ export default function FollowButton({
               : 'border border-blue-500/40 bg-blue-600 text-white hover:bg-blue-500'
           }`}
         >
-          {isFollowing ? (hovered ? 'Отписаться' : 'Вы подписаны') : 'Подписаться'}
+          {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
         </button>
       )}
     </span>

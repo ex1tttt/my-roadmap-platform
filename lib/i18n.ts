@@ -71,6 +71,9 @@ if (!i18n.isInitialized) {
     },
     lng: detectLanguage(),
     fallbackLng: "en",
+    // Force synchronous initialization so translations are ready
+    // before the first React render (critical when using inline resources)
+    initImmediate: false,
     interpolation: {
       // React already escapes values
       escapeValue: false,

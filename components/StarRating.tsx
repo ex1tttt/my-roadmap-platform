@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   roadmapId: string
@@ -41,6 +42,7 @@ function StarIcon({ fill, clipId }: { fill: number; clipId: string }) {
 
 export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props) {
   const uid = useId() // стабильный уникальный префикс для clipPath id
+  const { t } = useTranslation()
 
   const [average, setAverage] = useState(initialAverageRate)
   const [totalCount, setTotalCount] = useState(0)
@@ -136,9 +138,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
   const isInteractive = !!currentUserId && !submitting
 
   function declCount(n: number) {
-    if (n % 10 === 1 && n % 100 !== 11) return 'оценка'
-    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'оценки'
-    return 'оценок'
+    return t('rating.count', { count: n })
   }
 
   return (
@@ -147,7 +147,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
         className="flex items-center gap-0.5"
         onMouseLeave={() => setHovered(null)}
         role="group"
-        aria-label={`Рейтинг: ${average.toFixed(1)} из 5`}
+        aria-label={t('rating.label', { value: average.toFixed(1) })}
       >
         {[1, 2, 3, 4, 5].map((star) => {
           const fill = hovered !== null
@@ -166,7 +166,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
                   ? 'cursor-pointer hover:scale-110 active:scale-95'
                   : 'cursor-default opacity-75'
               }`}
-              aria-label={`Поставить ${star} ${star === 1 ? 'звезду' : star < 5 ? 'звезды' : 'звёзд'}`}
+              aria-label={`${t('rating.label', { value: star })}`}
             >
               <StarIcon fill={fill} clipId={`${uid}-star-${star}`} />
             </button>
@@ -177,20 +177,20 @@ export default function StarRating({ roadmapId, initialAverageRate = 0 }: Props)
       {/* Подпись */}
       <p className="text-xs text-slate-500">
         {submitting ? (
-          <span className="animate-pulse">Сохранение...</span>
+          <span className="animate-pulse">{t('rating.saving')}</span>
         ) : totalCount > 0 ? (
           <>
             <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
             {' · '}
             {totalCount} {declCount(totalCount)}
             {userRating !== null && (
-              <span className="ml-1.5 text-slate-600">(вы: {userRating})</span>
+              <span className="ml-1.5 text-slate-600">({t('rating.yourRating', { value: userRating })})</span>
             )}
           </>
         ) : currentUserId ? (
-          'Будьте первым, кто оценит'
+          t('rating.beFirst')
         ) : (
-          'Войдите, чтобы оценить'
+          t('rating.loginToRate')
         )}
       </p>
     </div>

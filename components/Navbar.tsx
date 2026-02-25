@@ -83,7 +83,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/70 dark:bg-[#020617]/70 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-white/70 dark:bg-[#020617]/70 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 transition-colors">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Логотип */}
         <Link
@@ -114,7 +114,7 @@ export default function Navbar() {
               {/* Имя пользователя */}
               <Link
                 href="/profile"
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <User className="w-4 h-4" />
                 {usernameLoading ? (
@@ -127,7 +127,7 @@ export default function Navbar() {
               {/* Кнопка Выйти */}
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 {t('nav.logout')}
@@ -138,7 +138,7 @@ export default function Navbar() {
               {/* Войти */}
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 {t('nav.login')}

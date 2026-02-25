@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { saveLanguage, type SupportedLanguage } from "@/lib/i18n";
 
 const INPUT_CLS =
-  "box-border w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
+  "box-border w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
 const CARD_CLS = "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6";
 const BTN_PRIMARY =
   "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50";
@@ -34,7 +34,7 @@ const LANGUAGE_OPTIONS: { value: SupportedLanguage; label: string }[] = [
 export default function SettingsPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState("");
@@ -315,6 +315,26 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleLanguageChange(lang: SupportedLanguage) {
+    // 1. Мгновенно обновляем UI
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+    saveLanguage(lang);
+
+    // 2. Сохраняем в Supabase
+    if (profile?.id) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ language: lang })
+        .eq('id', profile.id);
+
+      if (error) {
+        console.error('Language save error:', error);
+        toast.error(t('common.error') + ': ' + error.message);
+      }
+    }
+  }
+
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push("/");
@@ -323,41 +343,41 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#020617]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100">
       {/* Шапка */}
-      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900">
+      <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-700 hover:text-slate-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-4 w-4" />
-            На главную
+            {t('nav.backToHome')}
           </Link>
           <button
             onClick={handleSignOut}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-white/5 px-3 py-1.5 text-sm text-red-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-red-500 dark:text-red-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 dark:hover:text-red-300"
           >
             <LogOut className="h-4 w-4" />
-            Выйти
+            {t('auth.logout')}
           </button>
         </div>
       </div>
 
       {/* Контент */}
       <main className="mx-auto max-w-2xl space-y-6 px-6 py-12">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Настройки профиля</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
 
         {/* ── Аватар ── */}
         <div className={CARD_CLS}>
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">Аватар</h2>
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('settings.avatar')}</h2>
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
               {avatarUrl ? (
@@ -381,14 +401,14 @@ export default function SettingsPage() {
                 {uploading
                   ? <Loader2 className="h-4 w-4 animate-spin" />
                   : <Camera className="h-4 w-4" />}
-                {uploading ? "Загрузка..." : "Выбрать фото"}
+                {uploading ? t('settings.uploading') : t('settings.changeAvatar')}
               </button>
               {avatarUrl && (
                 <button type="button" onClick={() => setAvatarUrl(null)} className="text-left text-xs text-red-400 hover:text-red-300">
-                  Удалить аватар
+                  {t('settings.deleteAvatarLabel')}
                 </button>
               )}
-              <p className="text-xs text-slate-500">JPG, PNG, WebP — до 5 МБ</p>
+              <p className="text-xs text-slate-500">{t('settings.avatarHint')}</p>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
@@ -397,9 +417,9 @@ export default function SettingsPage() {
         {/* ── Данные (имя) ── */}
         <form onSubmit={handleSaveProfile}>
           <div className={CARD_CLS}>
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">Данные</h2>
+            <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('settings.profileInfo')}</h2>
             <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Имя пользователя</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.username')}</div>
               <input
                 type="text"
                 value={username}
@@ -411,7 +431,7 @@ export default function SettingsPage() {
             </label>
 
             <label className="mt-4 block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Электронная почта</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.email')}</div>
               {loading ? (
                 <div className="h-10 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800/60" />
               ) : (
@@ -422,20 +442,20 @@ export default function SettingsPage() {
                   className="box-border w-full cursor-not-allowed rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 outline-none"
                 />
               )}
-              <p className="mt-1.5 text-xs text-slate-600">Чтобы изменить почту, используйте раздел «Изменить почту» ниже.</p>
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{t('settings.emailReadonlyHint')}</p>
             </label>
 
             <label className="mt-4 block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">О себе</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.bio')}</div>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={200}
                 rows={3}
-                placeholder="Напишите немного о себе..."
-                className="box-border w-full resize-none rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                placeholder={t('settings.bioPlaceholder')}
+                className="box-border w-full resize-none rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
-              <p className="mt-1 text-right text-xs text-slate-600">
+              <p className="mt-1 text-right text-xs text-slate-500 dark:text-slate-400">
                 <span className={bio.length >= 180 ? 'text-amber-400' : ''}>{bio.length}</span>/200
               </p>
             </label>
@@ -444,17 +464,12 @@ export default function SettingsPage() {
             <div className="mt-4">
               <div className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
                 <Globe className="h-4 w-4" />
-                Язык интерфейса
+                {t('settings.language_label')}
               </div>
               <div className="relative">
                 <select
                   value={language}
-                  onChange={(e) => {
-                    const lang = e.target.value as SupportedLanguage;
-                    setLanguage(lang);
-                    i18n.changeLanguage(lang);
-                    saveLanguage(lang);
-                  }}
+                  onChange={(e) => handleLanguageChange(e.target.value as SupportedLanguage)}
                   className={INPUT_CLS + " cursor-pointer appearance-none pr-10"}
                 >
                   {LANGUAGE_OPTIONS.map((opt) => (
@@ -465,7 +480,7 @@ export default function SettingsPage() {
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               </div>
-              <p className="mt-1.5 text-xs text-slate-500">Язык будет сохранён в вашем профиле и применён на всех устройствах.</p>
+              <p className="mt-1.5 text-xs text-slate-500">{t('settings.languageHint')}</p>
             </div>
 
             <div className="mt-4 flex justify-end">
@@ -473,7 +488,7 @@ export default function SettingsPage() {
                 {saving
                   ? <Loader2 className="h-4 w-4 animate-spin" />
                   : <Save className="h-4 w-4" />}
-                {saving ? "Сохранение..." : "Сохранить"}
+                {saving ? t('settings.saving') : t('settings.save_button')}
               </button>
             </div>
           </div>
@@ -484,10 +499,10 @@ export default function SettingsPage() {
           <div className={CARD_CLS}>
             <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
               <Mail className="h-3.5 w-3.5" />
-              Изменить почту
+              {t('settings.changeEmail')}
             </h2>
             <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Новый Email</div>
+              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.newEmail')}</div>
               <input
                 type="email"
                 value={newEmail}
@@ -502,7 +517,7 @@ export default function SettingsPage() {
                 {emailSaving
                   ? <Loader2 className="h-4 w-4 animate-spin" />
                   : <Mail className="h-4 w-4" />}
-                {emailSaving ? "Отправка..." : "Обновить Email"}
+                {emailSaving ? t('settings.sending') : t('settings.updateEmail')}
               </button>
             </div>
           </div>
@@ -513,12 +528,12 @@ export default function SettingsPage() {
           <div className={CARD_CLS}>
             <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
               <Lock className="h-3.5 w-3.5" />
-              Безопасность
+              {t('settings.security')}
             </h2>
             <div className="space-y-3">
               {/* Текущий пароль */}
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Текущий пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.currentPassword')}</div>
                 <div className="relative">
                   <input
                     type={showCurrent ? "text" : "password"}
@@ -540,7 +555,7 @@ export default function SettingsPage() {
 
               {/* Новый пароль */}
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Новый пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.newPassword')}</div>
                 <div className="relative">
                   <input
                     type={showNew ? "text" : "password"}
@@ -562,7 +577,7 @@ export default function SettingsPage() {
 
               {/* Подтвердите новый пароль */}
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Подтвердите новый пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.confirmPassword')}</div>
                 <div className="relative">
                   <input
                     type={showConfirm ? "text" : "password"}
@@ -570,7 +585,7 @@ export default function SettingsPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    className={`box-border w-full rounded-lg border bg-white dark:bg-zinc-900 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 ${
+                    className={`box-border w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 ${
                       confirmPassword && newPassword !== confirmPassword
                         ? "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/20"
                         : "border-slate-200 dark:border-slate-800 focus:border-blue-500/60 focus:ring-blue-500/20"
@@ -585,7 +600,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="mt-1 text-xs text-red-400">Пароли не совпадают</p>
+                  <p className="mt-1 text-xs text-red-400">{t('settings.passwordMismatch')}</p>
                 )}
               </div>
             </div>
@@ -601,7 +616,7 @@ export default function SettingsPage() {
                 {passwordSaving
                   ? <Loader2 className="h-4 w-4 animate-spin" />
                   : <Lock className="h-4 w-4" />}
-                {passwordSaving ? "Сохранение..." : "Сменить пароль"}
+                {passwordSaving ? t('settings.saving') : t('settings.changePassword')}
               </button>
             </div>
           </div>
@@ -612,15 +627,15 @@ export default function SettingsPage() {
           <div className="rounded-xl border border-red-900/50 bg-red-950/10 p-6">
             <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-500">
               <Trash2 className="h-3.5 w-3.5" />
-              Опасная зона
+              {t('settings.dangerZone')}
             </h2>
             <p className="mb-4 text-xs text-slate-500">
-              Это действие необратимо. Все ваши дорожные карты будут удалены.
+              {t('settings.dangerHint')}
             </p>
 
             <div className="space-y-3">
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Ваша почта</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.yourEmail')}</div>
                 <input
                   type="email"
                   value={deleteEmail}
@@ -631,7 +646,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Ваш пароль</div>
+                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.yourPassword')}</div>
                 <div className="relative">
                   <input
                     type={showDeletePassword ? "text" : "password"}
@@ -661,7 +676,7 @@ export default function SettingsPage() {
                 {deleteLoading
                   ? <Loader2 className="h-4 w-4 animate-spin" />
                   : <Trash2 className="h-4 w-4" />}
-                {deleteLoading ? "Удаление..." : "Удалить навсегда"}
+                {deleteLoading ? t('settings.deleting') : t('settings.deleteForever')}
               </button>
             </div>
           </div>

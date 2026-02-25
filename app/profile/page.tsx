@@ -335,18 +335,18 @@ export default function ProfilePage() {
         {/* Шапка профиля */}
         <section className="mb-10 flex items-center justify-between gap-5">
           <div className="flex items-center gap-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden shrink-0">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0">
               {profile?.avatar ? (
                 <img src={profile.avatar} alt={profile.username} className="h-full w-full object-cover" />
               ) : (
-                <User className="h-10 w-10 text-gray-400" />
+                <User className="h-10 w-10 text-slate-400" />
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {profile?.username ?? '—'}
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {myCards.length} {t('profile.cards')} · {likedCards.length} {t('profile.liked').toLowerCase()}
                 {' · '}
                 <button
@@ -368,7 +368,7 @@ export default function ProfilePage() {
               {profile?.bio ? (
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 max-w-md">{profile.bio}</p>
               ) : (
-                <p className="mt-2 text-xs text-slate-600 italic">{t('profile.noBio')}</p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">{t('profile.noBio')}</p>
               )}
             </div>
           </div>
@@ -382,7 +382,7 @@ export default function ProfilePage() {
         </section>
 
         {/* Вкладки */}
-        <div className="mb-8 flex gap-1 border-b border-gray-200 dark:border-white/10">
+        <div className="mb-8 flex gap-1 border-b border-slate-200/60 dark:border-white/10">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -392,7 +392,7 @@ export default function ProfilePage() {
                 border-b-2 -mb-px
                 ${tab === t.key
                   ? 'border-blue-500 text-blue-500'
-                  : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
+                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
                 }
               `}
             >
@@ -402,7 +402,7 @@ export default function ProfilePage() {
                 rounded-full px-1.5 py-0.5 text-xs font-semibold
                 ${tab === t.key
                   ? 'bg-blue-500/15 text-blue-500'
-                  : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+                  : 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400'
                 }
               `}>
                 {t.count}
@@ -413,14 +413,14 @@ export default function ProfilePage() {
 
         {/* Карточки */}
         {tab === 'favorites' && favoritesLoading ? (
-          <div className="rounded-lg bg-white p-10 text-center shadow-sm dark:bg-gray-900">
-            <p className="text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
+          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
+            <p className="text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
           </div>
         ) : displayed.length === 0 ? (
-          <div className="rounded-lg bg-white p-10 text-center shadow-sm dark:bg-gray-900">
+          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
             {tab === 'my' ? (
               <>
-                <p className="text-gray-500 dark:text-gray-400">{t('profile.noCards')}</p>
+                <p className="text-slate-500 dark:text-slate-400">{t('profile.noCards')}</p>
                 <Link
                   href="/create"
                   className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
@@ -429,9 +429,9 @@ export default function ProfilePage() {
                 </Link>
               </>
             ) : tab === 'liked' ? (
-              <p className="text-gray-500 dark:text-gray-400">{t('profile.noLikes')}</p>
+              <p className="text-slate-500 dark:text-slate-400">{t('profile.noLikes')}</p>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">{t('favorites.empty')}</p>
+              <p className="text-slate-500 dark:text-slate-400">{t('favorites.empty')}</p>
             )}
           </div>
         ) : (
@@ -452,13 +452,13 @@ export default function ProfilePage() {
                       <div ref={openMenuId === c.id ? menuRef : undefined}>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenMenuId(openMenuId === c.id ? null : c.id) }}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-slate-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
                           title="Действия"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
                         {openMenuId === c.id && (
-                          <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-1 shadow-xl backdrop-blur-md">
+                          <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900 p-1 shadow-lg dark:shadow-none backdrop-blur-md">
                             <Link
                               href={`/card/${c.id}/edit`}
                               onClick={() => setOpenMenuId(null)}

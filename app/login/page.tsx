@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,11 +35,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-md">
-        <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">Войти</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">{t('auth.login')}</h1>
         <form onSubmit={handleLogin} className="space-y-4 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
           {error && <div className="text-sm text-red-600">{error}</div>}
           <label className="block">
-            <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">Email</div>
+            <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">{t('auth.email')}</div>
             <input
               type="email"
               value={email}
@@ -47,7 +49,7 @@ export default function LoginPage() {
             />
           </label>
           <label className="block">
-            <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">Password</div>
+            <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">{t('auth.password')}</div>
             <input
               type="password"
               value={password}
@@ -59,9 +61,9 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between">
             <button type="submit" className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60" disabled={loading}>
-              {loading ? "Вход..." : "Войти"}
+              {loading ? t('auth.signingIn') : t('auth.login')}
             </button>
-            <a href="/register" className="text-sm text-gray-600 hover:underline dark:text-gray-300">Регистрация</a>
+            <a href="/register" className="text-sm text-gray-600 hover:underline dark:text-gray-300">{t('nav.register')}</a>
           </div>
         </form>
       </main>

@@ -5,6 +5,7 @@
     "settings": "Настройки",
     "favorites": "Избранное",
     "create": "Создать",
+    "createRoadmap": "Создать роадмеп",
     "login": "Войти",
     "register": "Регистрация",
     "logout": "Выйти",
@@ -12,7 +13,8 @@
     "darkTheme": "Тёмная тема",
     "lightTheme": "Светлая тема",
     "systemTheme": "Системная тема",
-    "subscriptions": "Подписки"
+    "subscriptions": "Подписки",
+    "backToHome": "На главную"
   },
   "profile": {
     "title": "Профиль",
@@ -31,7 +33,13 @@
     "liked": "Понравилось",
     "noLikes": "Вы ещё не поставили ни одного лайка.",
     "cards_count": "{{count}} карт",
-    "likes_count": "{{count}} лайков"
+    "likes_count": "{{count}} лайков",
+    "statistics": "Статистика",
+    "noDescription": "Описание не добавлено",
+    "card_one": "карточка",
+    "card_few": "карточки",
+    "card_many": "карточек",
+    "card_other": "карточек"
   },
   "settings": {
     "title": "Настройки",
@@ -51,8 +59,32 @@
     "deleteAccountConfirm": "Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.",
     "changePassword": "Изменить пароль",
     "changeAvatar": "Изменить фото",
+    "statistics": "Статистика",
     "language": "Язык",
-    "theme": "Тема"
+    "theme": "Тема",
+    "language_label": "Язык",
+    "theme_label": "Тема",
+    "appearance": "Внешний вид",
+    "save_button": "Сохранить изменения",
+    "uploading": "Загрузка...",
+    "deleteAvatarLabel": "Удалить аватар",
+    "avatarHint": "JPG, PNG, WebP \u2014 до 5 МБ",
+    "profileInfo": "Данные",
+    "emailReadonlyHint": "Чтобы изменить почту, используйте раздел \u00abИзменить почту\u00bb ниже.",
+    "bioPlaceholder": "Напишите немного о себе...",
+    "languageHint": "Язык будет сохранён в вашем профиле и применён на всех устройствах.",
+    "saving": "Сохранение...",
+    "changeEmail": "Изменить почту",
+    "newEmail": "Новый Email",
+    "sending": "Отправка...",
+    "updateEmail": "Обновить Email",
+    "security": "Безопасность",
+    "passwordMismatch": "Пароли не совпадают",
+    "dangerHint": "Это действие необратимо. Все ваши дорожные карты будут удалены.",
+    "yourEmail": "Ваша почта",
+    "yourPassword": "Ваш пароль",
+    "deleting": "Удаление...",
+    "deleteForever": "Удалить навсегда"
   },
   "card": {
     "create": "Создать роадмеп",
@@ -65,6 +97,7 @@
     "publish": "Опубликовать",
     "cancel": "Отмена",
     "steps": "Шаги",
+    "progress": "Прогресс",
     "resources": "Ресурсы",
     "description": "Описание",
     "category": "Категория",
@@ -81,7 +114,13 @@
     "resourceTitle": "Название ресурса",
     "resourceUrl": "Ссылка на ресурс",
     "deleteCard": "Удалить роадмеп",
-    "deleteConfirm": "Вы уверены, что хотите удалить этот роадмеп?"
+    "deleteConfirm": "Вы уверены, что хотите удалить этот роадмеп?",
+    "back": "Назад",
+    "roadmap": "Дорожная карта",
+    "materials": "Материалы",
+    "editCard": "Редактировать",
+    "cardNotFound": "Карточка с таким ID не найдена.",
+    "loadError": "Ошибка при загрузке карточки"
   },
   "comments": {
     "title": "Комментарии",
@@ -94,10 +133,19 @@
     "like": "Нравится",
     "dislike": "Не нравится",
     "delete": "Удалить",
-    "loadMore": "Загрузить ещё"
+    "loadMore": "Загрузить ещё",
+    "sending": "Отправка...",
+    "loginToComment": "Войдите, чтобы оставить комментарий",
+    "showReplies": "Показать ответы ({{count}})",
+    "hideReplies": "Скрыть ответы",
+    "liked": "Нравится",
+    "unlike": "Убрать лайк",
+    "disliked": "Не нравится",
+    "undislike": "Убрать дизлайк"
   },
   "favorites": {
     "title": "Избранное",
+    "saved": "Сохранённые дорожные карты",
     "empty": "Нет сохранённых роадмепов.",
     "emptyHint": "Добавьте роадмеп в избранное, чтобы увидеть его здесь."
   },
@@ -139,7 +187,10 @@
     "loginSuccess": "Успешный вход!",
     "registerSuccess": "Регистрация завершена!",
     "logoutSuccess": "Вы вышли.",
-    "invalidCredentials": "Неверная почта или пароль."
+    "invalidCredentials": "Неверная почта или пароль.",
+    "signingIn": "Вход...",
+    "registering": "Регистрация...",
+    "username": "Имя пользователя"
   },
   "notifications": {
     "title": "Уведомления",
@@ -149,10 +200,27 @@
     "newFollower": "подписался на вас",
     "newComment": "прокомментировал ваш роадмеп",
     "newLike": "оценил ваш роадмеп",
+    "likedYourCard": "оценил вашу карточку",
+    "commentedOn": "прокомментировал",
+    "startedFollowing": "начал следить за вами",
     "justNow": "Только что",
     "minutesAgo": "{{count}} мин назад",
     "hoursAgo": "{{count}} ч назад",
-    "daysAgo": "{{count}} дн назад"
+    "daysAgo": "{{count}} дн назад",
+    "clearAll": "Очистить всё",
+    "deleteLabel": "Удалить",
+    "liked": "поставил лайк",
+    "commented": "прокомментировал",
+    "yourCard": "вашей карточке",
+    "didAction": "совершил действие",
+    "someone": "Кто-то"
+  },
+  "notification": {
+    "follow": "{{name}} подписался на вас",
+    "like": "{{name}} оценил вашу карточку \u00ab{{card}}\u00bb",
+    "comment": "{{name}} прокомментировал вашу карточку \u00ab{{card}}\u00bb",
+    "comment_like": "{{name}} оценил ваш комментарий",
+    "unknown": "{{name}} совершил действие"
   },
   "follow": {
     "follow": "Подписаться",
@@ -160,7 +228,17 @@
     "followers": "Подписчики",
     "following": "Подписки",
     "noFollowers": "Подписчиков ещё нет.",
-    "noFollowing": "Вы ни на кого не подписаны."
+    "noFollowing": "Вы ни на кого не подписаны.",
+    "subscribe": "Подписаться",
+    "subscribed": "Вы подписаны",
+    "unsubscribe": "Отписаться",
+    "follower_one": "подписчик",
+    "follower_few": "подписчика",
+    "follower_many": "подписчиков",
+    "subscription_one": "подписка",
+    "subscription_few": "подписки",
+    "subscription_many": "подписок",
+    "subscriptionsLabel": "подписок"
   },
   "theme": {
     "dark": "Тёмная",
@@ -173,5 +251,109 @@
     "uk": "Украинский",
     "pl": "Польский",
     "ru": "Русский"
+  },
+  "actions": {
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "share": "Поделиться",
+    "download": "Скачать",
+    "create": "Создать",
+    "publish": "Опубликовать",
+    "confirm": "Подтвердить",
+    "back": "Назад",
+    "close": "Закрыть",
+    "search": "Поиск",
+    "upload": "Загрузить",
+    "remove": "Удалить"
+  },
+  "home": {
+    "subtitle": "Карточки достижений от пользователей",
+    "searchPlaceholder": "Поиск по названию...",
+    "allCategories": "Все категории",
+    "filterPrefix": "Фильтр: ",
+    "filters": "Фильтры",
+    "noRoadmaps": "Пока нет дорожных карт",
+    "noResults": "Ничего не найдено",
+    "createFirst": "Создайте первую дорожную карту на странице создания.",
+    "pageLabel": "Стр.",
+    "of": "из",
+    "prevPage": "← Назад",
+    "nextPage": "Вперёд →"
+  },
+  "steps": {
+    "yourProgress": "Ваш прогресс",
+    "roadmapSteps": "Шаги дорожной карты",
+    "loginToTrack": "Войдите, чтобы отмечать шаги",
+    "markDone": "Отметить выполненным",
+    "unmark": "Снять отметку"
+  },
+  "create": {
+    "title": "Создать карточку",
+    "category": "Категория",
+    "selectCategory": "Выберите одну категорию",
+    "addStep": "+ Добавить шаг",
+    "stepTitle": "Заголовок шага",
+    "description": "Описание",
+    "link": "Ссылка (необязательно)",
+    "media": "Медиа",
+    "uploading": "Загрузка...",
+    "deleteStep": "Удалить шаг",
+    "usefulLinks": "Полезные ссылки",
+    "addLink": "+ Добавить ссылку",
+    "labelPlaceholder": "Название",
+    "publishing": "Сохранение...",
+    "publish": "Опубликовать",
+    "publishSuccess": "Карточка успешно опубликована",
+    "publishSuccessDesc": "Теперь она доступна в общем списке"
+  },
+  "edit": {
+    "title": "Редактировать карточку",
+    "back": "К карточке",
+    "heading": "Заголовок",
+    "category": "Категория",
+    "selectCategory": "Выберите одну категорию",
+    "description": "Описание",
+    "steps": "Шаги",
+    "stepLabel": "Шаг {{n}}",
+    "stepTitle": "Заголовок",
+    "stepContent": "Описание",
+    "stepLink": "Ссылка на ресурс",
+    "stepLinkPlaceholder": "Ссылка на ресурс (YouTube, статья и т.д.)",
+    "stepMedia": "Медиа (изображение)",
+    "deleteStep": "Удалить шаг",
+    "addStep": "+ Добавить шаг",
+    "usefulLinks": "Полезные ссылки",
+    "addLink": "+ Добавить ссылку",
+    "cancel": "Отмена",
+    "saving": "Загрузка...",
+    "save": "Сохранить изменения",
+    "forbidden": "Доступ запрещён",
+    "forbiddenText": "Вы не являетесь автором этой карточки.",
+    "backToHome": "На главную",
+    "errorNotAuth": "Вы не авторизованы"
+  },
+  "delete": {
+    "confirm": "Вы уверены, что хотите удалить эту карточку?",
+    "deleting": "Удаление...",
+    "label": "Удалить",
+    "error": "Ошибка при удалении"
+  },
+  "rating": {
+    "label": "Рейтинг: {{value}} из 5",
+    "saving": "Сохранение...",
+    "beFirst": "Будьте первым, кто оценит",
+    "loginToRate": "Войдите, чтобы оценить",
+    "yourRating": "вы: {{value}}",
+    "count_one": "оценка",
+    "count_few": "оценки",
+    "count_many": "оценок"
+  },
+  "share": {
+    "label": "Поделиться",
+    "copied": "Скопировано!",
+    "copyLink": "Скопируйте ссылку:",
+    "linkCopied": "Ссылка скопирована!"
   }
 }

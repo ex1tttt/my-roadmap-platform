@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Card from "@/components/Card";
 import { Bookmark, ArrowLeft } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -23,6 +24,7 @@ type CardType = {
 
 export default function FavoritesPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -122,16 +124,16 @@ export default function FavoritesPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Bookmark className="h-5 w-5 text-amber-400 fill-amber-400" />
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Избранное</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('favorites.title')}</h1>
             </div>
-            <p className="text-sm text-slate-400">Сохранённые дорожные карты</p>
+            <p className="text-sm text-slate-400">{t('favorites.saved')}</p>
           </div>
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-700 hover:text-slate-200"
           >
             <ArrowLeft className="h-4 w-4" />
-            На главную
+            {t('nav.backToHome')}
           </Link>
         </header>
 
@@ -139,17 +141,17 @@ export default function FavoritesPage() {
           <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-20 text-center backdrop-blur-md">
             <Bookmark className="mb-4 h-12 w-12 text-slate-600" />
             <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200">
-              У вас пока нет сохранённых дорожных карт
+              {t('favorites.empty')}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
-              Нажмите на иконку закладки на любой карточке, чтобы добавить её в избранное.
+              {t('favorites.emptyHint')}
             </p>
             <Link
               href="/"
               className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
             >
               <ArrowLeft className="h-4 w-4" />
-              На главную
+              {t('nav.backToHome')}
             </Link>
           </div>
         ) : (

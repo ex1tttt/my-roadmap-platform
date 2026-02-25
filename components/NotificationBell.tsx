@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Bell, X, UserPlus, Heart, MessageSquare, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 type Notification = {
   id: string
@@ -18,24 +19,14 @@ type Notification = {
   card_title: string | null
 }
 
-function renderNotificationText(n: Notification): React.ReactNode {
-  const actor = <span className="font-medium">{n.actor?.username ?? 'Кто-то'}</span>
-  const cardTitle = n.card_title
-    ? <> вашей карточке &laquo;<span className="font-bold text-slate-100">{n.card_title}</span>&raquo;</>
-    : <> вашей карточке</>
-
-  switch (n.type) {
-    case 'follow':
-      return <>{actor} подписался на вас</>
-    case 'like':
-      return <>{actor} поставил лайк{cardTitle}</>
-    case 'comment':
-      return <>{actor} прокомментировал{cardTitle}</>
-    case 'comment_like':
-      return <>{actor} лайкнул ваш комментарий</>
-    default:
-      return <>{actor} совершил действие</>
-  }
+function renderNotificationText(n: Notification, t: (key: string, opts?: any) => string): string {
+  const name = n.actor?.username ?? t('notifications.someone')
+  const card = n.card_title ?? ''
+  return t(`notification.${n.type}`, {
+    name,
+    card,
+    defaultValue: t('notification.unknown', { name, card }),
+  })
 }
 
 function getNotificationIcon(type: string) {
@@ -54,15 +45,16 @@ function getNotificationHref(n: Notification): string {
   return `/profile/${n.actor?.id ?? ''}`
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: (key: string, opts?: any) => string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000
-  if (diff < 60)   return 'только что'
-  if (diff < 3600) return `${Math.floor(diff / 60)} мин. назад`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} ч. назад`
-  return `${Math.floor(diff / 86400)} дн. назад`
+  if (diff < 60)   return t('notifications.justNow')
+  if (diff < 3600) return t('notifications.minutesAgo', { count: Math.floor(diff / 60) })
+  if (diff < 86400) return t('notifications.hoursAgo', { count: Math.floor(diff / 3600) })
+  return t('notifications.daysAgo', { count: Math.floor(diff / 86400) })
 }
 
 export default function NotificationBell({ userId }: { userId: string }) {
+  const { t } = useTranslation()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
@@ -218,8 +210,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
       {/* Кнопка колокольчика */}
       <button
         onClick={handleOpen}
-        aria-label="Уведомления"
-        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
+        aria-label={t('notifications.title')}
+        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
       >
         <Bell className="h-4 w-4" />
         {hasUnread && (
@@ -232,21 +224,21 @@ export default function NotificationBell({ userId }: { userId: string }) {
 
       {/* Дропдаун */}
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl">
+        <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900 shadow-lg dark:shadow-none">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 px-4 py-2.5">
-            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Уведомления</span>
+            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('notifications.title')}</span>
             {notifications.length > 0 && (
               <button
                 onClick={clearAll}
                 className="text-xs text-slate-500 transition-colors hover:text-red-400"
               >
-                Очистить всё
+                {t('notifications.clearAll')}
               </button>
             )}
           </div>
 
           {notifications.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-slate-500">Нет уведомлений</p>
+            <p className="px-4 py-6 text-center text-sm text-slate-500">{t('notifications.empty')}</p>
           ) : (
             <>
                 <ul className="max-h-96 divide-y divide-slate-100 dark:divide-white/5 overflow-y-auto">
@@ -255,7 +247,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
                     {/* Кнопка удаления одного уведомления */}
                     <button
                       onClick={() => deleteOne(n.id)}
-                      title="Удалить"
+                      title={t('notifications.deleteLabel')}
                       className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 z-10"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -273,9 +265,9 @@ export default function NotificationBell({ userId }: { userId: string }) {
                         </span>
                         <span className="flex flex-col gap-0.5">
                           <span className={!n.is_read ? 'text-slate-700 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}>
-                            {renderNotificationText(n)}
+                            {renderNotificationText(n, t)}
                           </span>
-                          <span className="text-xs text-slate-400 dark:text-slate-600">{timeAgo(n.created_at)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-600">{timeAgo(n.created_at, t)}</span>
                         </span>
                       </Link>
                     ) : (
@@ -284,8 +276,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
                           {getNotificationIcon(n.type)}
                         </span>
                         <span className="flex flex-col gap-0.5">
-                          <span className="text-slate-500 dark:text-slate-400">{renderNotificationText(n)}</span>
-                          <span className="text-xs text-slate-400 dark:text-slate-600">{timeAgo(n.created_at)}</span>
+                          <span className="text-slate-500 dark:text-slate-400">{renderNotificationText(n, t)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-600">{timeAgo(n.created_at, t)}</span>
                         </span>
                       </div>
                     )}
@@ -298,7 +290,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
                     onClick={clearRead}
                     className="w-full rounded-lg px-3 py-1.5 text-xs text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-slate-300"
                   >
-                    Очистить прочитанные
+                    {t('notifications.clearRead')}
                   </button>
                 </div>
               )}

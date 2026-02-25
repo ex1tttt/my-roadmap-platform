@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { Trash2, MessageSquare, Send, User, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useTranslation } from 'react-i18next'
 
 type Comment = {
   id: string
@@ -25,8 +26,8 @@ type Comment = {
   isDisliked: boolean
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ru-RU', {
+function formatDate(iso: string, locale?: string): string {
+  return new Date(iso).toLocaleDateString(locale ?? 'en', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -84,14 +85,8 @@ function getDescendants(flat: Comment[], rootId: string): Comment[] {
   return flat.filter((c) => childIds.has(c.id))
 }
 
-/** Склонение слова «ответ» */
-function pluralReplies(n: number): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'ответ'
-  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'ответа'
-  return 'ответов'
-}
+/** Склонение слова «ответ» — заменён на i18next */
+// pluralReplies removed — used t('comments.showReplies') instead
 
 /* ─── Общие пропсы ─────────────────────────────────────────────── */
 type CommentRowProps = {
@@ -153,13 +148,14 @@ function ActionBar({
   onReaction: (id: string, type: 'like' | 'dislike') => void
   onReplyClick: (id: string) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="mt-2 flex items-center gap-3">
       {/* Лайк */}
       <button
         onClick={() => onReaction(comment.id, 'like')}
         disabled={!currentUserId}
-        title={comment.isLiked ? 'Убрать лайк' : 'Понравилось'}
+        title={comment.isLiked ? t('comments.unlike') : t('comments.like')}
         className={`flex items-center gap-1.5 text-xs transition-colors disabled:cursor-default ${
           comment.isLiked
             ? 'text-blue-400'
@@ -174,7 +170,7 @@ function ActionBar({
       <button
         onClick={() => onReaction(comment.id, 'dislike')}
         disabled={!currentUserId}
-        title={comment.isDisliked ? 'Убрать дизлайк' : 'Не нравится'}
+        title={comment.isDisliked ? t('comments.undislike') : t('comments.dislike')}
         className={`flex items-center gap-1.5 text-xs transition-colors disabled:cursor-default ${
           comment.isDisliked
             ? 'text-slate-600 dark:text-slate-200'
@@ -191,7 +187,7 @@ function ActionBar({
           onClick={() => onReplyClick(comment.id)}
           className="text-xs font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:text-slate-800 dark:hover:text-slate-100"
         >
-          Ответить
+          {t('comments.reply')}
         </button>
       )}
     </div>
@@ -214,13 +210,14 @@ function ReplyForm({
   onReplySubmit: (id: string) => void
   onReplyCancel: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-50 dark:bg-slate-900/60 p-3">
       <textarea
         autoFocus
         value={replyText}
         onChange={(e) => onReplyTextChange(e.target.value)}
-        placeholder="Ваш ответ..."
+        placeholder={t('comments.replyPlaceholder')}
         rows={2}
         className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
       />
@@ -229,7 +226,7 @@ function ReplyForm({
           onClick={onReplyCancel}
           className="px-3 py-1 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:text-slate-800 dark:hover:text-slate-200"
         >
-          Отмена
+          {t('comments.cancel')}
         </button>
         <button
           disabled={!replyText.trim() || replySending}
@@ -237,7 +234,7 @@ function ReplyForm({
           className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Send className="h-3 w-3" />
-          {replySending ? 'Отправка...' : 'Ответить'}
+          {replySending ? t('comments.sending') : t('comments.reply')}
         </button>
       </div>
     </div>
@@ -256,6 +253,7 @@ function RootCommentRow({
   expanded: boolean
   onToggle: () => void
 }) {
+  const { t, i18n } = useTranslation()
   const isReplying = rest.replyingTo === comment.id
   return (
     <div className="group flex gap-3">
@@ -270,12 +268,12 @@ function RootCommentRow({
           >
             {comment.author.username}
           </Link>
-          <span className="text-xs text-slate-500">{formatDate(comment.created_at)}</span>
+          <span className="text-xs text-slate-500">{formatDate(comment.created_at, i18n.language)}</span>
           {(comment.user_id === rest.currentUserId || (rest.currentUserId !== null && rest.currentUserId === rest.cardOwnerId)) && (
             <button
               onClick={() => rest.onDelete(comment.id)}
               disabled={rest.deletingId === comment.id}
-              title="Удалить"
+              title={t('comments.delete')}
               className="ml-auto flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -318,8 +316,8 @@ function RootCommentRow({
               className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
             />
             {expanded
-              ? 'Скрыть ответы'
-              : `Показать ответы (${replies.length})`}
+              ? t('comments.hideReplies')
+              : t('comments.showReplies', { count: replies.length })}
           </button>
         )}
       </div>
@@ -329,6 +327,7 @@ function RootCommentRow({
 
 /* ─── Строка ответа (плоская, ml-12) ─────────────────────────── */
 function ReplyRow({ comment, ...rest }: CommentRowProps) {
+  const { t, i18n } = useTranslation()
   const isReplying = rest.replyingTo === comment.id
   return (
     <div className="group ml-12 flex gap-2">
@@ -343,12 +342,12 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
           >
             {comment.author.username}
           </Link>
-          <span className="text-xs text-slate-500">{formatDate(comment.created_at)}</span>
+          <span className="text-xs text-slate-500">{formatDate(comment.created_at, i18n.language)}</span>
           {(comment.user_id === rest.currentUserId || (rest.currentUserId !== null && rest.currentUserId === rest.cardOwnerId)) && (
             <button
               onClick={() => rest.onDelete(comment.id)}
               disabled={rest.deletingId === comment.id}
-              title="Удалить"
+              title={t('comments.delete')}
               className="ml-auto flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -410,6 +409,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const [replyText, setReplyText] = useState('')
   const [replySending, setReplySending] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { t, i18n } = useTranslation()
 
   useEffect(() => {
     // Загружаем автора карточки
@@ -692,7 +692,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     <section className="mt-12">
       <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
         <MessageSquare className="h-5 w-5 text-blue-400" />
-        Комментарии
+        {t('comments.title')}
         {!loading && (
           <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
             {totalCount}
@@ -707,7 +707,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={currentUserId ? 'Напишите комментарий...' : 'Войдите, чтобы оставить комментарий'}
+            placeholder={currentUserId ? t('comments.placeholder') : t('comments.loginToComment')}
             disabled={!currentUserId || sending}
             rows={3}
             className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -719,7 +719,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
               className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Send className="h-4 w-4" />
-              {sending ? 'Отправка...' : 'Отправить'}
+              {sending ? t('comments.sending') : t('comments.send')}
             </button>
           </div>
         </div>
@@ -741,7 +741,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         </div>
       ) : roots.length === 0 ? (
         <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/30 p-8 text-center text-slate-500">
-          Комментариев пока нет. Будьте первым!
+          {t('comments.noComments')}
         </div>
       ) : (
         <ul className="space-y-6">

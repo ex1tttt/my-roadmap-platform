@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "react-i18next";
 
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
@@ -15,6 +16,7 @@ function uid() {
 
 export default function CreatePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -45,7 +47,7 @@ export default function CreatePage() {
       );
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Ошибка загрузки файла: " + (err as any)?.message);
+      alert(t('common.error') + ': ' + (err as any)?.message);
     } finally {
       setUploadingStepId(null);
     }
@@ -83,7 +85,7 @@ export default function CreatePage() {
       // чтобы не зависеть от потенциально устаревшего состояния
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert("Пожалуйста, войдите в систему, чтобы опубликовать карточку.");
+        alert(t('edit.errorNotAuth'));
         setSaving(false);
         return;
       }
@@ -102,7 +104,7 @@ export default function CreatePage() {
 
       if (cardError) {
         console.error('Full error:', cardError);
-        alert('Ошибка: ' + cardError.message);
+        alert(t('common.error') + ': ' + cardError.message);
         return;
       }
       const cardId = cardData?.[0]?.id;
@@ -122,7 +124,7 @@ export default function CreatePage() {
         const { error: stepsError } = await supabase.from("steps").insert(stepsPayload);
         if (stepsError) {
           console.error('Full error:', stepsError);
-          alert('Ошибка: ' + stepsError.message);
+          alert(t('common.error') + ': ' + stepsError.message);
           return;
         }
       }
@@ -142,13 +144,13 @@ export default function CreatePage() {
       setCategory("");
       setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
       setResources([]);
-      toast.success('Карточка успешно опубликована', {
-        description: 'Теперь она доступна в общем списке',
+      toast.success(t('create.publishSuccess'), {
+        description: t('create.publishSuccessDesc'),
       });
       setTimeout(() => router.push('/'), 1500);
     } catch (err: any) {
       console.error('Full error:', err);
-      alert('Ошибка: ' + (err?.message || 'Неизвестная ошибка при публикации'));
+      alert(t('common.error') + ': ' + (err?.message || err));
     } finally {
       setSaving(false);
     }
@@ -157,7 +159,7 @@ export default function CreatePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-4xl">
-        <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">Создать карточку</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">{t('create.title')}</h1>
 
         <form onSubmit={handlePublish} className="space-y-6">
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
@@ -178,7 +180,7 @@ export default function CreatePage() {
             </label>
 
             <div className="mt-4">
-              <div className="mb-2 text-sm font-medium text-slate-200">Категория</div>
+              <div className="mb-2 text-sm font-medium text-slate-200">{t('create.category')}</div>
               <div className="flex flex-wrap gap-2">
                 {[
                   'Frontend', 'Backend', 'Mobile Development', 'Data Science',
@@ -199,7 +201,7 @@ export default function CreatePage() {
                 ))}
               </div>
               {!category && (
-                <p className="mt-1.5 text-xs text-slate-500">Выберите одну категорию</p>
+                <p className="mt-1.5 text-xs text-slate-500">{t('create.selectCategory')}</p>
               )}
             </div>
 
@@ -218,7 +220,7 @@ export default function CreatePage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-slate-200">Steps</h2>
               <button type="button" onClick={addStep} className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700">
-                + Добавить шаг
+                {t('create.addStep')}
               </button>
             </div>
 
@@ -229,7 +231,7 @@ export default function CreatePage() {
                     {/* Левая колонка: текстовые поля */}
                     <div className="flex flex-col gap-3">
                       <label className="block">
-                        <div className="mb-1 text-sm font-medium text-slate-200">Заголовок шага</div>
+                        <div className="mb-1 text-sm font-medium text-slate-200">{t('create.stepTitle')}</div>
                         <input
                           className="box-border w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                           value={s.title}
@@ -239,7 +241,7 @@ export default function CreatePage() {
                       </label>
 
                       <label className="block">
-                        <div className="mb-1 text-sm font-medium text-slate-200">Описание</div>
+                        <div className="mb-1 text-sm font-medium text-slate-200">{t('create.description')}</div>
                         <textarea
                           className="box-border w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                           rows={3}
@@ -249,7 +251,7 @@ export default function CreatePage() {
                       </label>
 
                       <label className="block">
-                        <div className="mb-1 text-sm font-medium text-slate-200">Ссылка (необязательно)</div>
+                        <div className="mb-1 text-sm font-medium text-slate-200">{t('create.link')}</div>
                         <input
                           type="url"
                           placeholder="https://..."
@@ -262,7 +264,7 @@ export default function CreatePage() {
 
                     {/* Правая колонка: медиа + удаление */}
                     <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-slate-200">Медиа</div>
+                      <div className="text-sm font-medium text-slate-200">{t('create.media')}</div>
                       <input
                         type="file"
                         accept="image/*"
@@ -274,7 +276,7 @@ export default function CreatePage() {
                         }}
                       />
                       {uploadingStepId === s.id && (
-                        <p className="text-xs text-gray-500">Загрузка...</p>
+                        <p className="text-xs text-gray-500">{t('create.uploading')}</p>
                       )}
                       {s.media_url && (
                         <img src={s.media_url} alt="media" className="mt-1 h-32 w-full rounded object-cover" />
@@ -284,7 +286,7 @@ export default function CreatePage() {
                         className="mt-auto self-start text-sm text-red-600 hover:text-red-800"
                         onClick={() => removeStep(s.id)}
                       >
-                        Удалить шаг
+                        {t('create.deleteStep')}
                       </button>
                     </div>
                   </div>
@@ -295,13 +297,13 @@ export default function CreatePage() {
 
           <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-200">Полезные ссылки</h2>
+              <h2 className="text-lg font-medium text-slate-200">{t('create.usefulLinks')}</h2>
               <button
                 type="button"
                 onClick={addResource}
                 className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700"
               >
-                + Добавить ссылку
+                {t('create.addLink')}
               </button>
             </div>
 
@@ -310,7 +312,7 @@ export default function CreatePage() {
                 <div key={r.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-900/40 px-3 py-2">
                   <input
                     className="w-1/3 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                    placeholder="Название"
+                    placeholder={t('create.labelPlaceholder')}
                     value={r.label}
                     onChange={(e) => updateResource(r.id, { label: e.target.value })}
                   />
@@ -325,7 +327,7 @@ export default function CreatePage() {
                     className="shrink-0 rounded-md px-2 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
                     onClick={() => removeResource(r.id)}
                   >
-                    Удалить
+                    {t('delete.label')}
                   </button>
                 </div>
               ))}
@@ -338,7 +340,7 @@ export default function CreatePage() {
               disabled={saving}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
             >
-              {saving ? "Сохранение..." : "Опубликовать"}
+              {saving ? t('create.publishing') : t('create.publish')}
             </button>
           </div>
         </form>

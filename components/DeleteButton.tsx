@@ -4,13 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 export default function DeleteButton({ cardId }: { cardId: string }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
-    if (!window.confirm("Вы уверены, что хотите удалить эту карточку?")) return;
+    if (!window.confirm(t('delete.confirm'))) return;
 
     setDeleting(true);
     try {
@@ -20,7 +22,7 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
       router.refresh();
     } catch (err: any) {
       console.error("Delete error:", err);
-      alert("Ошибка при удалении: " + (err?.message ?? "Неизвестная ошибка"));
+      alert(t('delete.error') + ': ' + (err?.message ?? t('common.error')));
       setDeleting(false);
     }
   }
@@ -37,12 +39,12 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
-          Удаление...
+          {t('delete.deleting')}
         </>
       ) : (
         <>
           <Trash2 className="h-4 w-4" />
-          Удалить
+          {t('delete.label')}
         </>
       )}
     </button>
