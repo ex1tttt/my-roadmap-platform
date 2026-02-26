@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Heart, Bookmark, MessageSquare, Star, Download } from 'lucide-react';
+import { Heart, Bookmark, MessageSquare, Star, Download, Lock } from 'lucide-react';
 import ShareButton from './ShareButton';
 import UserAvatar from './UserAvatar';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ type CardType = {
   description?: string;
   user: Profile;
   steps?: Step[];
+  is_private?: boolean;
 };
 
 type CardProps = {
@@ -163,29 +164,44 @@ export default function Card({
       className="group relative w-full h-full flex flex-col min-h-45 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer"
       onClick={() => router.push(`/card/${card.id}`)}
     >
+      {card.is_private && (
+        <div className="absolute top-2 left-2 z-20 flex items-center gap-1 rounded px-2 py-0.5 bg-slate-900/50 backdrop-blur-sm text-xs text-blue-100">
+          <Lock className="h-3.5 w-3.5 mr-0.5 text-blue-400" />
+          Приватная
+        </div>
+      )}
       {actions && (
         <div className="absolute top-2 right-2 z-10">{actions}</div>
       )}
       <header className="mb-2 flex items-center gap-2">
         <button
           type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${card.user.id}`); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(card.user?.id) router.push(`/profile/${card.user.id}`); }}
           className="flex shrink-0 items-center gap-2 text-left hover:opacity-80 transition-opacity"
+          disabled={!card.user?.id}
         >
           <UserAvatar
-            username={card.user.username}
-            avatarUrl={card.user.avatar}
+            username={card.user?.username ?? "??"}
+            avatarUrl={card.user?.avatar}
             size={32}
           />
         </button>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-white">{card.title}</h3>
+          <div className="flex items-center gap-1">
+            <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-white">{card.title ?? "Без названия"}</h3>
+            {card.is_private && (
+              <span title="Приватная дорожная карта">
+                <Lock className="ml-1 h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </span>
+            )}
+          </div>
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${card.user.id}`); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(card.user?.id) router.push(`/profile/${card.user.id}`); }}
             className="text-xs text-slate-400 hover:text-blue-400 hover:underline transition-colors"
+            disabled={!card.user?.id}
           >
-            by {card.user.username}
+            by {card.user?.username ?? "Автор неизвестен"}
           </button>
         </div>
       </header>

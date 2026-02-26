@@ -20,8 +20,6 @@ function normalizeUrl(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-// ─── Вспомогательные функции рендеринга медиа ───────────────────────────────
-
 function getYouTubeId(url: string): string | null {
   const shortMatch = url.match(/youtu\.be\/([\w-]{11})/i);
   if (shortMatch) return shortMatch[1];
@@ -38,7 +36,6 @@ function isVideoFile(url: string): boolean {
 
 function renderMedia(url: string | undefined, title: string) {
   if (!url) return null;
-
   const ytId = getYouTubeId(url);
   if (ytId) {
     return (
@@ -54,11 +51,9 @@ function renderMedia(url: string | undefined, title: string) {
       </div>
     );
   }
-
   if (isVideoFile(url)) {
     return <video controls src={url} className="mt-4 w-full rounded-xl" />;
   }
-
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
       <img src={url} alt={title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
@@ -66,8 +61,6 @@ function renderMedia(url: string | undefined, title: string) {
   );
 }
 
-// Для серверного компонента используем базовый createClient напрямую,
-// т.к. lib/supabase использует createBrowserClient (только для браузера)
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -79,21 +72,17 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-
   const { data } = await supabaseServer
     .from("cards")
     .select("title, description, image_url")
     .eq("id", id)
     .maybeSingle();
-
   if (!data) {
     return { title: "Roadmap | Дорожная карта не найдена" };
   }
-
   const title = data.title ?? "Без названия";
   const description = (data.description ?? "").slice(0, 160) || "Дорожная карта развития навыков";
   const image = data.image_url || DEFAULT_OG_IMAGE;
-
   return {
     title: `${title} | Roadmap Platform`,
     description,
@@ -114,8 +103,6 @@ export async function generateMetadata(
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
-  // Получаем карточку и текущего пользователя параллельно
   const cookieStore = await cookies();
   const supabaseAuth = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -127,7 +114,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       },
     }
   );
-
   const [{ data, error }, { data: { user: currentUser } }] = await Promise.all([
     supabaseServer
       .from("cards")
@@ -136,7 +122,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       .maybeSingle(),
     supabaseAuth.auth.getUser(),
   ]);
-
   if (error) {
     console.error("Full fetch error:", error);
     return (
@@ -151,7 +136,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       </div>
     );
   }
-
   if (!data) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
@@ -163,8 +147,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       </div>
     );
   }
-
-  // Если join по FK не вернул профиль — делаем отдельный запрос (фолбэк)
   let author = Array.isArray(data.profiles) ? (data.profiles[0] ?? null) : (data.profiles ?? null);
   if (!author && data.user_id) {
     const { data: profileFallback } = await supabaseServer
@@ -179,7 +161,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
   const isOwner = !!currentUser && currentUser.id === data.user_id;
-  // Загружаем прогресс текущего пользователя (пустой Set если не залогинен)
   const stepIds = steps.map((s) => s.id)
   let initialDoneArr: string[] = []
   if (currentUser && stepIds.length > 0) {
@@ -193,12 +174,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100">
-
-      {/* ── Компактная шапка ── */}
       <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-6 py-4">
-
-          {/* Верхняя строка: назад + кнопки */}
           <div className="mb-3 flex items-center justify-between gap-4">
             <Link
               href="/"
@@ -207,7 +184,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               <ArrowLeft className="h-3.5 w-3.5" />
               Назад
             </Link>
-
             <div className="flex items-center gap-2">
               <ClientOnly fallback={<div className="h-7 w-24" />}>
                 <ShareButton
@@ -232,8 +208,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               )}
             </div>
           </div>
-
-          {/* Заголовок + авто-строка */}
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             {data.category && (
               <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
@@ -244,8 +218,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               {data.title}
             </h1>
           </div>
-
-          {/* Автор + рейтинг в одну строку */}
           <div className="mt-2 flex flex-wrap items-center gap-4">
             <Link
               href={`/profile/${data.user_id}`}
@@ -262,15 +234,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               )}
               <span className="font-medium">{authorName}</span>
             </Link>
-
             <div className="flex items-center">
               <ClientOnly fallback={<div className="h-5 w-20" />}>
                 <StarRating roadmapId={id} compact />
               </ClientOnly>
             </div>
           </div>
-
-          {/* Описание — text-sm, максимум 2 строки */}
           {data.description && (
             <p className="mt-2 line-clamp-2 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
               {data.description}
@@ -278,11 +247,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           )}
         </div>
       </div>
-
-      {/* Основной контент */}
       <div className="mx-auto max-w-5xl gap-8 px-6 py-12 lg:grid lg:grid-cols-[1fr_280px]">
-
-        {/* Timeline шагов */}
         <section>
           <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
             <BookOpen className="h-5 w-5 text-blue-400" />
@@ -291,7 +256,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               {steps.length}
             </span>
           </h2>
-
           <ClientOnly>
             <StepsProgress
               cardId={id}
@@ -301,12 +265,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             />
           </ClientOnly>
         </section>
-
-        {/* Sidebar: рейтинг + ресурсы */}
         <aside className="mt-12 lg:mt-0">
           <div className="sticky top-20 space-y-4">
-
-            {/* Блок интерактивного рейтинга */}
             <div className="relative z-10 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 Оценить
@@ -315,8 +275,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                 <StarRating roadmapId={id} />
               </ClientOnly>
             </div>
-
-            {/* Блок ресурсов */}
             {resources.length > 0 && (
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
                 <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -343,8 +301,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           </div>
         </aside>
       </div>
-
-      {/* Разделитель + Комментарии */}
       <ScrollToHash />
       <div id="comments" className="mx-auto max-w-5xl px-6 pb-16">
         <div className="border-t border-slate-200 dark:border-slate-700/60 pt-10">

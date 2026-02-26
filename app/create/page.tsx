@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
+import { Lock, Globe } from "lucide-react";
 
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
@@ -28,6 +29,7 @@ export default function CreatePage() {
   ]);
   const [resources, setResources] = useState<Resource[]>([]);
 
+  const [isPrivate, setIsPrivate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingStepId, setUploadingStepId] = useState<string | null>(null);
 
@@ -100,6 +102,7 @@ export default function CreatePage() {
             title,
             category,
             description,
+            is_private: isPrivate,
           },
         ])
         .select("id");
@@ -144,6 +147,7 @@ export default function CreatePage() {
       setTitle("");
       setDescription("");
       setCategory("");
+      setIsPrivate(false);
       setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
       setResources([]);
       toast.success(t('create.publishSuccess'), {
@@ -166,16 +170,16 @@ export default function CreatePage() {
         <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">{t('create.title')}</h1>
 
         <form onSubmit={handlePublish} className="space-y-6">
-          <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
+          <section className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md p-6">
             <label className="block">
-              <div className="mb-1 flex items-center justify-between text-sm font-medium text-slate-200">
+              <div className="mb-1 flex items-center justify-between text-sm font-medium text-gray-700 dark:text-slate-200">
                 <span>Title</span>
                 <span className={`text-xs tabular-nums ${title.length >= 35 ? 'text-red-400' : 'text-slate-500'}`}>
                   {title.length}/40
                 </span>
               </div>
               <input
-                className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                className="w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={40}
@@ -184,7 +188,7 @@ export default function CreatePage() {
             </label>
 
             <div className="mt-4">
-              <div className="mb-2 text-sm font-medium text-slate-200">{t('create.category')}</div>
+              <div className="mb-2 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.category')}</div>
               <div className="flex flex-wrap gap-2">
                 {[
                   'Frontend', 'Backend', 'Mobile Development', 'Data Science',
@@ -197,7 +201,7 @@ export default function CreatePage() {
                     className={`rounded-full px-3 py-1 text-sm transition-colors ${
                       category === cat
                         ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800'
                     }`}
                   >
                     {cat}
@@ -210,34 +214,70 @@ export default function CreatePage() {
             </div>
 
             <label className="mt-4 block">
-              <div className="mb-1 text-sm font-medium text-slate-200">Description</div>
+              <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">Description</div>
               <textarea
-                className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                className="w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
             </label>
+
+            {/* Privacy toggle */}
+            <div className="mt-5 flex items-center justify-between rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 px-4 py-3">
+              <div className="flex items-center gap-3">
+                {isPrivate ? (
+                  <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                ) : (
+                  <Globe className="h-4 w-4 text-gray-400 dark:text-slate-400" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-gray-800 dark:text-slate-200">
+                    Приватная дорожная карта
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    Приватная дорожная карта — будет видна только вам
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPrivate((v) => !v)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                  isPrivate
+                    ? 'bg-blue-600'
+                    : 'bg-slate-700'
+                }`}
+                role="switch"
+                aria-checked={isPrivate}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    isPrivate ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </section>
 
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-200">Steps</h2>
-              <button type="button" onClick={addStep} className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700">
+              <h2 className="text-lg font-medium text-gray-800 dark:text-slate-200">Steps</h2>
+              <button type="button" onClick={addStep} className="rounded-md bg-gray-100 dark:bg-slate-800 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700">
                 {t('create.addStep')}
               </button>
             </div>
 
             <div className="space-y-3">
               {steps.map((s, idx) => (
-                <div key={s.id} className="box-border w-full rounded-lg border border-white/10 bg-slate-900/50 p-4">
+                <div key={s.id} className="box-border w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-sm p-4">
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {/* Левая колонка: текстовые поля */}
                     <div className="flex flex-col gap-3">
                       <label className="block">
-                        <div className="mb-1 text-sm font-medium text-slate-200">{t('create.stepTitle')}</div>
+                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.stepTitle')}</div>
                         <input
-                          className="box-border w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                          className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={s.title}
                           onChange={(e) => updateStep(s.id, { title: e.target.value })}
                           required
@@ -245,9 +285,9 @@ export default function CreatePage() {
                       </label>
 
                       <label className="block">
-                        <div className="mb-1 text-sm font-medium text-slate-200">{t('create.description')}</div>
+                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.description')}</div>
                         <textarea
-                          className="box-border w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                          className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           rows={3}
                           value={s.content}
                           onChange={(e) => updateStep(s.id, { content: e.target.value })}
@@ -255,11 +295,11 @@ export default function CreatePage() {
                       </label>
 
                       <label className="block">
-                        <div className="mb-1 text-sm font-medium text-slate-200">{t('create.link')}</div>
+                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.link')}</div>
                         <input
                           type="url"
                           placeholder="https://..."
-                          className="box-border w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                          className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={s.link ?? ""}
                           onChange={(e) => updateStep(s.id, { link: e.target.value })}
                         />
@@ -268,7 +308,7 @@ export default function CreatePage() {
 
                     {/* Правая колонка: медиа + удаление */}
                     <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-slate-200">{t('create.media')}</div>
+                      <div className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.media')}</div>
                       <input
                         type="file"
                         accept="image/*"
@@ -299,13 +339,13 @@ export default function CreatePage() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-white/10 bg-slate-900/50 p-6">
+          <section className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md p-6">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-200">{t('create.usefulLinks')}</h2>
+              <h2 className="text-lg font-medium text-gray-800 dark:text-slate-200">{t('create.usefulLinks')}</h2>
               <button
                 type="button"
                 onClick={addResource}
-                className="rounded-md bg-slate-800 px-3 py-1 text-sm text-slate-300 hover:bg-slate-700"
+                className="rounded-md bg-gray-100 dark:bg-slate-800 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
               >
                 {t('create.addLink')}
               </button>
@@ -313,15 +353,15 @@ export default function CreatePage() {
 
             <div className="space-y-3">
               {resources.map((r) => (
-                <div key={r.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-900/40 px-3 py-2">
+                <div key={r.id} className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900/40 px-3 py-2">
                   <input
-                    className="w-1/3 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="w-1/3 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={t('create.labelPlaceholder')}
                     value={r.label}
                     onChange={(e) => updateResource(r.id, { label: e.target.value })}
                   />
                   <input
-                    className="flex-1 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="flex-1 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="https://..."
                     value={r.url}
                     onChange={(e) => updateResource(r.id, { url: e.target.value })}

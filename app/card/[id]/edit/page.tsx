@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import CollaboratorManager from "@/components/CollaboratorManager";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -34,6 +35,7 @@ export default function EditPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
 
@@ -58,6 +60,7 @@ export default function EditPage() {
       if (card.user_id !== user.id) { setForbidden(true); setLoading(false); return; }
 
       setTitle(card.title ?? "");
+      setIsPrivate(card.is_private === true);
       setDescription(card.description ?? "");
       setCategory(card.category ?? "");
 
@@ -415,6 +418,11 @@ export default function EditPage() {
             </button>
           </div>
         </form>
+        {isPrivate && (
+          <div className="mt-10">
+            <CollaboratorManager cardId={cardId} />
+          </div>
+        )}
       </main>
     </div>
   );
