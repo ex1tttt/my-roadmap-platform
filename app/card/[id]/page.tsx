@@ -151,8 +151,18 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  // Если карточка не найдена или приватная и не владелец
-  if (!data || (data.is_private && (!currentUser || currentUser.id !== data.user_id))) {
+  // Если карточка не найдена или приватная и не владелец/не коллаборатор
+  let isCollaborator = false;
+  if (data && data.is_private && currentUser && currentUser.email) {
+    // Проверяем, есть ли email пользователя в card_collaborators для этой карточки
+    const { data: collabRows } = await supabaseAuth
+      .from('card_collaborators')
+      .select('user_email')
+      .eq('card_id', id)
+      .eq('user_email', currentUser.email)
+    isCollaborator = (collabRows ?? []).length > 0;
+  }
+  if (!data || (data.is_private && (!currentUser || (currentUser.id !== data.user_id && !isCollaborator)))) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
         <main className="mx-auto max-w-4xl">
