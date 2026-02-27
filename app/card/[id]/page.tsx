@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createClient } from "@supabase/supabase-js";
+// import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { ExternalLink, ArrowLeft, BookOpen, Pencil } from "lucide-react";
@@ -61,10 +61,7 @@ function renderMedia(url: string | undefined, title: string) {
   );
 }
 
-const supabaseServer = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+
 
 const DEFAULT_OG_IMAGE = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://roadmap-platform.vercel.app"}/og-default.svg`;
 
@@ -72,7 +69,18 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await supabaseServer
+  const cookieStore = await cookies();
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: () => {},
+      },
+    }
+  );
+  const { data } = await supabaseAuth
     .from("cards")
     .select("title, description, image_url")
     .eq("id", id)
@@ -114,14 +122,20 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       },
     }
   );
-  const [{ data, error }, { data: { user: currentUser } }] = await Promise.all([
-    supabaseServer
+  // Получаем пользователя и карточку параллельно
+  const [
+    { data, error },
+    { data: { user: currentUser } }
+  ] = await Promise.all([
+    supabaseAuth
       .from("cards")
       .select("*, steps(*), resources(*), profiles:user_id(*)")
       .eq("id", id)
       .maybeSingle(),
     supabaseAuth.auth.getUser(),
   ]);
+
+  // Проверка ошибок
   if (error) {
     console.error("Full fetch error:", error);
     return (
@@ -136,7 +150,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       </div>
     );
   }
-  if (!data) {
+
+  // Если карточка не найдена или приватная и не владелец
+  if (!data || (data.is_private && (!currentUser || currentUser.id !== data.user_id))) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
         <main className="mx-auto max-w-4xl">
@@ -149,7 +165,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
   let author = Array.isArray(data.profiles) ? (data.profiles[0] ?? null) : (data.profiles ?? null);
   if (!author && data.user_id) {
-    const { data: profileFallback } = await supabaseServer
+    const { data: profileFallback } = await supabaseAuth
       .from("profiles")
       .select("*")
       .eq("id", data.user_id)
@@ -164,7 +180,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const stepIds = steps.map((s) => s.id)
   let initialDoneArr: string[] = []
   if (currentUser && stepIds.length > 0) {
-    const { data: progressRows } = await supabaseServer
+    const { data: progressRows } = await supabaseAuth
       .from('user_progress')
       .select('step_id')
       .eq('user_id', currentUser.id)
