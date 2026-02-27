@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useHasMounted } from '@/hooks/useHasMounted';
+import { toast } from "sonner";
 
 export default function DeleteButton({ cardId }: { cardId: string }) {
   const router = useRouter();
@@ -13,20 +14,37 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
   const mounted = useHasMounted();
   const [deleting, setDeleting] = useState(false);
 
-  async function handleDelete() {
-    if (!window.confirm(t('delete.confirm'))) return;
-
-    setDeleting(true);
-    try {
-      const { error } = await supabase.from("cards").delete().eq("id", cardId);
-      if (error) throw error;
-      router.push("/");
-      router.refresh();
-    } catch (err: any) {
-      console.error("Delete error:", err);
-      alert(t('delete.error') + ': ' + (err?.message ?? t('common.error')));
-      setDeleting(false);
-    }
+  function handleDelete() {
+    const tId = toast(
+      <div className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4">
+        <span className="text-white text-sm mb-2">{t('delete.confirm')}</span>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
+            onClick={async () => {
+              toast.dismiss(tId);
+              setDeleting(true);
+              try {
+                const { error } = await supabase.from("cards").delete().eq("id", cardId);
+                if (error) throw error;
+                toast.success('Карточка успешно удалена');
+                router.push("/");
+                router.refresh();
+              } catch (err: any) {
+                console.error("Delete error:", err);
+                toast.error(t('delete.error') + ': ' + (err?.message ?? t('common.error')));
+                setDeleting(false);
+              }
+            }}
+          >{t('delete.label')}</button>
+          <button
+            className="px-3 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+            onClick={() => toast.dismiss(tId)}
+          >{t('common.cancel') || 'Отмена'}</button>
+        </div>
+      </div>,
+      { duration: 10000, id: 'delete-confirm', position: 'top-center' }
+    );
   }
 
   return (

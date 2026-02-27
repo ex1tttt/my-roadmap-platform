@@ -69,10 +69,13 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
     let cancelled = false
 
     async function load() {
-      const [{ data: { user } }, { data: ratings, error }] = await Promise.all([
+      const [userRes, ratingsRes] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('ratings').select('rate, user_id').eq('roadmap_id', roadmapId),
       ])
+      const user = userRes.data?.user;
+      const ratings = ratingsRes.data;
+      const error = ratingsRes.error;
 
       if (cancelled) return
 
@@ -81,19 +84,16 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
         return
       }
 
-      const userId = user?.id ?? null
-      setCurrentUserId(userId)
-
-      if (!ratings || ratings.length === 0) return
-
-      const values = ratings.map((r: any) => r.rate as number)
-      const avg = values.reduce((a: number, b: number) => a + b, 0) / values.length
-      setAverage(avg)
-      setTotalCount(values.length)
-
-      if (userId) {
-        const own = ratings.find((r: any) => r.user_id === userId)
-        if (own) setUserRating(own.rate)
+      setCurrentUserId(user?.id ?? null)
+      if (ratings && Array.isArray(ratings)) {
+        setTotalCount(ratings.length)
+        setAverage(
+          ratings.length > 0
+            ? ratings.reduce((sum, r) => sum + (r.rate ?? 0), 0) / ratings.length
+            : 0
+        )
+        const userRate = ratings.find((r) => r.user_id === user?.id)?.rate ?? null
+        setUserRating(userRate)
       }
     }
 

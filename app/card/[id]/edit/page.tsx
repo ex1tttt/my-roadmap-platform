@@ -5,7 +5,7 @@ import CollaboratorManager from "@/components/CollaboratorManager";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
@@ -182,6 +182,24 @@ export default function EditPage() {
     }
   }
 
+  async function handleDeleteImage(stepId: string, imageUrl: string) {
+    try {
+      // Получаем путь из URL
+      const path = imageUrl.split("/images/")[1];
+      if (!path) return;
+      // Удаляем файл из Supabase Storage
+      const { error: storageError } = await supabase.storage.from("images").remove([path]);
+      if (storageError) throw storageError;
+      // Обновляем поле media_url в базе
+      const { error: dbError } = await supabase.from("steps").update({ media_url: null }).eq("id", stepId);
+      if (dbError) throw dbError;
+      // Обновляем UI
+      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, media_url: undefined } : s));
+    } catch (err) {
+      alert("Ошибка удаления изображения: " + (err as any)?.message);
+    }
+  }
+
   if (!hasMounted) return <div className="opacity-0" />;
 
   if (loading) {
@@ -332,7 +350,16 @@ export default function EditPage() {
                         <p className="text-xs text-blue-400">{hasMounted ? t('create.uploading') : 'Uploading...'}</p>
                       )}
                       {s.media_url && (
-                        <img src={s.media_url} alt="media" className="mt-1 h-28 w-full rounded-lg object-cover" />
+                        <div className="relative mt-1">
+                          <img src={s.media_url} alt="media" className="h-28 w-full rounded-lg object-cover" />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 z-10 rounded-full bg-red-500 text-white p-1 hover:bg-red-600 transition"
+                            onClick={() => handleDeleteImage(s.id, s.media_url!)}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                       <button
                         type="button"

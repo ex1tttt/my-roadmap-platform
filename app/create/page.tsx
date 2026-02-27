@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Lock, Globe } from "lucide-react";
-
+import Toast from "@/components/Toast";
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
 type Resource = { id: string; label: string; url: string };
@@ -32,6 +32,7 @@ export default function CreatePage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingStepId, setUploadingStepId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   async function handleFileUpload(file: File, stepId: string) {
     try {
@@ -109,7 +110,8 @@ export default function CreatePage() {
 
       if (cardError) {
         console.error('Full error:', cardError);
-        alert(t('common.error') + ': ' + cardError.message);
+        setToast({ message: t('common.error') + ': ' + cardError.message, type: 'error' });
+        setSaving(false);
         return;
       }
       const cardId = cardData?.[0]?.id;
@@ -129,7 +131,8 @@ export default function CreatePage() {
         const { error: stepsError } = await supabase.from("steps").insert(stepsPayload);
         if (stepsError) {
           console.error('Full error:', stepsError);
-          alert(t('common.error') + ': ' + stepsError.message);
+          setToast({ message: t('common.error') + ': ' + stepsError.message, type: 'error' });
+          setSaving(false);
           return;
         }
       }
@@ -150,13 +153,10 @@ export default function CreatePage() {
       setIsPrivate(false);
       setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
       setResources([]);
-      toast.success(t('create.publishSuccess'), {
-        description: t('create.publishSuccessDesc'),
-      });
+      setToast({ message: "Карточка успешно опубликована!", type: "success" });
       setTimeout(() => router.push('/'), 1500);
     } catch (err: any) {
-      console.error('Full error:', err);
-      alert(t('common.error') + ': ' + (err?.message || err));
+      setToast({ message: t('common.error') + ': ' + (err?.message ?? err), type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -165,7 +165,10 @@ export default function CreatePage() {
   if (!mounted) return <div className="opacity-0" />;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">
+    <>
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
       <main className="mx-auto max-w-4xl">
         <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">{t('create.title')}</h1>
 
@@ -389,6 +392,6 @@ export default function CreatePage() {
           </div>
         </form>
       </main>
-    </div>
+    </>
   );
 }

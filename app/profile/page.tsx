@@ -329,7 +329,7 @@ export default function ProfilePage() {
   }
 
   async function handleDelete(cardId: string) {
-    if (!window.confirm(t('card.deleteConfirm'))) return
+    // confirm убран, подтверждение теперь только через модальное окно/кастомный toast
     const { error } = await supabase.from('cards').delete().eq('id', cardId)
     if (error) {
       alert('Ошибка при удалении: ' + error.message)
