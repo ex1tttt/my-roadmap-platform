@@ -181,6 +181,9 @@ export default function ProfilePage() {
         commentsCount: commentsCountMap.get(c.id) ?? 0,
       })
 
+      console.log('userId:', userId)
+      console.log('myCardsRaw:', myCardsRaw)
+      console.log('likedCardsRaw:', likedCardsRaw)
       setMyCards(myCardsRaw.map(toCardType))
       setLikedCards(likedCardsRaw.map(toCardType))
 

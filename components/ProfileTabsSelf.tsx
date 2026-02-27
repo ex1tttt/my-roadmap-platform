@@ -65,8 +65,81 @@ export default function ProfileTabsSelf({
           </button>
         ))}
       </div>
+
       {/* Контент вкладок */}
-      {tab === 'shared' ? (
+      {tab === 'my' && (
+        myCards.length === 0 ? (
+          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
+            <p className="text-slate-500 dark:text-slate-400">У вас пока нет карточек</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            {myCards.map((c: any) => (
+              <div key={c.id} className="relative">
+                <Card
+                  card={c}
+                  userId={profile?.id}
+                  initialIsLiked={c.isLiked}
+                  initialIsFavorite={c.isFavorite}
+                  initialLikesCount={c.likesCount}
+                  initialAverageRating={c.averageRating}
+                  initialCommentsCount={c.commentsCount}
+                />
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {tab === 'liked' && (
+        likedCards.length === 0 ? (
+          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
+            <p className="text-slate-500 dark:text-slate-400">У вас пока нет понравившихся карточек</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md/grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            {likedCards.map((c: any) => (
+              <div key={c.id} className="relative">
+                <Card
+                  card={c}
+                  userId={profile?.id}
+                  initialIsLiked={c.isLiked}
+                  initialIsFavorite={c.isFavorite}
+                  initialLikesCount={c.likesCount}
+                  initialAverageRating={c.averageRating}
+                  initialCommentsCount={c.commentsCount}
+                />
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {tab === 'favorites' && (
+        favoriteCards.length === 0 ? (
+          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
+            <p className="text-slate-500 dark:text-slate-400">У вас пока нет избранных карточек</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            {favoriteCards.map((c: any) => (
+              <div key={c.id} className="relative">
+                <Card
+                  card={c}
+                  userId={profile?.id}
+                  initialIsLiked={c.isLiked}
+                  initialIsFavorite={c.isFavorite}
+                  initialLikesCount={c.likesCount}
+                  initialAverageRating={c.averageRating}
+                  initialCommentsCount={c.commentsCount}
+                />
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {tab === 'shared' && (
         sharedCards.length === 0 ? (
           <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
             <p className="text-slate-500 dark:text-slate-400">У вас пока нет доступа к приватным карточкам других пользователей</p>
@@ -75,12 +148,20 @@ export default function ProfileTabsSelf({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             {sharedCards.map((c: any) => (
               <div key={c.id} className="relative">
-                <Card card={c} userId={profile?.id} />
+                <Card
+                  card={c}
+                  userId={profile?.id}
+                  initialIsLiked={c.isLiked}
+                  initialIsFavorite={c.isFavorite}
+                  initialLikesCount={c.likesCount}
+                  initialAverageRating={c.averageRating}
+                  initialCommentsCount={c.commentsCount}
+                />
               </div>
             ))}
           </div>
         )
-      ) : null}
+      )}
     </>
   );
 }
