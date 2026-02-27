@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 // import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { ExternalLink, ArrowLeft, BookOpen, Pencil } from "lucide-react";
+import { ExternalLink, ArrowLeft, BookOpen, Pencil, Lock } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import DeleteButton from "@/components/DeleteButton";
 import CommentSection from "@/components/CommentSection";
@@ -240,9 +240,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                 {data.category}
               </span>
             )}
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {data.title}
-            </h1>
+            <div className="flex items-center gap-2">
+              {data.is_private && (
+                <span title="Приватная карточка">
+                  <Lock size={18} className="text-amber-500 dark:text-slate-400" />
+                </span>
+              )}
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {data.title}
+              </h1>
+            </div>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-4">
             <Link
