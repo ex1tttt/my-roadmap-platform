@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
-import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil } from 'lucide-react'
+import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil, Users } from 'lucide-react'
+import ProfileTabsSelf from '@/components/ProfileTabsSelf'
 import { useTranslation } from 'react-i18next'
 import { useHasMounted } from '@/hooks/useHasMounted'
 
@@ -39,7 +40,8 @@ export default function ProfilePage() {
   const [favoritesLoaded, setFavoritesLoaded] = useState(false)
   const [favoritesLoading, setFavoritesLoading] = useState(false)
   const [favoritesCount, setFavoritesCount] = useState(0)
-  const [tab, setTab] = useState<Tab>('my')
+  const [tab, setTab] = useState<any>('my')
+    const [sharedCards, setSharedCards] = useState<CardType[]>([])
   const [loading, setLoading] = useState(true)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [followersCount, setFollowersCount] = useState(0)
@@ -181,6 +183,25 @@ export default function ProfilePage() {
 
       setMyCards(myCardsRaw.map(toCardType))
       setLikedCards(likedCardsRaw.map(toCardType))
+
+      // --- Доступные мне ---
+      const userEmail = user.email;
+      if (userEmail) {
+        const { data: collabRows = [] } = await supabase
+          .from('card_collaborators')
+          .select('card_id')
+          .eq('user_email', userEmail);
+        const cardIds = (collabRows ?? []).map((row: any) => row.card_id);
+        if (cardIds.length > 0) {
+          const { data: shared = [] } = await supabase
+            .from('cards')
+            .select('*')
+            .in('id', cardIds);
+          setSharedCards(shared ? shared.map(toCardType) : []);
+        } else {
+          setSharedCards([]);
+        }
+      }
       setLoading(false)
     }
 
@@ -314,13 +335,7 @@ export default function ProfilePage() {
     setMyCards((prev) => prev.filter((c) => c.id !== cardId))
   }
 
-  const tabs: { key: Tab; label: string; icon: React.ReactNode; count: number }[] = [
-    { key: 'my', label: t('profile.myCards'), icon: <MapIcon className="w-4 h-4" />, count: myCards.length },
-    { key: 'liked', label: t('profile.liked'), icon: <Heart className="w-4 h-4" />, count: likedCards.length },
-    { key: 'favorites', label: t('nav.favorites'), icon: <Bookmark className="w-4 h-4" />, count: favoritesCount },
-  ]
-
-  const displayed = tab === 'my' ? myCards : tab === 'liked' ? likedCards : favoriteCards
+  const displayed = tab === 'my' ? myCards : tab === 'liked' ? likedCards : tab === 'favorites' ? favoriteCards : sharedCards
 
   if (!mounted) return <div className="opacity-0" />;
 
@@ -335,7 +350,6 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-7xl">
-
         {/* Шапка профиля */}
         <section className="mb-10 flex items-center justify-between gap-5">
           <div className="flex items-center gap-5">
@@ -385,122 +399,46 @@ export default function ProfilePage() {
           </Link>
         </section>
 
-        {/* Вкладки */}
-        <div className="mb-8 flex gap-1 border-b border-slate-200/60 dark:border-white/10">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`
-                flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors
-                border-b-2 -mb-px
-                ${tab === t.key
-                  ? 'border-blue-500 text-blue-500'
-                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
-                }
-              `}
-            >
-              {t.icon}
-              {t.label}
-              <span className={`
-                rounded-full px-1.5 py-0.5 text-xs font-semibold
-                ${tab === t.key
-                  ? 'bg-blue-500/15 text-blue-500'
-                  : 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400'
-                }
-              `}>
-                {t.count}
-              </span>
-            </button>
-          ))}
-        </div>
+        {/* Вкладки с "Доступные мне" */}
+        <ProfileTabsSelf
+          myCards={myCards}
+          likedCards={likedCards}
+          favoriteCards={favoriteCards}
+          sharedCards={sharedCards}
+          profile={profile}
+          followersCount={followersCount}
+          followingCount={followingCount}
+          tab={tab}
+          setTab={setTab}
+          favoritesCount={favoritesCount}
+          loading={loading}
+          favoritesLoading={favoritesLoading}
+          displayed={displayed}
+          handleCardLike={handleCardLike}
+          handleCardFavorite={handleCardFavorite}
+          handleDelete={handleDelete}
+          openMenuId={openMenuId}
+          setOpenMenuId={setOpenMenuId}
+          menuRef={menuRef}
+          t={t}
+          modalMode={modalMode}
+          setModalMode={setModalMode}
+          setFollowingCount={setFollowingCount}
+        />
 
-        {/* Карточки */}
-        {tab === 'favorites' && favoritesLoading ? (
-          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
-          </div>
-        ) : displayed.length === 0 ? (
-          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            {tab === 'my' ? (
-              <>
-                <p className="text-slate-500 dark:text-slate-400">{t('profile.noCards')}</p>
-                <Link
-                  href="/create"
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
-                >
-                  {t('nav.create')}
-                </Link>
-              </>
-            ) : tab === 'liked' ? (
-              <p className="text-slate-500 dark:text-slate-400">{t('profile.noLikes')}</p>
-            ) : (
-              <p className="text-slate-500 dark:text-slate-400">{t('favorites.empty')}</p>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-            {displayed.map((c) => (
-              <div key={c.id} className="relative">
-                <Card
-                    card={c}
-                    userId={profile?.id}
-                    initialLikesCount={c.likesCount}
-                    initialIsLiked={c.isLiked}
-                    initialIsFavorite={c.isFavorite}
-                    initialAverageRating={c.averageRating}
-                    initialCommentsCount={c.commentsCount}
-                    onLike={handleCardLike}
-                    onFavorite={handleCardFavorite}
-                    actions={tab === 'my' ? (
-                      <div ref={openMenuId === c.id ? menuRef : undefined}>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenMenuId(openMenuId === c.id ? null : c.id) }}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-                          title="Действия"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-                        {openMenuId === c.id && (
-                          <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900 p-1 shadow-lg dark:shadow-none backdrop-blur-md">
-                            <Link
-                              href={`/card/${c.id}/edit`}
-                              onClick={() => setOpenMenuId(null)}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-colors"
-                            >
-                              <Pencil className="h-4 w-4" />
-                              {t('card.edit')}
-                            </Link>
-                            <button
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenMenuId(null); handleDelete(c.id) }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              {t('card.delete')}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ) : undefined}
-                  />
-              </div>
-            ))}
-          </div>
+        {/* Модалка подписчиков / подписок */}
+        {modalMode && profile && (
+          <FollowListModal
+            mode={modalMode}
+            profileId={profile.id}
+            currentUserId={profile.id}
+            canUnfollow={true}
+            isOpen={true}
+            onClose={() => setModalMode(null)}
+            onUnfollow={() => setFollowingCount((n) => Math.max(0, n - 1))}
+          />
         )}
       </main>
-
-      {/* Модалка подписчиков / подписок */}
-      {modalMode && profile && (
-        <FollowListModal
-          mode={modalMode}
-          profileId={profile.id}
-          currentUserId={profile.id}
-          canUnfollow={true}
-          isOpen={true}
-          onClose={() => setModalMode(null)}
-          onUnfollow={() => setFollowingCount((n) => Math.max(0, n - 1))}
-        />
-      )}
     </div>
   )
 }

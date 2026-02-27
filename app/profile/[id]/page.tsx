@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { ArrowLeft } from "lucide-react";
+import ProfileTabsWrapper from "./ProfileTabsWrapper";
 import PublicProfileCards from "@/components/PublicProfileCards";
 import ProfileHeader from "@/components/ProfileHeader";
 
@@ -62,6 +63,26 @@ export default async function PublicProfilePage({
   ]);
 
   const isOwner = currentUser?.id === id;
+
+  // --- Доступные мне карточки (только для владельца) ---
+  let sharedCards: any[] = [];
+  if (isOwner) {
+    const userEmail = currentUser?.email;
+    if (userEmail) {
+      const { data: collabRows = [] } = await supabaseAuth
+        .from("card_collaborators")
+        .select("card_id")
+        .eq("user_email", userEmail);
+      const cardIds = (collabRows ?? []).map((row: any) => row.card_id);
+      if (cardIds.length > 0) {
+        const { data: shared = [] } = await supabaseAuth
+          .from("cards")
+          .select("*, steps(*)")
+          .in("id", cardIds);
+        sharedCards = shared ?? [];
+      }
+    }
+  }
 
   // Проверяем подписку текущего пользователя отдельным точечным запросом
   const { count: isFollowingCount } = currentUser && !isOwner
@@ -138,7 +159,6 @@ export default async function PublicProfilePage({
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] py-10 px-6">
       <main className="mx-auto max-w-5xl">
-
         {/* Назад */}
         <Link
           href="/"
@@ -159,34 +179,14 @@ export default async function PublicProfilePage({
           currentUserId={currentUser?.id ?? null}
         />
 
-        {/* Карточки */}
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">
-            {isOwner ? "Мои карточки" : `Карточки пользователя`}
-          </h2>
-
-          {!cards || cards.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-8 text-center">
-              <p className="text-slate-600 dark:text-slate-400">
-                {isOwner ? "У вас пока нет карточек" : "Пользователь ещё не создал карточек"}
-              </p>
-              {isOwner && (
-                <Link
-                  href="/create"
-                  className="mt-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  Создать первую
-                </Link>
-              )}
-            </div>
-          ) : (
-            <PublicProfileCards
-              cards={enrichedCards}
-              profile={{ id: profile.id, username: profile.username, avatar: profile.avatar }}
-              currentUserId={currentUser?.id ?? null}
-            />
-          )}
-        </section>
+        {/* Вкладки профиля (client) */}
+        <ProfileTabsWrapper
+          isOwner={isOwner}
+          cards={enrichedCards}
+          sharedCards={sharedCards}
+          profile={{ id: profile.id, username: profile.username, avatar: profile.avatar }}
+          currentUserId={currentUser?.id ?? null}
+        />
       </main>
     </div>
   );
