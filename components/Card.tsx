@@ -161,7 +161,7 @@ export default function Card({
   return (
     <article
       ref={cardRef}
-      className="group relative w-full h-[200px] flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer overflow-hidden"
+      className="group relative w-full h-50 flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer overflow-hidden"
       onClick={() => router.push(`/card/${card.id}`)}
     >
       {/* Верхний блок: заголовок, автор, описание */}
@@ -204,7 +204,7 @@ export default function Card({
       </div>
       {/* Блок шага */}
       <div className="flex flex-col">
-        <ol className="text-xs max-h-[32px] overflow-hidden">
+        <ol className="text-xs max-h-8 overflow-hidden">
           {(card.steps && card.steps.length > 0)
             ? card.steps.slice().sort((a, b) => a.order - b.order).slice(0, 1).map((step) => (
                 <li key={step.id} className="flex gap-2 items-center">

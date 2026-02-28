@@ -85,6 +85,7 @@ export default function CreatePage() {
   async function handlePublish(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+
     try {
       // Получаем свежий ID залогиненного пользователя прямо перед сохранением,
       // чтобы не зависеть от потенциально устаревшего состояния
@@ -116,6 +117,57 @@ export default function CreatePage() {
       }
       const cardId = cardData?.[0]?.id;
       if (!cardId) throw new Error("Card ID not returned");
+
+      // --- Уведомления подписчикам ---
+      // 1. Получаем всех подписчиков (follower_id), которые подписаны на текущего пользователя
+      const { data: followers, error: followersError } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', user.id);
+      if (followersError) {
+        console.error('Followers fetch error:', followersError);
+      } else if (followers && followers.length > 0) {
+        // 2. Получаем имя автора
+        let authorName = user.email;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (profile && profile.username) authorName = profile.username;
+
+        // 3. Массовая вставка уведомлений
+        const notifications = followers.map((f: any) => ({
+          receiver_id: f.follower_id,
+          actor_id: user.id,
+          type: 'new_card',
+          card_id: cardId,
+          text: `${authorName} опубликовал новую дорожную карту: ${title}`,
+        }));
+        if (notifications.length > 0) {
+          const { error: notifError } = await supabase.from('notifications').insert(notifications);
+          if (notifError) console.error('Notifications insert error:', notifError);
+        }
+
+        // 4. Real-time broadcast (если есть подписка на канал)
+        try {
+          const { supabaseRealtime } = await import('@/lib/supabase-realtime');
+          const channel = supabaseRealtime.channel('notifications');
+          await channel.send({
+            type: 'broadcast',
+            event: 'new_card',
+            payload: {
+              userId: user.id,
+              authorName,
+              cardId,
+              title,
+              followerIds: followers.map((f: any) => f.follower_id),
+            },
+          });
+        } catch (err) {
+          console.error('Realtime broadcast error:', err);
+        }
+      }
 
       // 2) insert steps
       const stepsPayload = steps.map((s, idx) => ({

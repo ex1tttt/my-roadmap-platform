@@ -290,18 +290,11 @@ export default function EditPage() {
 
           {/* Шаги */}
           <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{hasMounted ? t('edit.steps') : 'Steps'}</h2>
-              <button type="button" onClick={addStep} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                {hasMounted ? t('edit.addStep') : 'Add step'}
-              </button>
-            </div>
-
+            <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{hasMounted ? t('edit.steps') : 'Steps'}</h2>
             <div className="space-y-3">
               {steps.map((s, idx) => (
                 <div key={s.id} className="box-border w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4">
                   <div className="mb-3 text-xs font-semibold text-slate-500">{hasMounted ? t('edit.stepLabel', { n: idx + 1 }) : `Step ${idx + 1}`}</div>
-
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {/* Левая колонка: текстовые поля */}
                     <div className="flex flex-col gap-3">
@@ -333,7 +326,6 @@ export default function EditPage() {
                         />
                       </label>
                     </div>
-
                     {/* Правая колонка: медиа */}
                     <div className="flex flex-col gap-2">
                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepMedia') : 'Media'}</div>
@@ -373,6 +365,13 @@ export default function EditPage() {
                 </div>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={addStep}
+              className="mt-4 w-full text-left rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            >
+              {hasMounted ? t('edit.addStep') : 'Add step'}
+            </button>
           </section>
 
           {/* Ресурсы */}
