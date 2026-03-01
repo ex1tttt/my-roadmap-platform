@@ -32,6 +32,8 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHistory() {
@@ -45,38 +47,52 @@ export default function HistoryPage() {
       }
 
       setUserId(user.id);
+      console.log('[history] auth user.id =>', user.id);
 
-      // Получаем историю с join на cards + steps + profiles
-      const { data: historyData, error } = await supabase
+      // Шаг 1: получаем историю просмотров
+      const { data: historyData, error: histError } = await supabase
         .from("view_history")
-        .select("card_id, viewed_at, card:card_id(*, steps(*), profiles:user_id(*))")
+        .select("card_id, viewed_at")
         .eq("user_id", user.id)
         .order("viewed_at", { ascending: false });
 
-      if (error) {
-        console.error("History fetch error:", error);
+      if (histError) {
+        const msg = `[view_history] ${histError.code}: ${histError.message}${histError.hint ? ` | Hint: ${histError.hint}` : ''}`;
+        console.error(msg);
+        setDebugError(msg);
         setLoading(false);
         return;
       }
+
+      console.log('[history] raw historyData:', historyData?.length, 'rows');
 
       if (!historyData || historyData.length === 0) {
         setLoading(false);
         return;
       }
 
-      const rawCards = historyData
-        .map((h: any) => ({ card: h.card, viewedAt: h.viewed_at }))
-        .filter((h) => h.card != null);
+      const cardIds = historyData.map((h: any) => h.card_id);
+      const viewedAtMap = new Map<string, string>(historyData.map((h: any) => [h.card_id, h.viewed_at]));
 
-      const cardIds = rawCards.map((h: any) => h.card.id);
-      const authorIds = Array.from(new Set(rawCards.map((h: any) => h.card.user_id)));
-
-      const [likesRes, userLikesRes, favRes, profilesRes] = await Promise.all([
+      // Шаг 2: параллельно тянем карточки + лайки + избранное
+      const [cardsRes, likesRes, userLikesRes, favRes] = await Promise.all([
+        supabase.from("cards").select("*, steps(*), profiles:user_id(*)").in("id", cardIds),
         supabase.from("likes").select("card_id").in("card_id", cardIds),
         supabase.from("likes").select("card_id").eq("user_id", user.id).in("card_id", cardIds),
         supabase.from("favorites").select("roadmap_id").eq("user_id", user.id).in("roadmap_id", cardIds),
-        supabase.from("profiles").select("*").in("id", authorIds),
       ]);
+
+      if (cardsRes.error) {
+        const msg = `[cards] ${cardsRes.error.code}: ${cardsRes.error.message}`;
+        console.error(msg);
+        setDebugError(msg);
+        setLoading(false);
+        return;
+      }
+      console.log('[history] cards fetched:', cardsRes.data?.length);
+
+      const authorIds = Array.from(new Set((cardsRes.data || []).map((r: any) => r.user_id)));
+      const profilesRes = await supabase.from("profiles").select("*").in("id", authorIds);
 
       const profilesMap = new Map<string, Profile>();
       (profilesRes.data || []).forEach((p: any) =>
@@ -91,18 +107,26 @@ export default function HistoryPage() {
       const userLikedSet = new Set<string>((userLikesRes.data || []).map((l: any) => l.card_id));
       const favSet = new Set<string>((favRes.data || []).map((f: any) => f.roadmap_id));
 
-      const merged: CardType[] = rawCards.map(({ card: r, viewedAt }: any) => ({
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        category: r.category,
-        user: profilesMap.get(r.user_id) || { id: r.user_id, username: "Unknown" },
-        steps: ((r.steps || []) as Step[]).slice().sort((a, b) => a.order - b.order),
-        likesCount: likesCountMap.get(r.id) || 0,
-        isLiked: userLikedSet.has(r.id),
-        isFavorite: favSet.has(r.id),
-        viewedAt,
-      }));
+      // Сортируем карточки в том же порядке, что история
+      const cardsMap = new Map((cardsRes.data || []).map((r: any) => [r.id, r]));
+      const merged: CardType[] = cardIds
+        .map((cid: string) => cardsMap.get(cid))
+        .filter(Boolean)
+        .map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          category: r.category,
+          user: (() => {
+            const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+            return p ? { id: p.id, username: p.username, avatar: p.avatar } : profilesMap.get(r.user_id) || { id: r.user_id, username: "Unknown" };
+          })(),
+          steps: ((r.steps || []) as Step[]).slice().sort((a: any, b: any) => a.order - b.order),
+          likesCount: likesCountMap.get(r.id) || 0,
+          isLiked: userLikedSet.has(r.id),
+          isFavorite: favSet.has(r.id),
+          viewedAt: viewedAtMap.get(r.id) || "",
+        }));
 
       setCards(merged);
       setLoading(false);
@@ -110,6 +134,27 @@ export default function HistoryPage() {
 
     loadHistory();
   }, [router]);
+
+  const [testResult, setTestResult] = useState<string | null>(null);
+
+  async function handleTestWrite() {
+    if (!userId) return;
+    setTestResult("⏳ Выполняется...");
+    // Берём любую карточку чтобы протестировать запись
+    const { data: anyCard } = await supabase.from("cards").select("id").limit(1).single();
+    if (!anyCard) { setTestResult("❌ Нет карточек в БД для теста"); return; }
+    const { data, error } = await supabase
+      .from("view_history")
+      .upsert({ user_id: userId, card_id: anyCard.id, viewed_at: new Date().toISOString() }, { onConflict: "user_id,card_id" })
+      .select();
+    if (error) {
+      setTestResult(`❌ Ошибка: ${error.code} — ${error.message}${error.hint ? ` | Hint: ${error.hint}` : ""}`);
+    } else {
+      setTestResult(`✅ Успешно! Запись: ${JSON.stringify(data?.[0])}`);
+      // Перезагружаем историю
+      window.location.reload();
+    }
+  }
 
   async function handleClearHistory() {
     if (!userId) return;
@@ -137,6 +182,25 @@ export default function HistoryPage() {
 
   if (!mounted) return <div className="opacity-0" />;
 
+  // Блок диагностики — показываем всегда пока есть ошибка или инфо
+  const DebugBanner = () => {
+    if (!debugError && !debugInfo) return null;
+    if (debugError) return (
+      <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-400 font-mono break-all">
+        <strong>Ошибка запроса:</strong><br />{debugError}<br />
+        <span className="text-slate-400 text-xs mt-2 block">
+          Скорее всего таблица <code>view_history</code> не создана или отсутствуют RLS-политики.<br />
+          Запусти SQL из файла <code>db/migration_view_history.sql</code> в Supabase → SQL Editor.
+        </span>
+      </div>
+    );
+    return (
+      <div className="mb-6 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-300 font-mono">
+        {debugInfo}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#020617]">
@@ -148,6 +212,13 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-6xl">
+        <DebugBanner />
+        {/* Результат теста записи */}
+        {testResult && (
+          <div className={`mb-6 rounded-lg border p-4 text-sm font-mono break-all ${testResult.startsWith("✅") ? "border-green-500/30 bg-green-500/10 text-green-400" : testResult.startsWith("❌") ? "border-red-500/30 bg-red-500/10 text-red-400" : "border-blue-500/30 bg-blue-500/10 text-blue-300"}`}>
+            {testResult}
+          </div>
+        )}
         {/* Заголовок */}
         <header className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -165,6 +236,13 @@ export default function HistoryPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Кнопка теста — временная диагностика */}
+            <button
+              onClick={handleTestWrite}
+              className="inline-flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-sm text-yellow-400 transition-colors hover:bg-yellow-500/20"
+            >
+              🧪 Тест записи
+            </button>
             {cards.length > 0 && (
               <button
                 onClick={handleClearHistory}
@@ -212,7 +290,7 @@ export default function HistoryPage() {
                   <Clock className="h-3 w-3" />
                   {formatViewed(c.viewedAt)}
                 </p>
-                <Link href={`/card/${c.id}`} className="cursor-pointer h-full block">
+                <div className="cursor-pointer h-full" onClick={() => router.push(`/card/${c.id}`)}>
                   <Card
                     card={c}
                     userId={userId}
@@ -220,7 +298,7 @@ export default function HistoryPage() {
                     initialIsLiked={c.isLiked}
                     initialIsFavorite={c.isFavorite}
                   />
-                </Link>
+                </div>
               </div>
             ))}
           </div>

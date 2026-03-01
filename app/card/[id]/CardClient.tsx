@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createBrowserClient } from "@supabase/ssr";
+import { supabase } from "@/lib/supabase";
 import { ExternalLink, ArrowLeft, BookOpen, Pencil, Loader2, ShieldAlert } from "lucide-react";
 
 // Импорты компонентов
@@ -27,31 +27,32 @@ export default function CardClient({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [initialDone, setInitialDone] = useState<string[]>([]);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   useEffect(() => {
     if (!id || id === "undefined") return;
 
     async function fetchData() {
       setLoading(true);
-      // 1. Юзер
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
 
-      // 2. Карточка
-      const { data: cardData } = await supabase
-        .from("cards")
-        .select("*, steps(*), resources(*), profiles:user_id(*)")
-        .eq("id", id)
-        .maybeSingle();
+      // 1. Юзер + карточка параллельно
+      // getSession читает из кукисов без сетевого запроса — не падает при протухшем refresh token
+      const [{ data: { session } }, { data: cardData }] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase
+          .from("cards")
+          .select("*, steps(*), resources(*), profiles:user_id(*)")
+          .eq("id", id)
+          .maybeSingle(),
+      ]);
+
+      const user = session?.user ?? null;
+      console.log('[CardClient] user =>', user ? `uid=${user.id}` : 'null (не авторизован)');
+      setCurrentUser(user);
 
       if (cardData) {
         setCard(cardData);
-        // 3. Прогресс
+
         if (user) {
+          // Прогресс
           const { data: prog } = await supabase
             .from('user_progress')
             .select('step_id')
@@ -59,19 +60,22 @@ export default function CardClient({ id }: { id: string }) {
             .eq('card_id', id);
           setInitialDone(prog?.map((p: any) => p.step_id) || []);
 
-          // Тихая запись в историю просмотров (fire-and-forget)
-          void supabase
+          // Запись в историю просмотров
+          console.log('[view_history] upsert → user_id:', user.id, '| card_id:', id);
+          const { data: upsertData, error: histErr } = await supabase
             .from('view_history')
             .upsert(
               { user_id: user.id, card_id: id, viewed_at: new Date().toISOString() },
               { onConflict: 'user_id,card_id' }
-            );
+            )
+            .select();
+          console.log('History status:', histErr ? `ERROR: ${histErr.code} ${histErr.message}` : 'OK', '| data:', upsertData);
         }
       }
       setLoading(false);
     }
     fetchData();
-  }, [id, supabase]);
+  }, [id]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617]">

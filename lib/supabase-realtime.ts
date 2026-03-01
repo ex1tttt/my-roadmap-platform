@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabaseRealtime = createClient(supabaseUrl, supabaseKey);
-
+// Используем синглтон из lib/supabase — не создаём лишних GoTrueClient
+import { supabase } from '@/lib/supabase';
+export const supabaseRealtime = supabase;
 export default supabaseRealtime;

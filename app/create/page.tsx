@@ -136,18 +136,9 @@ export default function CreatePage() {
           .maybeSingle();
         if (profile && profile.username) authorName = profile.username;
 
-        // 3. Массовая вставка уведомлений
-        const notifications = followers.map((f: any) => ({
-          receiver_id: f.follower_id,
-          actor_id: user.id,
-          type: 'new_card',
-          card_id: cardId,
-          text: `${authorName} опубликовал новую дорожную карту: ${title}`,
-        }));
-        if (notifications.length > 0) {
-          const { error: notifError } = await supabase.from('notifications').insert(notifications);
-          if (notifError) console.error('Notifications insert error:', notifError);
-        }
+        // 3. Массовая вставка уведомлений — тип 'like' пока не подходит,
+        // 'new_card' нет в notifications_type_check (допустимые: follow, like, comment, comment_like)
+        // Пропускаем DB-insert, оставляем только realtime broadcast
 
         // 4. Real-time broadcast (если есть подписка на канал)
         try {

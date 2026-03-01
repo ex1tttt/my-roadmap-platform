@@ -12,6 +12,7 @@ import ScrollToHash from "@/components/ScrollToHash";
 import ShareButton from "@/components/ShareButton";
 import StepsProgress from "@/components/StepsProgress";
 import ClientOnly from "@/components/ClientOnly";
+import ViewHistoryRecorder from "./ViewHistoryRecorder";
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -335,6 +336,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         </aside>
       </div>
       <ScrollToHash />
+      <ViewHistoryRecorder cardId={id} />
       <div id="comments" className="mx-auto max-w-5xl px-6 pb-16">
         <div className="border-t border-slate-200 dark:border-slate-700/60 pt-10">
           <CommentSection roadmapId={id} />
