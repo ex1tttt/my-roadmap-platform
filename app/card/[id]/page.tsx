@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 // import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { ExternalLink, ArrowLeft, BookOpen, Pencil, Lock } from "lucide-react";
+import { ExternalLink, BookOpen, Pencil, Lock } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import DeleteButton from "@/components/DeleteButton";
 import CommentSection from "@/components/CommentSection";
@@ -13,6 +13,7 @@ import ShareButton from "@/components/ShareButton";
 import StepsProgress from "@/components/StepsProgress";
 import ClientOnly from "@/components/ClientOnly";
 import ViewHistoryRecorder from "./ViewHistoryRecorder";
+import BackButton from "./BackButton";
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -204,13 +205,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-6 py-4">
           <div className="mb-3 flex items-center justify-between gap-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-slate-200"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Назад
-            </Link>
+            <BackButton isOwner={isOwner} />
             <div className="flex items-center gap-2">
               <ClientOnly fallback={<div className="h-7 w-24" />}>
                 <ShareButton

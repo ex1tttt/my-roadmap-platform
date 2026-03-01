@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Settings } from 'lucide-react'
+import { Settings, Bell } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import FollowListModal from '@/components/FollowListModal'
+import Toast from '@/components/Toast'
 import { useTranslation } from 'react-i18next'
 
 interface Props {
@@ -40,10 +41,48 @@ export default function ProfileHeader({
   const [followingCountState, setFollowingCountState] = useState(followingCount)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [notifyEnabled, setNotifyEnabled] = useState(false)
+  const [notifyLoading, setNotifyLoading] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
   const router = useRouter()
 
   useEffect(() => setMounted(true), [])
+
+  // Загружаем notify_enabled из таблицы follows
+  useEffect(() => {
+    if (!currentUserId || !isFollowing) return
+    supabase
+      .from('follows')
+      .select('notify_enabled')
+      .eq('follower_id', currentUserId)
+      .eq('following_id', profile.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setNotifyEnabled(data.notify_enabled ?? false)
+      })
+  }, [currentUserId, profile.id, isFollowing])
+
+  async function handleNotify() {
+    if (!currentUserId || notifyLoading) return
+    setNotifyLoading(true)
+    const newVal = !notifyEnabled
+    setNotifyEnabled(newVal)
+    const { error } = await supabase
+      .from('follows')
+      .update({ notify_enabled: newVal })
+      .match({ follower_id: currentUserId, following_id: profile.id })
+    if (error) {
+      setNotifyEnabled(!newVal)
+      setToast({ message: 'Ошибка при изменении настроек', type: 'error' })
+    } else {
+      setToast({
+        message: newVal ? 'Уведомления включены' : 'Уведомления выключены',
+        type: 'success',
+      })
+    }
+    setNotifyLoading(false)
+  }
 
   async function handleFollow() {
     if (loading) return
@@ -133,21 +172,38 @@ export default function ProfileHeader({
               {t('profile.settings')}
             </Link>
           ) : currentUserId ? (
-            <button
-              onClick={handleFollow}
-              disabled={loading}
-              onMouseEnter={() => setHovered(true)}
-              onMouseLeave={() => setHovered(false)}
-              className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                isFollowing
-                  ? hovered
-                    ? 'border border-red-500/40 bg-red-950/40 text-red-400'
-                    : 'border border-slate-700 bg-slate-800 text-slate-300'
-                  : 'border border-blue-500/40 bg-blue-600 text-white hover:bg-blue-500'
-              }`}
-            >
-              {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Колокольчик — только если подписан */}
+              {isFollowing && (
+                <button
+                  onClick={handleNotify}
+                  disabled={notifyLoading}
+                  title={notifyEnabled ? 'Выключить уведомления' : 'Включить уведомления'}
+                  className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-1.5 transition-colors hover:border-slate-300 dark:hover:border-white/20 disabled:opacity-50"
+                >
+                  <Bell
+                    className={`h-4 w-4 transition-colors ${
+                      notifyEnabled ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+              )}
+              <button
+                onClick={handleFollow}
+                disabled={loading}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isFollowing
+                    ? hovered
+                      ? 'border border-red-500/40 bg-red-950/40 text-red-400'
+                      : 'border border-slate-700 bg-slate-800 text-slate-300'
+                    : 'border border-blue-500/40 bg-blue-600 text-white hover:bg-blue-500'
+                }`}
+              >
+                {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
+              </button>
+            </div>
           ) : null}
         </div>
 
@@ -208,6 +264,15 @@ export default function ProfileHeader({
             ? () => setFollowingCountState((n) => Math.max(0, n - 1))
             : undefined
         }
+      />
+    )}
+
+    {/* Toast-уведомление */}
+    {toast && (
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast(null)}
       />
     )}
     </>
