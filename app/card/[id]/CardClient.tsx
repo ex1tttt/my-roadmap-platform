@@ -58,6 +58,14 @@ export default function CardClient({ id }: { id: string }) {
             .eq('user_id', user.id)
             .eq('card_id', id);
           setInitialDone(prog?.map((p: any) => p.step_id) || []);
+
+          // Тихая запись в историю просмотров (fire-and-forget)
+          void supabase
+            .from('view_history')
+            .upsert(
+              { user_id: user.id, card_id: id, viewed_at: new Date().toISOString() },
+              { onConflict: 'user_id,card_id' }
+            );
         }
       }
       setLoading(false);
