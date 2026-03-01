@@ -85,14 +85,16 @@ export default async function PublicProfilePage({
   }
 
   // Проверяем подписку текущего пользователя отдельным точечным запросом
-  const { count: isFollowingCount } = currentUser && !isOwner
+  const followRow = currentUser && !isOwner
     ? await supabaseServer
         .from("follows")
-        .select("*", { count: "exact", head: true })
+        .select("notify_enabled")
         .eq("follower_id", currentUser.id)
         .eq("following_id", id)
-    : { count: 0 };
-  const isFollowing = (isFollowingCount ?? 0) > 0;
+        .maybeSingle()
+    : { data: null }
+  const isFollowing = !!followRow.data
+  const initialNotifyEnabled = (followRow.data as any)?.notify_enabled ?? false
 
   // Загружаем социальные данные для карточек
   const cardIds = (cards ?? []).map((c: any) => c.id as string);
@@ -175,6 +177,7 @@ export default async function PublicProfilePage({
           initialFollowersCount={followersCount ?? 0}
           followingCount={followingCount ?? 0}
           initialIsFollowing={isFollowing}
+          initialNotifyEnabled={initialNotifyEnabled}
           isOwner={isOwner}
           currentUserId={currentUser?.id ?? null}
         />

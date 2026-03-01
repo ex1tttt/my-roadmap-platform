@@ -22,6 +22,7 @@ interface Props {
   initialFollowersCount: number
   followingCount: number
   initialIsFollowing: boolean
+  initialNotifyEnabled?: boolean
   isOwner: boolean
   currentUserId: string | null
 }
@@ -32,6 +33,7 @@ export default function ProfileHeader({
   initialFollowersCount,
   followingCount,
   initialIsFollowing,
+  initialNotifyEnabled = false,
   isOwner,
   currentUserId,
 }: Props) {
@@ -42,7 +44,7 @@ export default function ProfileHeader({
   const [followingCountState, setFollowingCountState] = useState(followingCount)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
-  const [notifyEnabled, setNotifyEnabled] = useState(false)
+  const [notifyEnabled, setNotifyEnabled] = useState(initialNotifyEnabled)
   const [notifyLoading, setNotifyLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
@@ -50,7 +52,7 @@ export default function ProfileHeader({
 
   useEffect(() => setMounted(true), [])
 
-  // Загружаем notify_enabled из таблицы follows
+  // Загружаем notify_enabled из таблицы follows (синхронизация при смене подписки)
   useEffect(() => {
     if (!currentUserId || !isFollowing) return
     supabase
