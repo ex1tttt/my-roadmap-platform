@@ -44,7 +44,7 @@ export default function ProfileHeader({
   const [followingCountState, setFollowingCountState] = useState(followingCount)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
-  const [notifyEnabled, setNotifyEnabled] = useState(initialNotifyEnabled)
+  const [notifyNewCards, setNotifyNewCards] = useState(initialNotifyEnabled)
   const [notifyLoading, setNotifyLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
@@ -57,18 +57,19 @@ export default function ProfileHeader({
   async function handleNotify() {
     if (!currentUserId || notifyLoading) return
     setNotifyLoading(true)
-    const newVal = !notifyEnabled
-    setNotifyEnabled(newVal)
+    const newVal = !notifyNewCards
+    setNotifyNewCards(newVal)
     const { error } = await supabase
       .from('follows')
-      .update({ notify_enabled: newVal })
-      .match({ follower_id: currentUserId, following_id: profile.id })
+      .update({ notify_new_cards: newVal })
+      .eq('follower_id', currentUserId)
+      .eq('following_id', profile.id)
     if (error) {
-      setNotifyEnabled(!newVal)
+      setNotifyNewCards(!newVal)
       setToast({ message: 'Ошибка при изменении настроек', type: 'error' })
     } else {
       setToast({
-        message: newVal ? 'Уведомления включены' : 'Уведомления выключены',
+        message: newVal ? 'Уведомления о новых карточках включены' : 'Уведомления о новых карточках выключены',
         type: 'success',
       })
     }
@@ -169,12 +170,16 @@ export default function ProfileHeader({
                 <button
                   onClick={handleNotify}
                   disabled={notifyLoading}
-                  title={notifyEnabled ? 'Выключить уведомления' : 'Включить уведомления'}
-                  className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-1.5 transition-colors hover:border-slate-300 dark:hover:border-white/20 disabled:opacity-50"
+                  title={notifyNewCards ? 'Отключить уведомления о новых карточках' : 'Включить уведомления о новых карточках'}
+                  className={`flex items-center justify-center rounded-lg border p-1.5 transition-all disabled:opacity-50 ${
+                    notifyNewCards
+                      ? 'border-yellow-500/40 bg-yellow-950/40 hover:bg-yellow-900/40'
+                      : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-slate-300 dark:hover:border-white/20'
+                  }`}
                 >
                   <Bell
                     className={`h-4 w-4 transition-colors ${
-                      notifyEnabled ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'
+                      notifyNewCards ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'
                     }`}
                   />
                 </button>

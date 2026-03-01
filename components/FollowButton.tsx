@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 
@@ -33,17 +33,17 @@ export default function FollowButton({
 
   useEffect(() => setMounted(true), [])
 
-  // Загружаем текущее значение notify_enabled при монтировании
+  // Загружаем текущее значение notify_new_cards при монтировании
   useEffect(() => {
     if (!currentUserId || !initialIsFollowing) return
     supabase
       .from('follows')
-      .select('notify_enabled')
+      .select('notify_new_cards')
       .eq('follower_id', currentUserId)
       .eq('following_id', profileId)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setNotifyNewCards(data.notify_enabled ?? false)
+        if (data) setNotifyNewCards(data.notify_new_cards ?? false)
       })
   }, [currentUserId, profileId, initialIsFollowing])
 
@@ -83,7 +83,7 @@ export default function FollowButton({
     setNotifyNewCards(next)
     await supabase
       .from('follows')
-      .update({ notify_enabled: next })
+      .update({ notify_new_cards: next })
       .eq('follower_id', currentUserId)
       .eq('following_id', profileId)
     setBellLoading(false)
@@ -138,13 +138,18 @@ export default function FollowButton({
             onClick={handleBell}
             disabled={bellLoading}
             title={notifyNewCards ? 'Отключить уведомления о новых карточках' : 'Уведомлять о новых карточках'}
-            className={`rounded-lg p-1 text-xs transition-all disabled:opacity-50 ${
+            className={`rounded-lg p-1.5 transition-all disabled:opacity-50 ${
               notifyNewCards
                 ? 'border border-yellow-500/40 bg-yellow-950/40 text-yellow-400 hover:bg-yellow-900/40'
                 : 'border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
-            {notifyNewCards ? <Bell size={14} /> : <BellOff size={14} />}
+            <Bell
+              size={14}
+              className={`transition-all ${
+                notifyNewCards ? 'fill-yellow-400 text-yellow-400' : 'fill-none text-slate-400'
+              }`}
+            />
           </button>
         )}
         </span>

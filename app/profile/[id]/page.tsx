@@ -88,13 +88,13 @@ export default async function PublicProfilePage({
   const followRow = currentUser && !isOwner
     ? await supabaseAuth
         .from("follows")
-        .select("notify_enabled")
+        .select("notify_new_cards")
         .eq("follower_id", currentUser.id)
         .eq("following_id", id)
         .maybeSingle()
     : { data: null }
   const isFollowing = !!followRow.data
-  const initialNotifyEnabled = (followRow.data as any)?.notify_enabled ?? false
+  const initialNotifyEnabled = (followRow.data as any)?.notify_new_cards ?? false
 
   // Загружаем социальные данные для карточек
   const cardIds = (cards ?? []).map((c: any) => c.id as string);
