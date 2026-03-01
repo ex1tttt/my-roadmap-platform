@@ -206,6 +206,7 @@
     "commentedOn": "skomentował",
     "startedFollowing": "zaczął cię obserwować",
     "publishedCard": "opublikował nową mapę drogową",
+    "andMore": "i {{count}} więcej",
     "justNow": "Przed chwilą",
     "minutesAgo": "{{count}} min temu",
     "hoursAgo": "{{count}} godz. temu",

@@ -645,6 +645,34 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       textareaRef.current?.focus()
       // Проверяем достижение «Критик»
       await checkAndAwardBadges(currentUserId, 'comment')
+      // Push-уведомление автору карточки (fire-and-forget)
+      supabase
+        .from('cards')
+        .select('user_id, title')
+        .eq('id', roadmapId)
+        .maybeSingle()
+        .then(({ data: cardData }) => {
+          if (cardData && cardData.user_id !== currentUserId) {
+            // In-app уведомление
+            supabase.from('notifications').insert({
+              receiver_id: cardData.user_id,
+              actor_id: currentUserId,
+              type: 'comment',
+              card_id: roadmapId,
+            }).then(() => {})
+            // Push
+            fetch('/api/send-push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: cardData.user_id,
+                title: 'Новый комментарий 💬',
+                body: `${currentUserProfile?.username ?? 'Кто-то'} прокомментировал вашу карточку «${cardData.title}»`,
+                url: `/card/${roadmapId}`,
+              }),
+            }).catch(() => {})
+          }
+        })
     }
     setSending(false)
   }

@@ -206,6 +206,7 @@
     "commentedOn": "прокомментировал",
     "startedFollowing": "начал следить за вами",
     "publishedCard": "опубликовал новую дорожную карту",
+    "andMore": "и ещё {{count}}",
     "justNow": "Только что",
     "minutesAgo": "{{count}} мин назад",
     "hoursAgo": "{{count}} ч назад",

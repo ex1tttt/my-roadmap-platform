@@ -87,6 +87,17 @@ export default function Card({
             type: 'like',
             card_id: card.id,
           });
+          // Push-уведомление автору карточки
+          fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: card.user.id,
+              title: 'Новый лайк ❤️',
+              body: `Кто-то лайкнул вашу карточку «${card.title}»`,
+              url: `/card/${card.id}`,
+            }),
+          }).catch(() => {})
         }
       }
     } catch {

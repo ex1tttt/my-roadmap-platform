@@ -204,6 +204,7 @@
     "commentedOn": "commented on",
     "startedFollowing": "started following you",
     "publishedCard": "published a new roadmap",
+    "andMore": "and {{count}} more",
     "justNow": "Just now",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",

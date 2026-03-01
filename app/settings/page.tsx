@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown } from "lucide-react";
+import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { saveLanguage, type SupportedLanguage } from "@/lib/i18n";
+import { subscribeUser, unsubscribeUser, getActiveSubscription, getPushStatus, type PushStatus } from "@/lib/push";
 import { ALL_BADGES } from "@/components/ProfileBadges";
 
 const INPUT_CLS =
@@ -70,10 +71,28 @@ export default function SettingsPage() {
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Push-уведомления
+  const [pushStatus, setPushStatus] = useState<PushStatus>('unsupported');
+  const [pushLoading, setPushLoading] = useState(false);
+
   // Достижения
   const [earnedBadgeIds, setEarnedBadgeIds] = useState<Set<string>>(new Set());
   const [featuredBadge, setFeaturedBadge] = useState<string | null>(null);
   const [badgeSaving, setBadgeSaving] = useState(false);
+
+  // Инициализируем статус push при монтировании
+  useEffect(() => {
+    const initPush = async () => {
+      const base = getPushStatus();
+      if (base === 'unsupported' || base === 'denied') {
+        setPushStatus(base);
+        return;
+      }
+      const existing = await getActiveSubscription();
+      setPushStatus(existing ? 'subscribed' : 'default');
+    };
+    initPush();
+  }, []);
 
   // Загружаем профиль текущего пользователя
   useEffect(() => {
@@ -384,6 +403,33 @@ export default function SettingsPage() {
         console.error('Language save error:', error);
         toast.error(t('common.error') + ': ' + error.message);
       }
+    }
+  }
+  async function handleTogglePush() {
+    if (!profile?.id) return;
+    setPushLoading(true);
+    try {
+      if (pushStatus === 'subscribed') {
+        const { ok, error } = await unsubscribeUser(profile.id);
+        if (ok) {
+          setPushStatus('default');
+          toast.success('Push-уведомления отключены.');
+        } else {
+          toast.error(error ?? 'Ошибка при отписке.');
+        }
+      } else {
+        const { ok, error } = await subscribeUser(profile.id);
+        if (ok) {
+          setPushStatus('subscribed');
+          toast.success('Push-уведомления включены!');
+        } else {
+          toast.error(error ?? 'Ошибка при подписке.');
+          // Если разрешение заблокировано — обновляем статус
+          if (Notification.permission === 'denied') setPushStatus('denied');
+        }
+      }
+    } finally {
+      setPushLoading(false);
     }
   }
 
@@ -727,6 +773,69 @@ export default function SettingsPage() {
               );
             })}
           </div>
+        </div>
+
+        {/* ── Push-уведомления ── */}
+        <div className={CARD_CLS}>
+          <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+            <Bell className="h-3.5 w-3.5" />
+            Уведомления
+          </h2>
+          <p className="mb-5 text-xs text-slate-500">
+            Получайте Push-уведомления прямо в браузере — о лайках, комментариях, новых карточках.
+          </p>
+
+          {pushStatus === 'unsupported' && (
+            <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-500">
+              <BellOff className="h-4 w-4 shrink-0" />
+              Ваш браузер не поддерживает Push-уведомления.
+            </div>
+          )}
+
+          {pushStatus === 'denied' && (
+            <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+              <BellOff className="h-4 w-4 shrink-0" />
+              Уведомления заблокированы в настройках браузера. Разрешите их вручную в адресной строке.
+            </div>
+          )}
+
+          {(pushStatus === 'default' || pushStatus === 'subscribed') && (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {pushStatus === 'subscribed' ? (
+                  <Bell className="h-5 w-5 text-blue-500" />
+                ) : (
+                  <BellOff className="h-5 w-5 text-slate-400" />
+                )}
+                <span className="text-sm text-slate-700 dark:text-slate-300">
+                  {pushStatus === 'subscribed' ? 'Push-уведомления включены' : 'Push-уведомления выключены'}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={pushLoading}
+                onClick={handleTogglePush}
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                  pushStatus === 'subscribed'
+                    ? 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'
+                    : 'bg-blue-600 text-white hover:bg-blue-500'
+                }`}
+              >
+                {pushLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : pushStatus === 'subscribed' ? (
+                  <BellOff className="h-4 w-4" />
+                ) : (
+                  <Bell className="h-4 w-4" />
+                )}
+                {pushLoading
+                  ? 'Подождите...'
+                  : pushStatus === 'subscribed'
+                  ? 'Отключить'
+                  : 'Включить уведомления'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Danger Zone ── */}

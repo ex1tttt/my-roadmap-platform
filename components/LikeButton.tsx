@@ -97,6 +97,17 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
           })
           // Проверяем достижение «Сенсей» для автора карточки
           await checkAndAwardBadges(card.user_id, 'like')
+          // Push-уведомление автору карточки
+          fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: card.user_id,
+              title: 'Новый лайк ❤️',
+              body: `Кто-то лайкнул вашу карточку «${card.title}»`,
+              url: `/card/${cardId}`,
+            }),
+          }).catch(() => {})
         }
       }
     } catch {
