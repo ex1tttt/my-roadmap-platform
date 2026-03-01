@@ -123,16 +123,15 @@ export default function CreatePage() {
       await checkAndAwardBadges(user.id, 'first_card');
 
       // --- Уведомления подписчикам ---
-      // 1. Получаем всех подписчиков (follower_id), которые подписаны на текущего пользователя
+      // Получаем всех подписчиков с их настройкой колокольчика
       const { data: followers, error: followersError } = await supabase
         .from('follows')
-        .select('follower_id')
+        .select('follower_id, notify_new_cards')
         .eq('following_id', user.id);
       if (followersError) {
         console.error('Followers fetch error:', followersError);
       } else if (followers && followers.length > 0) {
-        // 3. Массовая вставка уведомлений в БД для каждого подписчика.
-        // NotificationBell слушает postgres_changes → подписчики получат уведомление в реальном времени.
+        // In-app уведомление — всем подписчикам
         const notificationRows = followers.map((f: any) => ({
           receiver_id: f.follower_id,
           actor_id: user.id,
@@ -146,18 +145,22 @@ export default function CreatePage() {
           console.error('Notifications insert error:', notifError);
         }
 
-        // Push-уведомления — только подписчикам с включённым колокольчиком
-        const followerIds = followers.map((f: any) => f.follower_id);
-        fetch('/api/send-push', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userIds: followerIds,
-            title: '🗺️ Новая карточка',
-            body: `Опубликована карточка «${title}»`,
-            url: `/card/${cardId}`,
-          }),
-        }).catch(() => {});
+        // Push — только тем, у кого включён колокольчик
+        const pushIds = followers
+          .filter((f: any) => f.notify_new_cards)
+          .map((f: any) => f.follower_id);
+        if (pushIds.length > 0) {
+          fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userIds: pushIds,
+              title: '🗺️ Новая карточка',
+              body: `Опубликована карточка «${title}»`,
+              url: `/card/${cardId}`,
+            }),
+          }).catch(() => {});
+        }
       }
 
       // 2) insert steps

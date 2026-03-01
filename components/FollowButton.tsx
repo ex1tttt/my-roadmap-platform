@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Bell, BellOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 
@@ -27,8 +28,24 @@ export default function FollowButton({
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [notifyNewCards, setNotifyNewCards] = useState(false)
+  const [bellLoading, setBellLoading] = useState(false)
 
   useEffect(() => setMounted(true), [])
+
+  // Загружаем текущее значение notify_new_cards при монтировании
+  useEffect(() => {
+    if (!currentUserId || !initialIsFollowing) return
+    supabase
+      .from('follows')
+      .select('notify_new_cards')
+      .eq('follower_id', currentUserId)
+      .eq('following_id', profileId)
+      .single()
+      .then(({ data }) => {
+        if (data) setNotifyNewCards(data.notify_new_cards ?? false)
+      })
+  }, [currentUserId, profileId, initialIsFollowing])
 
   async function handleFollow() {
     if (!currentUserId || loading) return
@@ -37,6 +54,7 @@ export default function FollowButton({
     // Оптимистичное обновление
     if (isFollowing) {
       setIsFollowing(false)
+      setNotifyNewCards(false)
       setFollowersCount((n) => Math.max(0, n - 1))
     } else {
       setIsFollowing(true)
@@ -56,6 +74,19 @@ export default function FollowButton({
     }
 
     setLoading(false)
+  }
+
+  async function handleBell() {
+    if (!currentUserId || bellLoading || !isFollowing) return
+    setBellLoading(true)
+    const next = !notifyNewCards
+    setNotifyNewCards(next)
+    await supabase
+      .from('follows')
+      .update({ notify_new_cards: next })
+      .eq('follower_id', currentUserId)
+      .eq('following_id', profileId)
+    setBellLoading(false)
   }
 
   if (!mounted) return null
@@ -85,6 +116,7 @@ export default function FollowButton({
 
       {/* Кнопка подписки (только если не хозяин и залогинен) */}
       {!isOwner && currentUserId && (
+        <span className="flex items-center gap-1.5">
         <button
           onClick={handleFollow}
           disabled={loading}
@@ -100,6 +132,22 @@ export default function FollowButton({
         >
           {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
         </button>
+        {/* Колокольчик — только когда подписан */}
+        {isFollowing && (
+          <button
+            onClick={handleBell}
+            disabled={bellLoading}
+            title={notifyNewCards ? 'Отключить уведомления о новых карточках' : 'Уведомлять о новых карточках'}
+            className={`rounded-lg p-1 text-xs transition-all disabled:opacity-50 ${
+              notifyNewCards
+                ? 'border border-yellow-500/40 bg-yellow-950/40 text-yellow-400 hover:bg-yellow-900/40'
+                : 'border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {notifyNewCards ? <Bell size={14} /> : <BellOff size={14} />}
+          </button>
+        )}
+        </span>
       )}
     </span>
   )
