@@ -19,17 +19,21 @@ export async function POST(req: NextRequest) {
   )
 
   try {
-    const { userId, title, body, url } = await req.json()
+    const body_json = await req.json()
+    const { title, body, url } = body_json
 
-    if (!userId || !title) {
-      return NextResponse.json({ error: 'userId и title обязательны' }, { status: 400 })
+    // Поддерживаем как одиночный userId, так и массив userIds
+    const rawIds = body_json.userIds ?? (body_json.userId ? [body_json.userId] : null)
+    if (!rawIds || rawIds.length === 0 || !title) {
+      return NextResponse.json({ error: 'userId/userIds и title обязательны' }, { status: 400 })
     }
+    const userIds: string[] = rawIds
 
-    // Берём все подписки пользователя (может быть несколько устройств)
+    // Берём подписки всех указанных пользователей
     const { data: subs, error } = await adminSupabase
       .from('user_subscriptions')
-      .select('endpoint, p256dh, auth')
-      .eq('user_id', userId)
+      .select('user_id, endpoint, p256dh, auth')
+      .in('user_id', userIds)
 
     if (error) throw error
     if (!subs || subs.length === 0) {
@@ -51,22 +55,24 @@ export async function POST(req: NextRequest) {
     )
 
     // Удаляем истёкшие / недействительные подписки (статус 410 Gone)
-    const expiredEndpoints: string[] = []
-    results.forEach((result, idx) => {
-      if (
-        result.status === 'rejected' &&
-        (result.reason as any)?.statusCode === 410
-      ) {
-        expiredEndpoints.push(subs[idx].endpoint)
-      }
-    })
+    const expiredEndpoints = results
+      .map((r, i) =>
+        r.status === 'rejected' && (r.reason as any)?.statusCode === 410
+          ? { userId: subs[i].user_id, endpoint: subs[i].endpoint }
+          : null
+      )
+      .filter(Boolean) as { userId: string; endpoint: string }[]
 
     if (expiredEndpoints.length > 0) {
-      await adminSupabase
-        .from('user_subscriptions')
-        .delete()
-        .eq('user_id', userId)
-        .in('endpoint', expiredEndpoints)
+      await Promise.all(
+        expiredEndpoints.map((e) =>
+          adminSupabase
+            .from('user_subscriptions')
+            .delete()
+            .eq('user_id', e.userId)
+            .eq('endpoint', e.endpoint)
+        )
+      )
     }
 
     const sent = results.filter((r) => r.status === 'fulfilled').length

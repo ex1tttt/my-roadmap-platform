@@ -145,6 +145,19 @@ export default function CreatePage() {
         if (notifError) {
           console.error('Notifications insert error:', notifError);
         }
+
+        // Push-уведомления — только подписчикам с включённым колокольчиком
+        const followerIds = followers.map((f: any) => f.follower_id);
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userIds: followerIds,
+            title: '🗺️ Новая карточка',
+            body: `Опубликована карточка «${title}»`,
+            url: `/card/${cardId}`,
+          }),
+        }).catch(() => {});
       }
 
       // 2) insert steps
