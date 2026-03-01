@@ -124,13 +124,25 @@ export default function CreatePage() {
 
       // --- Уведомления подписчикам ---
       // Получаем всех подписчиков с их настройкой колокольчика
-      const { data: followers, error: followersError } = await supabase
+      // Пробуем получить подписчиков с колонкой notify_new_cards (если миграция применена)
+      // Fallback — без неё (только in-app уведомления, без push-фильтрации)
+      let followers: any[] | null = null
+      const { data: followersWithBell, error: errWithBell } = await supabase
         .from('follows')
         .select('follower_id, notify_new_cards')
-        .eq('following_id', user.id);
-      if (followersError) {
-        console.error('Followers fetch error:', followersError);
-      } else if (followers && followers.length > 0) {
+        .eq('following_id', user.id)
+      if (!errWithBell) {
+        followers = followersWithBell
+      } else {
+        // Колонка ещё не добавлена — берём без неё
+        const { data: followersBasic } = await supabase
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', user.id)
+        followers = followersBasic
+      }
+
+      if (followers && followers.length > 0) {
         // In-app уведомление — всем подписчикам
         const notificationRows = followers.map((f: any) => ({
           receiver_id: f.follower_id,
@@ -145,9 +157,10 @@ export default function CreatePage() {
           console.error('Notifications insert error:', notifError);
         }
 
-        // Push — только тем, у кого включён колокольчик
+        // Push — только тем, у кого включён колокольчик (если колонка есть)
+        // Если колонки нет — отправляем всем подписчикам
         const pushIds = followers
-          .filter((f: any) => f.notify_new_cards)
+          .filter((f: any) => f.notify_new_cards !== undefined ? f.notify_new_cards : true)
           .map((f: any) => f.follower_id);
         if (pushIds.length > 0) {
           fetch('/api/send-push', {
