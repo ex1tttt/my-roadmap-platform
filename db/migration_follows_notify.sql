@@ -1,3 +1,3 @@
--- Добавляем колонку "уведомлять о новых карточках" в таблицу подписок
-ALTER TABLE follows
-  ADD COLUMN IF NOT EXISTS notify_new_cards BOOLEAN NOT NULL DEFAULT FALSE;
+-- Используйте migration_follows_notify_enabled.sql (колонка notify_enabled).
+-- Этот файл оставлен для совместимости, колонка notify_new_cards не используется.
+-- Применять не нужно.

@@ -129,7 +129,7 @@ export default function CreatePage() {
       let followers: any[] | null = null
       const { data: followersWithBell, error: errWithBell } = await supabase
         .from('follows')
-        .select('follower_id, notify_new_cards')
+        .select('follower_id, notify_enabled')
         .eq('following_id', user.id)
       if (!errWithBell) {
         followers = followersWithBell
@@ -160,7 +160,7 @@ export default function CreatePage() {
         // Push — только тем, у кого включён колокольчик (если колонка есть)
         // Если колонки нет — отправляем всем подписчикам
         const pushIds = followers
-          .filter((f: any) => f.notify_new_cards !== undefined ? f.notify_new_cards : true)
+          .filter((f: any) => f.notify_enabled !== undefined ? f.notify_enabled : true)
           .map((f: any) => f.follower_id);
         if (pushIds.length > 0) {
           fetch('/api/send-push', {

@@ -33,17 +33,17 @@ export default function FollowButton({
 
   useEffect(() => setMounted(true), [])
 
-  // Загружаем текущее значение notify_new_cards при монтировании
+  // Загружаем текущее значение notify_enabled при монтировании
   useEffect(() => {
     if (!currentUserId || !initialIsFollowing) return
     supabase
       .from('follows')
-      .select('notify_new_cards')
+      .select('notify_enabled')
       .eq('follower_id', currentUserId)
       .eq('following_id', profileId)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
-        if (data) setNotifyNewCards(data.notify_new_cards ?? false)
+        if (data) setNotifyNewCards(data.notify_enabled ?? false)
       })
   }, [currentUserId, profileId, initialIsFollowing])
 
@@ -83,7 +83,7 @@ export default function FollowButton({
     setNotifyNewCards(next)
     await supabase
       .from('follows')
-      .update({ notify_new_cards: next })
+      .update({ notify_enabled: next })
       .eq('follower_id', currentUserId)
       .eq('following_id', profileId)
     setBellLoading(false)
