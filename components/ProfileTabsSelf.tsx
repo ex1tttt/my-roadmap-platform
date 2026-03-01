@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Users, Trash2, Pin } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Users, Trash2, Pin, MoreVertical, Pencil } from "lucide-react";
 import Card from "@/components/Card";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -43,6 +43,20 @@ export default function ProfileTabsSelf({
   // Для одиночного удаления
   const [cardToDelete, setCardToDelete] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Дропдаун три точки
+  const [cardMenuOpenId, setCardMenuOpenId] = useState<string | null>(null);
+  const cardMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!cardMenuOpenId) return;
+    function handleClick(e: MouseEvent) {
+      if (cardMenuRef.current && !cardMenuRef.current.contains(e.target as Node)) {
+        setCardMenuOpenId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [cardMenuOpenId]);
 
   async function togglePinCard(cardId: string, currentStatus: boolean) {
     const newVal = !currentStatus;
@@ -99,8 +113,8 @@ export default function ProfileTabsSelf({
   };
 
   // Кастомный toast для подтверждения удаления
-  const confirmDelete = () => {
-    if (!cardToDelete) return;
+  // cardId передаётся явно, т.к. setCardToDelete — асинхронный
+  const confirmDelete = (cardId: string) => {
     const tId = toast(
       <div className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4">
         <span className="text-white text-sm mb-2">Вы уверены, что хотите удалить эту карточку?</span>
@@ -108,9 +122,9 @@ export default function ProfileTabsSelf({
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
             onClick={async () => {
-              const { error } = await supabase.from('cards').delete().eq('id', cardToDelete);
+              const { error } = await supabase.from('cards').delete().eq('id', cardId);
               if (!error) {
-                setMyCards((prev: any[]) => prev.filter((c) => c.id !== cardToDelete));
+                setMyCards((prev: any[]) => prev.filter((c) => c.id !== cardId));
                 toast.success("Карточка удалена", { id: tId });
               } else {
                 toast.error("Ошибка при удалении", { id: tId });
@@ -202,24 +216,69 @@ export default function ProfileTabsSelf({
                       className="absolute top-2 left-2 z-10 accent-blue-500"
                     />
                   )}
-                  {/* Кнопка закрепления */}
-                  {!isSelectionMode && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); togglePinCard(c.id, c.is_pinned ?? false); }}
-                      title={c.is_pinned ? 'Открепить' : 'Закрепить'}
-                      className="absolute top-2 right-2 z-10 rounded-md bg-white/80 dark:bg-slate-800/80 p-1 hover:bg-white dark:hover:bg-slate-700 transition-colors shadow-sm"
-                    >
-                      <Pin
-                        className={`h-3.5 w-3.5 transition-colors ${
-                          c.is_pinned ? 'fill-blue-500 text-blue-500' : 'text-slate-400'
-                        }`}
-                      />
-                    </button>
-                  )}
-                  {/* Плашка "Закреплено" */}
+
+                  {/* Плашка «Закреплено» */}
                   {c.is_pinned && (
                     <div className="absolute top-0 left-0 z-10 rounded-tl-xl rounded-br-lg bg-blue-500 px-2 py-0.5 text-[10px] font-semibold text-white select-none pointer-events-none">
                       Закреплено
+                    </div>
+                  )}
+
+                  {/* Три точки — меню карточки */}
+                  {!isSelectionMode && (
+                    <div ref={cardMenuOpenId === c.id ? cardMenuRef : undefined} className="absolute top-2 right-2 z-20">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCardMenuOpenId(cardMenuOpenId === c.id ? null : c.id); }}
+                        className="flex items-center justify-center rounded-md bg-white/80 dark:bg-slate-800/80 p-1.5 shadow-sm hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                        title="Действия"
+                      >
+                        <MoreVertical className="h-3.5 w-3.5 text-slate-500 dark:text-slate-300" />
+                      </button>
+
+                      {cardMenuOpenId === c.id && (
+                        <div className="absolute right-0 top-7 min-w-35 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+                          {/* Закрепить / Открепить */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCardMenuOpenId(null);
+                              togglePinCard(c.id, c.is_pinned ?? false);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <Pin className={`h-3.5 w-3.5 ${c.is_pinned ? 'fill-blue-500 text-blue-500' : 'text-slate-400'}`} />
+                            {c.is_pinned ? 'Открепить' : 'Закрепить'}
+                          </button>
+
+                          {/* Изменить */}
+                          <Link
+                            href={`/card/${c.id}/edit`}
+                            onClick={() => setCardMenuOpenId(null)}
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-slate-400" />
+                            Изменить
+                          </Link>
+
+                          {/* Разделитель */}
+                          <div className="border-t border-slate-100 dark:border-white/5" />
+
+                          {/* Удалить */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCardMenuOpenId(null);
+                              setCardToDelete(c.id);
+                              setIsModalOpen(false);
+                              confirmDelete(c.id);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Удалить
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   <div
@@ -234,17 +293,8 @@ export default function ProfileTabsSelf({
                       initialLikesCount={c.likesCount}
                       initialAverageRating={c.averageRating}
                       initialCommentsCount={c.commentsCount}
-                      actions={
-                        <button
-                          className="ml-2 px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setCardToDelete(c.id);
-                            setIsModalOpen(false);
-                            confirmDelete();
-                          }}
-                        >Удалить</button>
-                      }
+                      onLike={handleCardLike}
+                      onFavorite={handleCardFavorite}
                     />
                   </div>
                 </div>
@@ -260,7 +310,7 @@ export default function ProfileTabsSelf({
             <p className="text-slate-500 dark:text-slate-400">У вас пока нет понравившихся карточек</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md/grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             {likedCards.map((c: any) => (
               <div key={c.id} className="relative">
                 <Card
@@ -271,6 +321,8 @@ export default function ProfileTabsSelf({
                   initialLikesCount={c.likesCount}
                   initialAverageRating={c.averageRating}
                   initialCommentsCount={c.commentsCount}
+                  onLike={handleCardLike}
+                  onFavorite={handleCardFavorite}
                 />
               </div>
             ))}
@@ -295,6 +347,8 @@ export default function ProfileTabsSelf({
                   initialLikesCount={c.likesCount}
                   initialAverageRating={c.averageRating}
                   initialCommentsCount={c.commentsCount}
+                  onLike={handleCardLike}
+                  onFavorite={handleCardFavorite}
                 />
               </div>
             ))}
@@ -319,6 +373,8 @@ export default function ProfileTabsSelf({
                   initialLikesCount={c.likesCount}
                   initialAverageRating={c.averageRating}
                   initialCommentsCount={c.commentsCount}
+                  onLike={handleCardLike}
+                  onFavorite={handleCardFavorite}
                 />
               </div>
             ))}

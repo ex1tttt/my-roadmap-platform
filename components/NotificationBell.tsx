@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell, X, UserPlus, Heart, MessageSquare, Zap } from 'lucide-react'
+import { Bell, X, UserPlus, Heart, MessageSquare, Zap, Map as MapIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import { useTranslation } from 'react-i18next'
@@ -73,6 +73,7 @@ function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): s
     case 'comment':      return `${first}${others} ${t('notifications.commented', { defaultValue: 'прокомментировали' })} ${card}`
     case 'comment_like': return `${first}${others} ${t('notifications.likedComment', { defaultValue: 'лайкнули ваш комментарий в' })} ${card}`
     case 'follow':       return `${first}${others} ${t('notifications.startedFollowing', { defaultValue: 'подписались на вас' })}`
+    case 'new_card':     return `${first} ${t('notifications.publishedCard', { defaultValue: 'опубликовал новую дорожную карту' })} ${card}`
     default:             return `${first} ${t('notifications.didAction', { defaultValue: 'совершил действие' })}`
   }
 }
@@ -89,6 +90,7 @@ function getGroupIcon(type: string) {
     case 'like':         return <Heart       className="h-3.5 w-3.5 text-rose-400" />
     case 'comment':      return <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
     case 'comment_like': return <Heart       className="h-3.5 w-3.5 text-orange-400" />
+    case 'new_card':     return <MapIcon      className="h-3.5 w-3.5 text-violet-400" />
     default:             return <Zap         className="h-3.5 w-3.5 text-slate-400" />
   }
 }
@@ -137,10 +139,12 @@ export default function NotificationBell({ userId }: { userId: string }) {
   const [open, setOpen]         = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const fetchRef = useRef<() => void>(() => {})
+  const markAllReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => setMounted(true), [])
 
-  async function fetchNotifications() {
+  const fetchNotifications = useCallback(async () => {
     const { data } = await supabase
       .from('notifications')
       .select('id, type, is_read, created_at, card_id, actor_id')
@@ -173,7 +177,10 @@ export default function NotificationBell({ userId }: { userId: string }) {
 
     setGroups(groupNotifications(enriched))
     setHasUnread(data.some((n: any) => !n.is_read))
-  }
+  }, [userId])
+
+  // Держим актуальную ссылку для реалтайм-обработчика (избегаем stale closure)
+  useEffect(() => { fetchRef.current = fetchNotifications }, [fetchNotifications])
 
   async function markAllRead() {
     await supabase
@@ -192,8 +199,9 @@ export default function NotificationBell({ userId }: { userId: string }) {
   }
 
   async function deleteGroup(ids: string[]) {
+    const idsSet = new Set(ids)
     setGroups((prev) => {
-      const next = prev.filter((g) => g.ids.join() !== ids.join())
+      const next = prev.filter((g) => !g.ids.every((id) => idsSet.has(id)) || g.ids.length !== ids.length)
       setHasUnread(next.some((g) => !g.is_read))
       return next
     })
@@ -222,7 +230,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
         () => {
           setHasUnread(true)
           setOpen((isOpen) => {
-            if (isOpen) fetchNotifications()
+            if (isOpen) fetchRef.current()
             return isOpen
           })
         }
@@ -240,10 +248,16 @@ export default function NotificationBell({ userId }: { userId: string }) {
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
+  // Очистка таймера при размонтировании
+  useEffect(() => () => {
+    if (markAllReadTimerRef.current) clearTimeout(markAllReadTimerRef.current)
+  }, [])
+
   function handleOpen() {
     if (!open) {
       fetchNotifications()
-      setTimeout(markAllRead, 600)
+      if (markAllReadTimerRef.current) clearTimeout(markAllReadTimerRef.current)
+      markAllReadTimerRef.current = setTimeout(markAllRead, 600)
     }
     setOpen((o) => !o)
   }

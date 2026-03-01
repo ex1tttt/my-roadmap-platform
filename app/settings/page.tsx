@@ -249,7 +249,22 @@ export default function SettingsPage() {
         .from("profiles")
         .upsert({ id: user.id, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null, language });
 
-      if (error) throw error;
+      if (error) {
+        // 409 / PostgreSQL 23505 — нарушение уникальности (ник уже занят)
+        const isDuplicate =
+          error.code === '23505' ||
+          (error as any).status === 409 ||
+          error.message?.toLowerCase().includes('unique') ||
+          error.message?.toLowerCase().includes('duplicate') ||
+          error.details?.toLowerCase().includes('already exists');
+
+        if (isDuplicate) {
+          toast.error(`Пользователь с ником «${trimmed}» уже существует. Выберите другой ник.`);
+        } else {
+          toast.error("Ошибка сохранения: " + (error.message ?? "Неизвестная ошибка"));
+        }
+        return;
+      }
 
       toast.success("Профиль успешно обновлён!");
       setProfile((prev) => prev ? { ...prev, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null } : prev);

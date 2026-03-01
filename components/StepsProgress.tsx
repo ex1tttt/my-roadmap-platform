@@ -169,15 +169,16 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
 
       {/* Список шагов */}
       <ol className="relative space-y-6 pl-8">
-        {/* Вертикальная линия */}
-        <div className="absolute left-3.5 top-3 bottom-3 w-px bg-linear-to-b from-blue-500/60 via-slate-700 to-slate-800" />
-
         {steps.map((s, idx) => {
           const isDone = done.has(s.id)
           const isLoading = pending.has(s.id)
 
           return (
             <li key={s.id} className="relative">
+              {/* Линия до следующего пункта (только если не последний) */}
+              {idx < steps.length - 1 && (
+                <div className="absolute -left-[18px] top-7 -bottom-6 w-px bg-linear-to-b from-blue-500/60 via-slate-700 to-slate-800" />
+              )}
               {/* Кружок на линии */}
               <div
                 className={`absolute -left-8 flex h-7 w-7 items-center justify-center rounded-full border-2 bg-white dark:bg-zinc-950 text-xs font-bold shadow-md transition-all duration-300 ${

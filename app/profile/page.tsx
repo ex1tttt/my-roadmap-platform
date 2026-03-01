@@ -6,11 +6,12 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
-import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil, Users } from 'lucide-react'
+import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil, Users, TrendingUp } from 'lucide-react'
 import ProfileTabsSelf from '@/components/ProfileTabsSelf'
 import ProfileBadges from '@/components/ProfileBadges'
 import { useTranslation } from 'react-i18next'
 import { useHasMounted } from '@/hooks/useHasMounted'
+import { toast } from 'sonner'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
 type Profile = { id: string; username: string; avatar?: string; bio?: string | null }
@@ -98,6 +99,8 @@ export default function ProfilePage() {
       setFollowingCount(followingRes.count ?? 0)
 
       const myCardsRaw = myCardsRes.data ?? []
+
+      // Статистика автора
       const likedCardIds = (likedRes.data ?? []).map((l: any) => l.card_id)
 
       // Загружаем лайкнутые карточки отдельно, чтобы знать их user_id для профилей
@@ -150,6 +153,7 @@ export default function ProfilePage() {
       ;(likesRes.data ?? []).forEach((l: any) =>
         likesCountMap.set(l.card_id, (likesCountMap.get(l.card_id) ?? 0) + 1)
       )
+
       const userLikedSet = new Set<string>((userLikesRes.data ?? []).map((l: any) => l.card_id))
       const userFavSet = new Set<string>((userFavsRes.data ?? []).map((f: any) => f.roadmap_id))
 
@@ -329,10 +333,9 @@ export default function ProfilePage() {
   }
 
   async function handleDelete(cardId: string) {
-    // confirm убран, подтверждение теперь только через модальное окно/кастомный toast
     const { error } = await supabase.from('cards').delete().eq('id', cardId)
     if (error) {
-      alert('Ошибка при удалении: ' + error.message)
+      toast.error('Ошибка при удалении: ' + error.message)
       return
     }
     setMyCards((prev) => prev.filter((c) => c.id !== cardId))
@@ -394,13 +397,22 @@ export default function ProfilePage() {
               {profile && <ProfileBadges profileId={profile.id} />}
             </div>
           </div>
-          <Link
-            href="/settings"
-            className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
-          >
-            <Settings className="h-4 w-4" />
-            {t('profile.settings')}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/stats"
+              className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Статистика
+            </Link>
+            <Link
+              href="/settings"
+              className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              {t('profile.settings')}
+            </Link>
+          </div>
         </section>
 
         {/* Вкладки с "Доступные мне" */}

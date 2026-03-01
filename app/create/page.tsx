@@ -53,7 +53,7 @@ export default function CreatePage() {
       );
     } catch (err) {
       console.error("Upload error:", err);
-      alert(t('common.error') + ': ' + (err as any)?.message);
+      setToast({ message: t('common.error') + ': ' + (err as any)?.message, type: 'error' });
     } finally {
       setUploadingStepId(null);
     }

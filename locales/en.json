@@ -203,6 +203,7 @@
     "likedYourCard": "liked your card",
     "commentedOn": "commented on",
     "startedFollowing": "started following you",
+    "publishedCard": "published a new roadmap",
     "justNow": "Just now",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",

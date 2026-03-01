@@ -194,12 +194,6 @@ function formatDate(iso: string, locale?: string): string {
 }
 
 /** Оптимистично обновляет реакцию (лайк/дизлайк) с YouTube-логикой */
-/**
- * Оптимистично обновляет реакцию (лайк/дизлайк) с YouTube-логикой
- * @param flat - массив комментариев
- * @param commentId - id комментария
- * @param type - 'like' | 'dislike'
- */
 function updateFlatReaction(
   flat: AppComment[],
   commentId: string,
@@ -593,18 +587,12 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   useEffect(() => {
     setLoading(true)
     fetchComments()
-  }, [roadmapId])
+  }, [roadmapId, currentUserId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed || !currentUserId || sending) return
-
-    // Валидация перед отправкой
-    if (!trimmed || !roadmapId || !currentUserId) {
-      toast.error('Данные не полные')
-      return
-    }
 
     setSending(true)
     setText('')
@@ -674,6 +662,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       .single()
     if (error) {
       console.error(error)
+      toast.error('Не удалось отправить ответ')
     } else {
       const newReply: AppComment = {
         id: data.id,

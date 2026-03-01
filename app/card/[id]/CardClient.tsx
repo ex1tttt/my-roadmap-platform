@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ExternalLink, ArrowLeft, BookOpen, Pencil, Loader2, ShieldAlert } from "lucide-react";
+import { ExternalLink, ArrowLeft, BookOpen, Pencil, Loader2, ShieldAlert, Eye } from "lucide-react";
 
 // Импорты компонентов
 import UserAvatar from "@/components/UserAvatar";
@@ -26,6 +26,7 @@ export default function CardClient({ id }: { id: string }) {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [initialDone, setInitialDone] = useState<string[]>([]);
+  const [viewsCount, setViewsCount] = useState(0);
 
   useEffect(() => {
     if (!id || id === "undefined") return;
@@ -49,6 +50,18 @@ export default function CardClient({ id }: { id: string }) {
 
       if (cardData) {
         setCard(cardData);
+        setViewsCount(cardData.views_count ?? 0);
+
+        // Подсчёт просмотров: не считаем автора, один пользователь — один раз (localStorage)
+        const isAuthor = user?.id === cardData.user_id;
+        const storageKey = `viewed_${id}`;
+        const alreadyViewed = typeof window !== 'undefined' && localStorage.getItem(storageKey);
+
+        if (!isAuthor && !alreadyViewed) {
+          await supabase.rpc('increment_views', { target_card_id: id });
+          setViewsCount((prev) => prev + 1);
+          if (typeof window !== 'undefined') localStorage.setItem(storageKey, '1');
+        }
 
         if (user) {
           // Прогресс
@@ -154,6 +167,11 @@ export default function CardClient({ id }: { id: string }) {
             <span className="font-medium">{authorName}</span>
           </Link>
           <StarRating roadmapId={id} compact />
+          {/* Счётчик просмотров */}
+          <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+            <Eye className="h-3.5 w-3.5" />
+            {viewsCount.toLocaleString()}
+          </span>
         </div>
 
         {card.description && (
