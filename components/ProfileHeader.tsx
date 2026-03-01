@@ -52,19 +52,7 @@ export default function ProfileHeader({
 
   useEffect(() => setMounted(true), [])
 
-  // Загружаем notify_enabled из таблицы follows (синхронизация при смене подписки)
-  useEffect(() => {
-    if (!currentUserId || !isFollowing) return
-    supabase
-      .from('follows')
-      .select('notify_enabled')
-      .eq('follower_id', currentUserId)
-      .eq('following_id', profile.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setNotifyEnabled(data.notify_enabled ?? false)
-      })
-  }, [currentUserId, profile.id, isFollowing])
+  // notify_enabled приходит с сервера через initialNotifyEnabled — повторная загрузка не нужна
 
   async function handleNotify() {
     if (!currentUserId || notifyLoading) return

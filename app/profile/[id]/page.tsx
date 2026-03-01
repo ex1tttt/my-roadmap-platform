@@ -86,7 +86,7 @@ export default async function PublicProfilePage({
 
   // Проверяем подписку текущего пользователя отдельным точечным запросом
   const followRow = currentUser && !isOwner
-    ? await supabaseServer
+    ? await supabaseAuth
         .from("follows")
         .select("notify_enabled")
         .eq("follower_id", currentUser.id)
