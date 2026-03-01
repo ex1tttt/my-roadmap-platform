@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { checkAndAwardBadges } from '@/lib/badges'
 
 interface LikeButtonProps {
   cardId: string
@@ -94,6 +95,8 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
             type: 'like',
             card_id: cardId,
           })
+          // Проверяем достижение «Сенсей» для автора карточки
+          await checkAndAwardBadges(card.user_id, 'like')
         }
       }
     } catch {

@@ -213,7 +213,8 @@
     "commented": "commented on",
     "yourCard": "your card",
     "didAction": "did something",
-    "someone": "Someone"
+    "someone": "Someone",
+    "seeAll": "All notifications"
   },
   "notification": {
     "follow": "{{name}} started following you",

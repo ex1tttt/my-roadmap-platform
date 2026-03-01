@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Trash2 } from "lucide-react";
+import { Users, Trash2, Pin } from "lucide-react";
 import Card from "@/components/Card";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -43,6 +43,27 @@ export default function ProfileTabsSelf({
   // Для одиночного удаления
   const [cardToDelete, setCardToDelete] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  async function togglePinCard(cardId: string, currentStatus: boolean) {
+    const newVal = !currentStatus;
+    // Оптимистичное обновление
+    setMyCards((prev: any[]) =>
+      prev.map((c: any) => (c.id === cardId ? { ...c, is_pinned: newVal } : c))
+    );
+    const { error } = await supabase
+      .from('cards')
+      .update({ is_pinned: newVal })
+      .eq('id', cardId);
+    if (error) {
+      // Откат
+      setMyCards((prev: any[]) =>
+        prev.map((c: any) => (c.id === cardId ? { ...c, is_pinned: currentStatus } : c))
+      );
+      toast.error('Ошибка при закреплении');
+    } else {
+      toast.success(newVal ? 'Карточка закреплена' : 'Откреплено');
+    }
+  }
 
   const handleSelectCard = (id: string) => {
     setSelectedCardIds((prev) =>
@@ -164,8 +185,15 @@ export default function ProfileTabsSelf({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-              {myCards.map((c: any) => (
+              {[...myCards]
+                .sort((a: any, b: any) => {
+                  if (a.is_pinned && !b.is_pinned) return -1;
+                  if (!a.is_pinned && b.is_pinned) return 1;
+                  return 0;
+                })
+                .map((c: any) => (
                 <div key={c.id} className="relative">
+                  {/* Флажок выбора (режим массового удаления) */}
                   {isSelectionMode && (
                     <input
                       type="checkbox"
@@ -173,6 +201,26 @@ export default function ProfileTabsSelf({
                       onChange={() => handleSelectCard(c.id)}
                       className="absolute top-2 left-2 z-10 accent-blue-500"
                     />
+                  )}
+                  {/* Кнопка закрепления */}
+                  {!isSelectionMode && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); togglePinCard(c.id, c.is_pinned ?? false); }}
+                      title={c.is_pinned ? 'Открепить' : 'Закрепить'}
+                      className="absolute top-2 right-2 z-10 rounded-md bg-white/80 dark:bg-slate-800/80 p-1 hover:bg-white dark:hover:bg-slate-700 transition-colors shadow-sm"
+                    >
+                      <Pin
+                        className={`h-3.5 w-3.5 transition-colors ${
+                          c.is_pinned ? 'fill-blue-500 text-blue-500' : 'text-slate-400'
+                        }`}
+                      />
+                    </button>
+                  )}
+                  {/* Плашка "Закреплено" */}
+                  {c.is_pinned && (
+                    <div className="absolute top-0 left-0 z-10 rounded-tl-xl rounded-br-lg bg-blue-500 px-2 py-0.5 text-[10px] font-semibold text-white select-none pointer-events-none">
+                      Закреплено
+                    </div>
                   )}
                   <div
                     className={isSelectionMode ? "pointer-events-auto" : "cursor-pointer"}

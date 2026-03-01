@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Lock, Globe } from "lucide-react";
 import Toast from "@/components/Toast";
+import { checkAndAwardBadges } from '@/lib/badges';
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
 type Resource = { id: string; label: string; url: string };
@@ -118,6 +119,9 @@ export default function CreatePage() {
       const cardId = cardData?.[0]?.id;
       if (!cardId) throw new Error("Card ID not returned");
 
+      // Проверяем достижение «Первопроходец»
+      await checkAndAwardBadges(user.id, 'first_card');
+
       // --- Уведомления подписчикам ---
       // 1. Получаем всех подписчиков (follower_id), которые подписаны на текущего пользователя
       const { data: followers, error: followersError } = await supabase
@@ -127,36 +131,19 @@ export default function CreatePage() {
       if (followersError) {
         console.error('Followers fetch error:', followersError);
       } else if (followers && followers.length > 0) {
-        // 2. Получаем имя автора
-        let authorName = user.email;
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .maybeSingle();
-        if (profile && profile.username) authorName = profile.username;
-
-        // 3. Массовая вставка уведомлений — тип 'like' пока не подходит,
-        // 'new_card' нет в notifications_type_check (допустимые: follow, like, comment, comment_like)
-        // Пропускаем DB-insert, оставляем только realtime broadcast
-
-        // 4. Real-time broadcast (если есть подписка на канал)
-        try {
-          const { supabaseRealtime } = await import('@/lib/supabase-realtime');
-          const channel = supabaseRealtime.channel('notifications');
-          await channel.send({
-            type: 'broadcast',
-            event: 'new_card',
-            payload: {
-              userId: user.id,
-              authorName,
-              cardId,
-              title,
-              followerIds: followers.map((f: any) => f.follower_id),
-            },
-          });
-        } catch (err) {
-          console.error('Realtime broadcast error:', err);
+        // 3. Массовая вставка уведомлений в БД для каждого подписчика.
+        // NotificationBell слушает postgres_changes → подписчики получат уведомление в реальном времени.
+        const notificationRows = followers.map((f: any) => ({
+          receiver_id: f.follower_id,
+          actor_id: user.id,
+          type: 'new_card' as const,
+          card_id: cardId,
+        }));
+        const { error: notifError } = await supabase
+          .from('notifications')
+          .insert(notificationRows);
+        if (notifError) {
+          console.error('Notifications insert error:', notifError);
         }
       }
 

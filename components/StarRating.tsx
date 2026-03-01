@@ -101,8 +101,43 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
     return () => { cancelled = true }
   }, [roadmapId])
 
+  // Realtime: подписка на изменения рейтингов для этой карточки
+  useEffect(() => {
+    const channel = supabase
+      .channel(`ratings:${roadmapId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ratings', filter: `roadmap_id=eq.${roadmapId}` },
+        () => {
+          // Перезагружаем актуальные данные с сервера
+          supabase
+            .from('ratings')
+            .select('rate, user_id')
+            .eq('roadmap_id', roadmapId)
+            .then(({ data: rows }) => {
+              if (!rows) return
+              setTotalCount(rows.length)
+              setAverage(
+                rows.length > 0
+                  ? rows.reduce((s, r) => s + (r.rate ?? 0), 0) / rows.length
+                  : 0
+              )
+              // Обновляем оценку текущего пользователя
+              setCurrentUserId((uid) => {
+                if (uid) {
+                  const myRate = rows.find((r) => r.user_id === uid)?.rate ?? null
+                  setUserRating(myRate)
+                }
+                return uid
+              })
+            })
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [roadmapId])
+
   async function handleRate(value: number) {
-    console.log('Проверка ID перед отправкой:', roadmapId)
     if (!currentUserId || submitting) return
 
     // Повторный клик на ту же звезду — отмена оценки
@@ -118,23 +153,11 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
     setUserRating(value)
     setSubmitting(true)
 
-    console.log('Данные для отправки:', { roadmapId, userId: currentUserId, rating: value })
-
-    // Диагностика: проверяем доступность таблицы ratings перед записью
-    const { data: testData, error: testError } = await supabase.from('ratings').select('*').limit(1)
-    console.log('Диагностика таблицы ratings:', { testData, testError })
-
     const { error: upsertError } = await supabase
       .from('ratings')
       .upsert({ roadmap_id: roadmapId, user_id: currentUserId, rate: Math.round(value) })
 
     if (upsertError) {
-      console.error('StarRating: ошибка сохранения оценки:', {
-        message: upsertError.message,
-        details: upsertError.details,
-        hint: upsertError.hint,
-        code: upsertError.code,
-      })
       // Откатываем
       setUserRating(prevRating)
       setAverage(prevAverage)
@@ -150,7 +173,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
       .eq('roadmap_id', roadmapId)
 
     if (fetchError) {
-      console.error('StarRating: ошибка обновления среднего (rate):', fetchError)
+      // Ошибка пересчёта среднего — Realtime подхватит позже
     } else if (ratings && ratings.length > 0) {
       const values = ratings.map((r: any) => r.rate as number)
       const avg = values.reduce((a: number, b: number) => a + b, 0) / values.length
@@ -182,20 +205,12 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
     setUnrating(true)
     setSubmitting(true)
 
-    console.log('Отправка данных (delete):', { roadmapId, userId: currentUserId })
-
     const { error } = await supabase
       .from('ratings')
       .delete()
       .match({ roadmap_id: roadmapId, user_id: currentUserId })
 
     if (error) {
-      console.error('Детали ошибки Supabase (delete):', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      })
       setUserRating(prevRating)
       setAverage(prevAverage)
       setTotalCount(prevCount)
@@ -211,7 +226,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
       .eq('roadmap_id', roadmapId)
 
     if (fetchError) {
-      console.error('StarRating: ошибка обновления среднего:', fetchError)
+      // Ошибка пересчёта — Realtime подхватит позже
     } else if (!ratings || ratings.length === 0) {
       setAverage(0)
       setTotalCount(0)

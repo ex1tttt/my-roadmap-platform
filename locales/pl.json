@@ -215,7 +215,8 @@
     "commented": "skomentował",
     "yourCard": "twój kartę",
     "didAction": "zrobił coś",
-    "someone": "Ktoś"
+    "someone": "Ktoś",
+    "seeAll": "Wszystkie powiadomienia"
   },
   "notification": {
     "follow": "{{name}} zaczął cię obserwować",

@@ -215,7 +215,8 @@
     "commented": "прокомментировал",
     "yourCard": "вашей карточке",
     "didAction": "совершил действие",
-    "someone": "Кто-то"
+    "someone": "Кто-то",
+    "seeAll": "Все уведомления"
   },
   "notification": {
     "follow": "{{name}} подписался на вас",

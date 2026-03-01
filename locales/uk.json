@@ -215,7 +215,8 @@
     "commented": "прокоментував",
     "yourCard": "вашій картці",
     "didAction": "здійснив дію",
-    "someone": "Хтось"
+    "someone": "Хтось",
+    "seeAll": "Усі сповіщення"
   },
   "notification": {
     "follow": "{{name}} підписався на вас",

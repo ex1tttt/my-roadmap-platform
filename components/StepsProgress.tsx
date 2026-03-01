@@ -68,6 +68,41 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
 
   useEffect(() => setIsMounted(true), [])
 
+  // Realtime: синхронизация прогресса между вкладками / устройствами
+  useEffect(() => {
+    if (!userId) return
+    const channel = supabase
+      .channel(`user_progress:${cardId}:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'user_progress', filter: `card_id=eq.${cardId}` },
+        (payload) => {
+          if ((payload.new as any)?.user_id !== userId) return
+          const stepId = (payload.new as any).step_id as string
+          setDone((prev) => {
+            const next = new Set(prev)
+            next.add(stepId)
+            return next
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'user_progress', filter: `card_id=eq.${cardId}` },
+        (payload) => {
+          if ((payload.old as any)?.user_id !== userId) return
+          const stepId = (payload.old as any).step_id as string
+          setDone((prev) => {
+            const next = new Set(prev)
+            next.delete(stepId)
+            return next
+          })
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [cardId, userId])
+
   if (!isMounted) return null
 
   const total = steps.length

@@ -8,6 +8,7 @@ import { Trash2, MessageSquare, Send, User, ThumbsUp, ThumbsDown, ChevronDown, P
 import { Skeleton } from '@/components/ui/Skeleton';
 import Avatar from '@/components/UserAvatar';
 import { useTranslation } from 'react-i18next';
+import { checkAndAwardBadges } from '@/lib/badges';
 
 // Тип комментария должен быть выше всех его использований
 type AppComment = {
@@ -385,6 +386,123 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
   useEffect(() => setMounted(true), [])
 
+  // Realtime: комментарии + лайки + дизлайки
+  useEffect(() => {
+    const channel = supabase
+      .channel(`comments-rt:${roadmapId}`)
+      // Новый комментарий от ДРУГОГО пользователя
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comments', filter: `roadmap_id=eq.${roadmapId}` },
+        async (payload) => {
+          const row = payload.new as any
+          // Пропускаем свои: уже добавлены оптимистично
+          if (row.user_id === currentUserId) return
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar')
+            .eq('id', row.user_id)
+            .maybeSingle()
+          // Если это ответ, берём автора родителя
+          let parentAuthorName: string | undefined
+          let parentAuthorUserId: string | undefined
+          if (row.parent_id) {
+            const { data: parentRow } = await supabase
+              .from('comments')
+              .select('user_id, profiles:user_id(username)')
+              .eq('id', row.parent_id)
+              .maybeSingle()
+            if (parentRow) {
+              parentAuthorUserId = parentRow.user_id
+              const pr = Array.isArray(parentRow.profiles) ? parentRow.profiles[0] : parentRow.profiles
+              parentAuthorName = (pr as any)?.username
+            }
+          }
+          const newComment: AppComment = {
+            id: row.id,
+            content: row.content,
+            created_at: row.created_at,
+            user_id: row.user_id,
+            parent_id: row.parent_id ?? null,
+            is_pinned: false,
+            parentAuthorName,
+            parentAuthorUserId,
+            author: profile ?? { username: 'Unknown' },
+            likesCount: 0,
+            isLiked: false,
+            dislikesCount: 0,
+            isDisliked: false,
+          }
+          setFlat((prev) => {
+            if (prev.some((c) => c.id === newComment.id)) return prev
+            return [newComment, ...prev]
+          })
+          setTotalCount((n) => n + 1)
+        }
+      )
+      // Удалённый комментарий (от любого пользователя, в т.ч. от нас с другого устройства)
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'comments', filter: `roadmap_id=eq.${roadmapId}` },
+        (payload) => {
+          const id = (payload.old as any).id as string
+          setFlat((prev) => {
+            if (!prev.some((c) => c.id === id)) return prev
+            setTotalCount((n) => Math.max(0, n - 1))
+            return prev.filter((c) => c.id !== id)
+          })
+        }
+      )
+      // Лайки комментариев — от ДРУГИХ пользователей (свои уже обновлены оптимистично)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comment_likes' },
+        (payload) => {
+          const { comment_id, user_id } = payload.new as any
+          if (user_id === currentUserId) return
+          setFlat((prev) => prev.map((c) =>
+            c.id === comment_id ? { ...c, likesCount: c.likesCount + 1 } : c
+          ))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'comment_likes' },
+        (payload) => {
+          const { comment_id, user_id } = payload.old as any
+          if (user_id === currentUserId) return
+          setFlat((prev) => prev.map((c) =>
+            c.id === comment_id ? { ...c, likesCount: Math.max(0, c.likesCount - 1) } : c
+          ))
+        }
+      )
+      // Дизлайки комментариев — от ДРУГИХ пользователей
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comment_dislikes' },
+        (payload) => {
+          const { comment_id, user_id } = payload.new as any
+          if (user_id === currentUserId) return
+          setFlat((prev) => prev.map((c) =>
+            c.id === comment_id ? { ...c, dislikesCount: c.dislikesCount + 1 } : c
+          ))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'comment_dislikes' },
+        (payload) => {
+          const { comment_id, user_id } = payload.old as any
+          if (user_id === currentUserId) return
+          setFlat((prev) => prev.map((c) =>
+            c.id === comment_id ? { ...c, dislikesCount: Math.max(0, c.dislikesCount - 1) } : c
+          ))
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [roadmapId, currentUserId])
+
   useEffect(() => {
     // Загружаем автора карточки
     supabase.from('cards').select('user_id').eq('id', roadmapId).maybeSingle()
@@ -491,13 +609,6 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     setSending(true)
     setText('')
 
-    // Debug-лог перед отправкой в Supabase
-    console.log('Данные перед отправкой:', {
-      content: trimmed,
-      roadmap_id: String(roadmapId),
-      user_id: currentUserId,
-    })
-
     // Optimistic Update — добавляем коммент в список немедленно
     const tempId = `optimistic-${Date.now()}`
     const optimisticComment: AppComment = {
@@ -522,7 +633,6 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       .single()
 
     if (error) {
-      console.log("ПОЛНАЯ ОШИБКА:", JSON.stringify(error, null, 2))
       // Откат оптимистичного обновления
       setFlat((prev) => prev.filter((c) => c.id !== tempId))
       setTotalCount((prev) => prev - 1)
@@ -545,6 +655,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       }
       setFlat((prev) => prev.map((c) => (c.id === tempId ? newComment : c)))
       textareaRef.current?.focus()
+      // Проверяем достижение «Критик»
+      await checkAndAwardBadges(currentUserId, 'comment')
     }
     setSending(false)
   }

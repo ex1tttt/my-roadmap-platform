@@ -8,6 +8,7 @@ import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
 import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil, Users } from 'lucide-react'
 import ProfileTabsSelf from '@/components/ProfileTabsSelf'
+import ProfileBadges from '@/components/ProfileBadges'
 import { useTranslation } from 'react-i18next'
 import { useHasMounted } from '@/hooks/useHasMounted'
 
@@ -18,6 +19,7 @@ type CardType = {
   title: string
   description?: string
   category?: string
+  is_pinned?: boolean
   user: Profile
   steps?: Step[]
   likesCount: number
@@ -172,6 +174,7 @@ export default function ProfilePage() {
         title: c.title,
         description: c.description,
         category: c.category,
+        is_pinned: c.is_pinned ?? false,
         user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: 'Unknown' },
         steps: stepsByCard.get(c.id) ?? [],
         likesCount: likesCountMap.get(c.id) ?? 0,
@@ -181,9 +184,6 @@ export default function ProfilePage() {
         commentsCount: commentsCountMap.get(c.id) ?? 0,
       })
 
-      console.log('userId:', userId)
-      console.log('myCardsRaw:', myCardsRaw)
-      console.log('likedCardsRaw:', likedCardsRaw)
       setMyCards(myCardsRaw.map(toCardType))
       setLikedCards(likedCardsRaw.map(toCardType))
 
@@ -391,6 +391,7 @@ export default function ProfilePage() {
               ) : (
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">{t('profile.noBio')}</p>
               )}
+              {profile && <ProfileBadges profileId={profile.id} />}
             </div>
           </div>
           <Link
@@ -405,6 +406,7 @@ export default function ProfilePage() {
         {/* Вкладки с "Доступные мне" */}
         <ProfileTabsSelf
           myCards={myCards}
+          setMyCards={setMyCards}
           likedCards={likedCards}
           favoriteCards={favoriteCards}
           sharedCards={sharedCards}

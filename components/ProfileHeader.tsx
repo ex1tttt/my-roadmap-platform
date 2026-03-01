@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import FollowListModal from '@/components/FollowListModal'
 import Toast from '@/components/Toast'
+import ProfileBadges from '@/components/ProfileBadges'
 import { useTranslation } from 'react-i18next'
 
 interface Props {
@@ -247,6 +248,9 @@ export default function ProfileHeader({
             <span className="text-slate-500 dark:text-slate-400">{t('follow.subscriptionsLabel')}</span>
           </button>
         </div>
+
+        {/* Значки / достижения */}
+        <ProfileBadges profileId={profile.id} />
       </div>
     </div>
 
