@@ -5,20 +5,28 @@ import { createClient } from '@supabase/supabase-js'
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  // Инициализируем VAPID внутри обработчика — env vars доступны только в runtime
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT!,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-  )
-
-  // Supabase с service_role — обходит RLS, читает все подписки
-  const adminSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
   try {
+    // Проверяем наличие обязательных env vars
+    const vapidSubject = process.env.VAPID_SUBJECT
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!vapidSubject || !vapidPublicKey || !vapidPrivateKey) {
+      console.error('[send-push] Missing VAPID env vars:', { vapidSubject: !!vapidSubject, vapidPublicKey: !!vapidPublicKey, vapidPrivateKey: !!vapidPrivateKey })
+      return NextResponse.json({ error: 'VAPID env vars not configured' }, { status: 500 })
+    }
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('[send-push] Missing Supabase env vars')
+      return NextResponse.json({ error: 'Supabase env vars not configured' }, { status: 500 })
+    }
+
+    // Инициализируем VAPID и Supabase внутри try
+    webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey)
+
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey)
+
     const body_json = await req.json()
     const { title, body, url } = body_json
 
@@ -78,7 +86,10 @@ export async function POST(req: NextRequest) {
     const sent = results.filter((r) => r.status === 'fulfilled').length
     return NextResponse.json({ sent })
   } catch (err: any) {
-    console.error('[send-push] error:', err)
-    return NextResponse.json({ error: err.message ?? 'Server error' }, { status: 500 })
+    console.error('[send-push] error:', err?.message, err?.statusCode, err?.body)
+    return NextResponse.json({
+      error: err?.message ?? 'Server error',
+      statusCode: err?.statusCode,
+    }, { status: 500 })
   }
 }
