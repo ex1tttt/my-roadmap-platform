@@ -32,8 +32,6 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [debugError, setDebugError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHistory() {
@@ -47,7 +45,6 @@ export default function HistoryPage() {
       }
 
       setUserId(user.id);
-      console.log('[history] auth user.id =>', user.id);
 
       // Шаг 1: получаем историю просмотров
       const { data: historyData, error: histError } = await supabase
@@ -57,14 +54,10 @@ export default function HistoryPage() {
         .order("viewed_at", { ascending: false });
 
       if (histError) {
-        const msg = `[view_history] ${histError.code}: ${histError.message}${histError.hint ? ` | Hint: ${histError.hint}` : ''}`;
-        console.error(msg);
-        setDebugError(msg);
+        console.error('[history] view_history error:', histError.message);
         setLoading(false);
         return;
       }
-
-      console.log('[history] raw historyData:', historyData?.length, 'rows');
 
       if (!historyData || historyData.length === 0) {
         setLoading(false);
@@ -83,13 +76,10 @@ export default function HistoryPage() {
       ]);
 
       if (cardsRes.error) {
-        const msg = `[cards] ${cardsRes.error.code}: ${cardsRes.error.message}`;
-        console.error(msg);
-        setDebugError(msg);
+        console.error('[history] cards error:', cardsRes.error.message);
         setLoading(false);
         return;
       }
-      console.log('[history] cards fetched:', cardsRes.data?.length);
 
       const authorIds = Array.from(new Set((cardsRes.data || []).map((r: any) => r.user_id)));
       const profilesRes = await supabase.from("profiles").select("*").in("id", authorIds);
@@ -135,27 +125,6 @@ export default function HistoryPage() {
     loadHistory();
   }, [router]);
 
-  const [testResult, setTestResult] = useState<string | null>(null);
-
-  async function handleTestWrite() {
-    if (!userId) return;
-    setTestResult("⏳ Выполняется...");
-    // Берём любую карточку чтобы протестировать запись
-    const { data: anyCard } = await supabase.from("cards").select("id").limit(1).single();
-    if (!anyCard) { setTestResult("❌ Нет карточек в БД для теста"); return; }
-    const { data, error } = await supabase
-      .from("view_history")
-      .upsert({ user_id: userId, card_id: anyCard.id, viewed_at: new Date().toISOString() }, { onConflict: "user_id,card_id" })
-      .select();
-    if (error) {
-      setTestResult(`❌ Ошибка: ${error.code} — ${error.message}${error.hint ? ` | Hint: ${error.hint}` : ""}`);
-    } else {
-      setTestResult(`✅ Успешно! Запись: ${JSON.stringify(data?.[0])}`);
-      // Перезагружаем историю
-      window.location.reload();
-    }
-  }
-
   async function handleClearHistory() {
     if (!userId) return;
     setClearing(true);
@@ -182,25 +151,6 @@ export default function HistoryPage() {
 
   if (!mounted) return <div className="opacity-0" />;
 
-  // Блок диагностики — показываем всегда пока есть ошибка или инфо
-  const DebugBanner = () => {
-    if (!debugError && !debugInfo) return null;
-    if (debugError) return (
-      <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-400 font-mono break-all">
-        <strong>Ошибка запроса:</strong><br />{debugError}<br />
-        <span className="text-slate-400 text-xs mt-2 block">
-          Скорее всего таблица <code>view_history</code> не создана или отсутствуют RLS-политики.<br />
-          Запусти SQL из файла <code>db/migration_view_history.sql</code> в Supabase → SQL Editor.
-        </span>
-      </div>
-    );
-    return (
-      <div className="mb-6 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-300 font-mono">
-        {debugInfo}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#020617]">
@@ -212,13 +162,6 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
       <main className="mx-auto max-w-6xl">
-        <DebugBanner />
-        {/* Результат теста записи */}
-        {testResult && (
-          <div className={`mb-6 rounded-lg border p-4 text-sm font-mono break-all ${testResult.startsWith("✅") ? "border-green-500/30 bg-green-500/10 text-green-400" : testResult.startsWith("❌") ? "border-red-500/30 bg-red-500/10 text-red-400" : "border-blue-500/30 bg-blue-500/10 text-blue-300"}`}>
-            {testResult}
-          </div>
-        )}
         {/* Заголовок */}
         <header className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -236,13 +179,6 @@ export default function HistoryPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Кнопка теста — временная диагностика */}
-            <button
-              onClick={handleTestWrite}
-              className="inline-flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-sm text-yellow-400 transition-colors hover:bg-yellow-500/20"
-            >
-              🧪 Тест записи
-            </button>
             {cards.length > 0 && (
               <button
                 onClick={handleClearHistory}

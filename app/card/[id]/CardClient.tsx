@@ -45,7 +45,6 @@ export default function CardClient({ id }: { id: string }) {
       ]);
 
       const user = session?.user ?? null;
-      console.log('[CardClient] user =>', user ? `uid=${user.id}` : 'null (не авторизован)');
       setCurrentUser(user);
 
       if (cardData) {
@@ -61,15 +60,12 @@ export default function CardClient({ id }: { id: string }) {
           setInitialDone(prog?.map((p: any) => p.step_id) || []);
 
           // Запись в историю просмотров
-          console.log('[view_history] upsert → user_id:', user.id, '| card_id:', id);
-          const { data: upsertData, error: histErr } = await supabase
+          await supabase
             .from('view_history')
             .upsert(
               { user_id: user.id, card_id: id, viewed_at: new Date().toISOString() },
               { onConflict: 'user_id,card_id' }
-            )
-            .select();
-          console.log('History status:', histErr ? `ERROR: ${histErr.code} ${histErr.message}` : 'OK', '| data:', upsertData);
+            );
         }
       }
       setLoading(false);
