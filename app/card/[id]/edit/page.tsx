@@ -30,6 +30,7 @@ export default function EditPage() {
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [uploadingStepId, setUploadingStepId] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
@@ -57,7 +58,20 @@ export default function EditPage() {
       if (!card) { setLoading(false); return; }
 
       // Проверка прав
-      if (card.user_id !== user.id) { setForbidden(true); setLoading(false); return; }
+      if (card.user_id === user.id) {
+        setIsOwner(true);
+      } else {
+        // Проверяем, является ли пользователь коллаборатором
+        if (!user.email) { setForbidden(true); setLoading(false); return; }
+        const { data: collabRow } = await supabase
+          .from('card_collaborators')
+          .select('id')
+          .eq('card_id', cardId)
+          .eq('user_email', user.email)
+          .maybeSingle();
+        if (!collabRow) { setForbidden(true); setLoading(false); return; }
+        setIsOwner(false);
+      }
 
       setTitle(card.title ?? "");
       setIsPrivate(card.is_private === true);
@@ -136,8 +150,7 @@ export default function EditPage() {
       const { error: cardError } = await supabase
         .from("cards")
         .update({ title, description, category, is_private: isPrivate })
-        .eq("id", cardId)
-        .eq("user_id", user.id); // дополнительная защита на уровне запроса
+        .eq("id", cardId);
 
       if (cardError) {
         console.error("Card update error:", cardError);
@@ -479,7 +492,7 @@ export default function EditPage() {
             </button>
           </div>
         </form>
-        {isPrivate && (
+        {isOwner && (
           <div className="mt-10">
             <CollaboratorManager cardId={cardId} />
           </div>

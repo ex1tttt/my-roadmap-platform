@@ -161,8 +161,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   // Если карточка не найдена или приватная и не владелец/не коллаборатор
   let isCollaborator = false;
-  if (data && data.is_private && currentUser && currentUser.email) {
-    // Проверяем, есть ли email пользователя в card_collaborators для этой карточки
+  if (data && currentUser && currentUser.email) {
+    // Проверяем коллаборатора для всех карточек (публичных и приватных)
     const { data: collabRows } = await supabaseAuth
       .from('card_collaborators')
       .select('user_email')
@@ -222,17 +222,17 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                 />
               </ClientOnly>
+              {(isOwner || isCollaborator) && (
+                <Link
+                  href={`/card/${id}/edit`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Редактировать
+                </Link>
+              )}
               {isOwner && (
-                <>
-                  <Link
-                    href={`/card/${id}/edit`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Редактировать
-                  </Link>
-                  <DeleteButton cardId={id} />
-                </>
+                <DeleteButton cardId={id} />
               )}
             </div>
           </div>
