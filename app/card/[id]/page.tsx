@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { ExternalLink, BookOpen, Pencil, Lock } from "lucide-react";
@@ -71,25 +70,28 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  // Используем service role key чтобы обойти RLS (Telegram-бот ходит без сессии).
-  // Fallback на anon key если service role не задан в Vercel.
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    key
-  );
+  // Прямой REST-запрос к Supabase, service role обходит RLS полностью
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   let data: { title: string; description: string; image_url: string } | null = null;
   try {
-    const { data: row } = await supabaseAdmin
-      .from("cards")
-      .select("title, description, image_url")
-      .eq("id", id)
-      .maybeSingle();
-    // Не фильтруем is_private здесь — страница сама защищает приватные карточки.
-    // NULL-значения is_private (старые карточки) тоже считаются публичными.
-    data = row;
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      }
+    );
+    if (res.ok) {
+      const rows = await res.json();
+      data = rows?.[0] ?? null;
+    }
   } catch {
-    // ignore — вернём заглушку
+    // ignore
   }
   if (!data) {
     return { title: "Roadmap | Дорожная карта не найдена" };
