@@ -5,7 +5,7 @@
 
 html {
   scroll-behavior: smooth;
-  font-size: 87.5%; /* 14px base — scales all rem-based Tailwind utilities down proportionally */
+  font-size: 82.5%; /* ~13.2px base — scales all rem-based Tailwind utilities down proportionally */
 }
 
 :root {
