@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Settings, Bell } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import FollowListModal from '@/components/FollowListModal'
@@ -147,15 +147,7 @@ export default function ProfileHeader({
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{profile.username}</h1>
 
-          {isOwner ? (
-            <Link
-              href="/settings"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
-            >
-              <Settings className="h-4 w-4" />
-              {t('profile.settings')}
-            </Link>
-          ) : currentUserId ? (
+          {!isOwner && currentUserId ? (
             <div className="flex items-center gap-2">
               {/* Колокольчик — только если подписан */}
               {isFollowing && (

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
-import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil, Users, TrendingUp } from 'lucide-react'
+import { User, Heart, Map as MapIcon, Trash2, Bookmark, MoreVertical, Pencil, Users } from 'lucide-react'
 import ProfileTabsSelf from '@/components/ProfileTabsSelf'
 import { useTranslation } from 'react-i18next'
 import { useHasMounted } from '@/hooks/useHasMounted'
@@ -393,22 +393,7 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/stats"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Статистика
-            </Link>
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-              {t('profile.settings')}
-            </Link>
-          </div>
+
         </section>
 
         {/* Вкладки с "Доступные мне" */}

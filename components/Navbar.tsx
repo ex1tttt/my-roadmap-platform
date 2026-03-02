@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useHasMounted } from '@/hooks/useHasMounted'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
-import ThemeToggle from '@/components/ThemeToggle'
+import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { saveLanguage, type SupportedLanguage } from '@/lib/i18n'
 
@@ -16,9 +16,13 @@ export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
   const [username, setUsername] = useState('')
   const [usernameLoading, setUsernameLoading] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const mounted = useHasMounted()
   const router = useRouter()
   const { t, i18n } = useTranslation()
+  const { theme, setTheme } = useTheme()
+  const isDark = theme === 'dark'
 
   // Загружаем username и language из таблицы profiles
   async function loadUsername(userId: string) {
@@ -79,10 +83,22 @@ export default function Navbar() {
   }, [session?.user?.id])
 
   const handleSignOut = async () => {
+    setDropdownOpen(false)
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
   }
+
+  // Закрываем dropdown при клике вне
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/70 dark:bg-[#020617]/70 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 transition-colors">
@@ -98,7 +114,6 @@ export default function Navbar() {
 
         {/* Правая часть */}
         <div className="flex items-center gap-3">
-          <ThemeToggle />
           {session ? (
             <>
               {/* Колокольчик уведомлений */}
@@ -114,16 +129,6 @@ export default function Navbar() {
                 {mounted ? t('nav.feed') : ''}
               </Link>
 
-              {/* История просмотров */}
-              <Link
-                href="/history"
-                suppressHydrationWarning
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-              >
-                <Clock className="w-4 h-4" />
-                {mounted ? t('nav.history') : ''}
-              </Link>
-
               {/* Кнопка Создать */}
               <Link
                 href="/create"
@@ -134,29 +139,86 @@ export default function Navbar() {
                 {mounted ? t('nav.create') : ''}
               </Link>
 
-              {/* Имя пользователя */}
-              <Link
-                href="/profile"
-                suppressHydrationWarning
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-              >
-                <User className="w-4 h-4" />
-                {usernameLoading ? (
-                  <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
-                ) : (
-                  username || session.user.email?.split('@')[0] || (mounted ? t('nav.profile') : '')
-                )}
-              </Link>
+              {/* Dropdown с именем пользователя */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen((v) => !v)}
+                  suppressHydrationWarning
+                  className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  {usernameLoading ? (
+                    <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                  ) : (
+                    username || session.user.email?.split('@')[0] || (mounted ? t('nav.profile') : '')
+                  )}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-              {/* Кнопка Выйти */}
-              <button
-                onClick={handleSignOut}
-                suppressHydrationWarning
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                {mounted ? t('nav.logout') : ''}
-              </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl py-1 z-50">
+                    {/* Профиль */}
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Профиль
+                    </Link>
+
+                    {/* История */}
+                    <Link
+                      href="/history"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <Clock className="w-4 h-4" />
+                      История
+                    </Link>
+
+                    {/* Смена темы */}
+                    <button
+                      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      {mounted && isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                      {mounted ? (isDark ? 'Светлая тема' : 'Тёмная тема') : 'Тема'}
+                    </button>
+
+                    {/* Статистика */}
+                    <Link
+                      href="/stats"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      Статистика
+                    </Link>
+
+                    <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+
+                    {/* Настройки */}
+                    <Link
+                      href="/settings"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Настройки
+                    </Link>
+
+                    {/* Выход */}
+                    <button
+                      onClick={handleSignOut}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Выйти
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <>
