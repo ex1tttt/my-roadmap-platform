@@ -71,16 +71,25 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  // Используем service role key, чтобы обойти RLS — Telegram-бот ходит без cookies
+  // Используем service role key чтобы обойти RLS (Telegram-бот ходит без сессии).
+  // Fallback на anon key если service role не задан в Vercel.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    key
   );
-  const { data } = await supabaseAdmin
-    .from("cards")
-    .select("title, description, image_url")
-    .eq("id", id)
-    .maybeSingle();
+  let data: { title: string; description: string; image_url: string } | null = null;
+  try {
+    const { data: row } = await supabaseAdmin
+      .from("cards")
+      .select("title, description, image_url")
+      .eq("id", id)
+      .eq("is_private", false)
+      .maybeSingle();
+    data = row;
+  } catch {
+    // ignore — вернём заглушку
+  }
   if (!data) {
     return { title: "Roadmap | Дорожная карта не найдена" };
   }
