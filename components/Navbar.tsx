@@ -21,8 +21,8 @@ export default function Navbar() {
   const mounted = useHasMounted()
   const router = useRouter()
   const { t, i18n } = useTranslation()
-  const { theme, setTheme } = useTheme()
-  const isDark = theme === 'dark'
+  const { resolvedTheme, setTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   // Загружаем username и language из таблицы profiles
   async function loadUsername(userId: string) {
