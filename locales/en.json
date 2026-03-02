@@ -121,7 +121,8 @@
     "materials": "Materials",
     "editCard": "Edit",
     "cardNotFound": "Card with this ID not found.",
-    "loadError": "Error loading card"
+    "loadError": "Error loading card",
+    "rate": "Rate"
   },
   "comments": {
     "title": "Comments",
@@ -142,7 +143,13 @@
     "liked": "Liked",
     "unlike": "Unlike",
     "disliked": "Disliked",
-    "undislike": "Remove dislike"
+    "undislike": "Remove dislike",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "pinnedByAuthor": "Pinned by author",
+    "pinned": "Comment pinned",
+    "unpinned": "Comment unpinned",
+    "pinError": "Error pinning comment"
   },
   "favorites": {
     "title": "Favorites",

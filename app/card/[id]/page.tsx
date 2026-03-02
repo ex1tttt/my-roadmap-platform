@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { ExternalLink, BookOpen, Pencil, Lock } from "lucide-react";
+import { ExternalLink, BookOpen, Lock } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import DeleteButton from "@/components/DeleteButton";
 import CommentSection from "@/components/CommentSection";
@@ -13,6 +13,8 @@ import StepsProgress from "@/components/StepsProgress";
 import ClientOnly from "@/components/ClientOnly";
 import ViewHistoryRecorder from "./ViewHistoryRecorder";
 import BackButton from "./BackButton";
+import CardEditButton from "./CardEditButton";
+import T from "@/components/T";
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -224,13 +226,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                 />
               </ClientOnly>
               {(isOwner || collaboratorRole === "editor") && (
-                <Link
-                  href={`/card/${id}/edit`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Редактировать
-                </Link>
+                <CardEditButton cardId={id} />
               )}
               {isOwner && (
                 <DeleteButton cardId={id} />
@@ -287,7 +283,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <section>
           <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
             <BookOpen className="h-5 w-5 text-blue-400" />
-            Дорожная карта
+            <T k="card.roadmap" />
             <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
               {steps.length}
             </span>
@@ -305,7 +301,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <div className="sticky top-20 space-y-4">
             <div className="relative z-10 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                Оценить
+                <T k="card.rate" />
               </h2>
               <ClientOnly fallback={<div className="h-16" />}>
                 <StarRating roadmapId={id} />
@@ -315,7 +311,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
                 <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   <ExternalLink className="h-4 w-4" />
-                  Материалы
+                  <T k="card.materials" />
                 </h2>
                 <ul className="space-y-2">
                   {resources.map((r) => (

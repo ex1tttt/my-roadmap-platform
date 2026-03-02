@@ -123,7 +123,8 @@
     "materials": "Materiały",
     "editCard": "Edytuj",
     "cardNotFound": "Karta o tym ID nie została znaleziona.",
-    "loadError": "Błąd podczas ładowania karty"
+    "loadError": "Błąd podczas ładowania karty",
+    "rate": "Oceń"
   },
   "comments": {
     "title": "Komentarze",
@@ -144,7 +145,13 @@
     "liked": "Polubione",
     "unlike": "Cofnij lajk",
     "disliked": "Nie lubiane",
-    "undislike": "Cofnij dyslajk"
+    "undislike": "Cofnij dyslajk",
+    "pin": "Przypnij",
+    "unpin": "Odepnij",
+    "pinnedByAuthor": "Przypięte przez autora",
+    "pinned": "Komentarz przypięty",
+    "unpinned": "Komentarz odpięty",
+    "pinError": "Błąd przypinania"
   },
   "favorites": {
     "title": "Ulubione",

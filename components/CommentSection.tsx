@@ -136,7 +136,7 @@ function RootCommentRow(props: RootCommentRowProps) {
 
         {/* Закреплено */}
         {comment.is_pinned && (
-          <div className="mb-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400">Закреплено автором</div>
+          <div className="mb-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400">{t('comments.pinnedByAuthor')}</div>
         )}
 
         {/* Текст */}
@@ -802,13 +802,13 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     }
     const { error } = await supabase.from('comments').update({ is_pinned: !comment.is_pinned }).eq('id', comment.id);
     if (!error) {
-      toast.success(!comment.is_pinned ? 'Комментарий закреплен' : 'Комментарий откреплен');
+      toast.success(!comment.is_pinned ? t('comments.pinned') : t('comments.unpinned'));
     } else {
       // Откат flat при ошибке
       setFlat((prev) => prev.map((c) =>
         c.id === comment.id ? { ...c, is_pinned: comment.is_pinned } : c
       ));
-      toast.error('Ошибка закрепления');
+      toast.error(t('comments.pinError'));
     }
   }
 
