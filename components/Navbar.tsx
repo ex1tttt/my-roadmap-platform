@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, ChevronDown, TrendingUp } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
-import { useTheme } from 'next-themes'
+import ThemeToggle from '@/components/ThemeToggle'
 import { useTranslation } from 'react-i18next'
 import { saveLanguage, type SupportedLanguage } from '@/lib/i18n'
 
@@ -21,8 +21,6 @@ export default function Navbar() {
   const mounted = useHasMounted()
   const router = useRouter()
   const { t, i18n } = useTranslation()
-  const { theme, setTheme } = useTheme()
-  const isDark = theme === 'dark'
 
   // Загружаем username и language из таблицы profiles
   async function loadUsername(userId: string) {
@@ -91,13 +89,13 @@ export default function Navbar() {
 
   // Закрываем dropdown при клике вне
   useEffect(() => {
-    function handleOutside(e: MouseEvent) {
+    function handleOutside(e: PointerEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
+    document.addEventListener('pointerdown', handleOutside)
+    return () => document.removeEventListener('pointerdown', handleOutside)
   }, [])
 
   return (
@@ -118,6 +116,9 @@ export default function Navbar() {
             <>
               {/* Колокольчик уведомлений */}
               <NotificationBell userId={session.user.id} />
+
+              {/* Переключатель темы — всегда виден */}
+              <ThemeToggle />
 
               {/* Лента */}
               <Link
@@ -176,15 +177,6 @@ export default function Navbar() {
                       <Clock className="w-4 h-4" />
                       {t('nav.history')}
                     </Link>
-
-                    {/* Смена темы */}
-                    <button
-                      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-                    >
-                      {mounted && isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                      {mounted ? (isDark ? t('nav.lightTheme') : t('nav.darkTheme')) : t('nav.systemTheme')}
-                    </button>
 
                     {/* Статистика */}
                     <Link
