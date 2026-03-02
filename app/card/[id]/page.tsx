@@ -84,8 +84,9 @@ export async function generateMetadata(
       .from("cards")
       .select("title, description, image_url")
       .eq("id", id)
-      .eq("is_private", false)
       .maybeSingle();
+    // Не фильтруем is_private здесь — страница сама защищает приватные карточки.
+    // NULL-значения is_private (старые карточки) тоже считаются публичными.
     data = row;
   } catch {
     // ignore — вернём заглушку
