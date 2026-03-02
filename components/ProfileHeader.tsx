@@ -9,6 +9,7 @@ import UserAvatar from '@/components/UserAvatar'
 import FollowListModal from '@/components/FollowListModal'
 import Toast from '@/components/Toast'
 import { useTranslation } from 'react-i18next'
+import { checkAndAwardBadges } from '@/lib/badges'
 
 interface Props {
   profile: {
@@ -112,6 +113,8 @@ export default function ProfileHeader({
       error = res.error
 
       // Уведомление создаётся DB-триггером handle_new_follow автоматически
+      // Значки «Общительный» / «Инфлюенсер» для получателя подписки
+      if (!res.error) checkAndAwardBadges(profile.id, 'follow_received').catch(() => {})
     }
 
     // При ошибке откатываем оптимистичное обновление

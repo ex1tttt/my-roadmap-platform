@@ -1,27 +1,39 @@
 /**
  * lib/badges.ts
  * Утилита для проверки и выдачи значков пользователю.
- *
- * Использование (только в клиентских компонентах / actions):
- *   import { checkAndAwardBadges } from '@/lib/badges'
- *   await checkAndAwardBadges(userId, 'first_card')
  */
 
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-export type BadgeType = 'first_card' | 'like' | 'comment'
+export type BadgeType = 'first_card' | 'like' | 'comment' | 'follow_received' | 'fan' | 'collector'
 
-/**
- * Проверяет условие выдачи значка и, если оно выполнено,
- * добавляет запись в user_badges.
- * Показывает toast.success только при первом получении значка.
- */
+/** Вставляет значок если ещё не выдан. Возвращает true если выдан впервые. */
+async function awardIfNew(userId: string, badgeId: string): Promise<boolean> {
+  const { data: existing } = await supabase
+    .from('user_badges')
+    .select('badge_id')
+    .eq('user_id', userId)
+    .eq('badge_id', badgeId)
+    .maybeSingle()
+
+  if (existing) return false
+
+  const { error } = await supabase
+    .from('user_badges')
+    .insert({ user_id: userId, badge_id: badgeId, awarded_at: new Date().toISOString() })
+
+  if (error) {
+    if (error.code === '23505') return false
+    console.error('[badges] insert error:', error)
+    return false
+  }
+  return true
+}
+
 export async function checkAndAwardBadges(userId: string, type: BadgeType): Promise<void> {
-  let badgeId: string | null = null
-  let qualified = false
 
-  // ── 1. PIONEER — первая карточка ────────────────────────────────────────
+  // ── first_card: pioneer (1), creator (5), explorer (10) ─────────────────
   if (type === 'first_card') {
     const { count, error } = await supabase
       .from('cards')
@@ -29,13 +41,14 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .eq('user_id', userId)
 
     if (error) { console.error('[badges] first_card count error:', error); return }
+    const n = count ?? 0
 
-    // >= 1: карточка уже создана, проверяем что это первая
-    qualified = (count ?? 0) >= 1
-    badgeId   = 'pioneer'
+    if (n >= 1 && await awardIfNew(userId, 'pioneer'))  toast.success('🏆 Значок «Первопроходец» получен!')
+    if (n >= 5 && await awardIfNew(userId, 'creator'))   toast.success('🏆 Значок «Картограф» получен!')
+    if (n >= 10 && await awardIfNew(userId, 'explorer')) toast.success('🏆 Значок «Исследователь» получен!')
   }
 
-  // ── 2. SENSEI — 100+ лайков на всех картах пользователя ─────────────────
+  // ── like: sensei (100 лайков на картах владельца), popular (500) ─────────
   if (type === 'like') {
     const { data: userCards, error: cardsErr } = await supabase
       .from('cards')
@@ -53,12 +66,13 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .in('card_id', cardIds)
 
     if (likesErr) { console.error('[badges] like count error:', likesErr); return }
+    const n = count ?? 0
 
-    qualified = (count ?? 0) >= 100
-    badgeId   = 'sensei'
+    if (n >= 100 && await awardIfNew(userId, 'sensei'))  toast.success('🏆 Значок «Сенсей» получен!')
+    if (n >= 500 && await awardIfNew(userId, 'popular')) toast.success('🏆 Значок «Популярный» получен!')
   }
 
-  // ── 3. CRITIC — 50+ комментариев от пользователя ────────────────────────
+  // ── comment: critic (50), wordsmith (100) ────────────────────────────────
   if (type === 'comment') {
     const { count, error } = await supabase
       .from('comments')
@@ -66,37 +80,49 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .eq('user_id', userId)
 
     if (error) { console.error('[badges] comment count error:', error); return }
+    const n = count ?? 0
 
-    qualified = (count ?? 0) >= 50
-    badgeId   = 'critic'
+    if (n >= 50  && await awardIfNew(userId, 'critic'))    toast.success('🏆 Значок «Критик» получен!')
+    if (n >= 100 && await awardIfNew(userId, 'wordsmith')) toast.success('🏆 Значок «Словоплёт» получен!')
   }
 
-  if (!qualified || !badgeId) return
+  // ── follow_received: social (10 подписчиков), influencer (50) ────────────
+  if (type === 'follow_received') {
+    const { count, error } = await supabase
+      .from('follows')
+      .select('id', { count: 'exact', head: true })
+      .eq('following_id', userId)
 
-  // ── Проверяем: значок уже есть? ─────────────────────────────────────────
-  const { data: existing, error: checkErr } = await supabase
-    .from('user_badges')
-    .select('badge_id')
-    .eq('user_id', userId)
-    .eq('badge_id', badgeId)
-    .maybeSingle()
+    if (error) { console.error('[badges] follow_received count error:', error); return }
+    const n = count ?? 0
 
-  if (checkErr) { console.error('[badges] check error:', checkErr); return }
-
-  // Значок уже выдан — ничего не делаем
-  if (existing) return
-
-  // ── Вставляем новый значок ───────────────────────────────────────────────
-  const { error: insertErr } = await supabase
-    .from('user_badges')
-    .insert({ user_id: userId, badge_id: badgeId, awarded_at: new Date().toISOString() })
-
-  if (insertErr) {
-    // Дубль (race condition) — не показываем ошибку
-    if (insertErr.code === '23505') return
-    console.error('[badges] insert error:', insertErr)
-    return
+    if (n >= 10 && await awardIfNew(userId, 'social'))      toast.success('🏆 Значок «Общительный» получен!')
+    if (n >= 50 && await awardIfNew(userId, 'influencer'))  toast.success('🏆 Значок «Инфлюенсер» получен!')
   }
 
-  toast.success('🏆 Поздравляем! Вы получили новый значок!')
+  // ── fan: поставил 50 лайков ──────────────────────────────────────────────
+  if (type === 'fan') {
+    const { count, error } = await supabase
+      .from('likes')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) { console.error('[badges] fan count error:', error); return }
+    const n = count ?? 0
+
+    if (n >= 50 && await awardIfNew(userId, 'fan')) toast.success('🏆 Значок «Фанат» получен!')
+  }
+
+  // ── collector: добавил 20 в избранное ────────────────────────────────────
+  if (type === 'collector') {
+    const { count, error } = await supabase
+      .from('favorites')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) { console.error('[badges] collector count error:', error); return }
+    const n = count ?? 0
+
+    if (n >= 20 && await awardIfNew(userId, 'collector')) toast.success('🏆 Значок «Коллекционер» получен!')
+  }
 }

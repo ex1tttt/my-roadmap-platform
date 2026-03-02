@@ -92,7 +92,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
           .maybeSingle()
 
         if (card && card.user_id !== userId) {
-          // Проверяем достижение «Сенсей» для автора карточки
+          // Проверяем достижение «Сенсей»/«Популярный» для автора карточки
           await checkAndAwardBadges(card.user_id, 'like')
           // Push-уведомление автору карточки
           fetch('/api/send-push', {
@@ -107,6 +107,8 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
             }),
           }).catch(() => {})
         }
+        // Значок «Фанат» для лайкающего
+        checkAndAwardBadges(userId, 'fan').catch(() => {})
       }
     } catch {
       // Откатываем optimistic update при ошибке

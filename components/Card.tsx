@@ -8,6 +8,7 @@ import { Heart, Bookmark, MessageSquare, Star, Download, Lock } from 'lucide-rea
 import ShareButton from './ShareButton';
 import UserAvatar from './UserAvatar';
 import { useTranslation } from 'react-i18next';
+import { checkAndAwardBadges } from '@/lib/badges';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
@@ -95,6 +96,8 @@ export default function Card({
             }),
           }).catch(() => {})
         }
+        // Значок «Фанат» для лайкающего
+        checkAndAwardBadges(userId, 'fan').catch(() => {})
       }
     } catch {
       // Откатываем при ошибке
@@ -153,6 +156,8 @@ export default function Card({
       } else {
         const { error } = await supabase.from('favorites').insert({ user_id: userId, roadmap_id: card.id });
         if (error) throw error;
+        // Значок «Коллекционер»
+        checkAndAwardBadges(userId, 'collector').catch(() => {});
       }
     } catch {
       // Откатываем
