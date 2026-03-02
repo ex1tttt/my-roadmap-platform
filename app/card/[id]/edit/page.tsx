@@ -5,7 +5,7 @@ import CollaboratorManager from "@/components/CollaboratorManager";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { ArrowLeft, Save, X, Lock, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
@@ -135,7 +135,7 @@ export default function EditPage() {
       // 1) Обновляем карточку
       const { error: cardError } = await supabase
         .from("cards")
-        .update({ title, description, category })
+        .update({ title, description, category, is_private: isPrivate })
         .eq("id", cardId)
         .eq("user_id", user.id); // дополнительная защита на уровне запроса
 
@@ -287,6 +287,40 @@ export default function EditPage() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </label>
+
+            {/* Приватность */}
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 py-3">
+              <div className="flex items-center gap-3">
+                {isPrivate ? (
+                  <Lock className="h-4 w-4 text-amber-400" />
+                ) : (
+                  <Globe className="h-4 w-4 text-slate-400" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                    {isPrivate ? 'Приватная карточка' : 'Публичная карточка'}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {isPrivate ? 'Видна только вам и соавторам' : 'Видна всем пользователям'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isPrivate}
+                onClick={() => setIsPrivate((v) => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  isPrivate ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    isPrivate ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </section>
 
           {/* Шаги */}
