@@ -143,24 +143,12 @@ export default function CreatePage() {
       }
 
       if (followers && followers.length > 0) {
-        // In-app уведомление — всем подписчикам
-        const notificationRows = followers.map((f: any) => ({
-          receiver_id: f.follower_id,
-          actor_id: user.id,
-          type: 'new_card' as const,
-          card_id: cardId,
-        }));
-        const { error: notifError } = await supabase
-          .from('notifications')
-          .insert(notificationRows);
-        if (notifError) {
-          console.error('Notifications insert error:', notifError);
-        }
+        // In-app уведомления создаются DB-триггером notify_followers_on_new_card
+        // (только подписчикам с notify_new_cards = true)
 
-        // Push — только тем, у кого включён колокольчик (если колонка есть)
-        // Если колонки нет — отправляем всем подписчикам
+        // Push — только тем, у кого включён колокольчик
         const pushIds = followers
-          .filter((f: any) => f.notify_new_cards !== undefined ? f.notify_new_cards : true)
+          .filter((f: any) => f.notify_new_cards === true)
           .map((f: any) => f.follower_id);
         if (pushIds.length > 0) {
           fetch('/api/send-push', {
