@@ -179,7 +179,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
             <li key={s.id} className="relative">
               {/* Линия до следующего пункта (только если не последний) */}
               {idx < steps.length - 1 && (
-                <div className="absolute -left-[18px] top-7 -bottom-6 w-px bg-linear-to-b from-blue-500/60 via-slate-700 to-slate-800" />
+                <div className="absolute -left-4.5 top-7 -bottom-6 w-px bg-linear-to-b from-blue-500/60 via-slate-700 to-slate-800" />
               )}
               {/* Кружок на линии */}
               <div
