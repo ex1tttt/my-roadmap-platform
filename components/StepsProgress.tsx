@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ExternalLink, CheckCircle2, Circle, Share2, Check } from 'lucide-react'
+import { ExternalLink, CheckCircle2, Circle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 
@@ -19,7 +19,6 @@ interface Props {
   userId: string | null
   steps: Step[]
   initialDone: string[]   // step_id-ы уже выполненных шагов
-  cardTitle?: string
 }
 
 function normalizeUrl(url: string): string {
@@ -61,13 +60,11 @@ function renderMedia(url: string | undefined, title: string) {
   )
 }
 
-export default function StepsProgress({ cardId, userId, steps, initialDone, cardTitle }: Props) {
+export default function StepsProgress({ cardId, userId, steps, initialDone }: Props) {
   const { t } = useTranslation()
   const [isMounted, setIsMounted] = useState(false)
   const [done, setDone] = useState<Set<string>>(() => new Set(initialDone))
   const [pending, setPending] = useState<Set<string>>(new Set())
-  const [shared, setShared] = useState(false)
-
   useEffect(() => setIsMounted(true), [])
 
   // Realtime: синхронизация прогресса между вкладками / устройствами
@@ -110,24 +107,6 @@ export default function StepsProgress({ cardId, userId, steps, initialDone, card
   const total = steps.length
   const completedCount = steps.filter((s) => done.has(s.id)).length
   const percent = total === 0 ? 0 : Math.round((completedCount / total) * 100)
-
-  async function handleShare() {
-    const url = typeof window !== 'undefined' ? window.location.href : ''
-    const title = cardTitle ? `«${cardTitle}»` : 'этого роадмапа'
-    const emoji = percent === 100 ? '🎉' : percent >= 50 ? '🚀' : '💪'
-    const text = `${emoji} Я прошёл ${completedCount} из ${total} шагов (${percent}%) в роадмапе ${title}!\n${url}`
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: cardTitle ?? 'Мой прогресс', text, url })
-        return
-      } catch {}
-    }
-    // Фоллбэк: копировать в буфер
-    await navigator.clipboard.writeText(text).catch(() => {})
-    setShared(true)
-    setTimeout(() => setShared(false), 2000)
-  }
 
   async function toggleStep(stepId: string) {
     if (!userId) return
@@ -176,18 +155,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone, card
                 <span className="ml-1.5 font-semibold text-blue-400">{percent}%</span>
               </span>
             )}
-            {userId && total > 0 && (
-              <button
-                type="button"
-                onClick={handleShare}
-                title="Поделиться прогрессом"
-                className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-blue-400/50 hover:text-blue-400"
-              >
-                {shared
-                  ? <><Check className="h-3.5 w-3.5 text-emerald-400" /> <span className="text-emerald-400">Скопировано!</span></>
-                  : <><Share2 className="h-3.5 w-3.5" /> Поделиться</>}
-              </button>
-            )}
+
           </div>
         </div>
 
