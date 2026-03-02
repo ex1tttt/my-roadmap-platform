@@ -38,7 +38,8 @@ export default function CreatePage() {
   async function handleFileUpload(file: File, stepId: string) {
     try {
       setUploadingStepId(stepId);
-      const fileName = `${Date.now()}-${file.name}`;
+      const ext = file.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '') || 'bin';
+      const fileName = `${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("images")
         .upload(fileName, file);
