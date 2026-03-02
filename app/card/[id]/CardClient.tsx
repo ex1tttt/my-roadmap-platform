@@ -125,7 +125,7 @@ export default function CardClient({ id }: { id: string }) {
 
         <div className="grid lg:grid-cols-[1fr_300px] gap-12">
           <section>
-            <StepsProgress cardId={id} userId={currentUser?.id} steps={steps} initialDone={initialDone} />
+            <StepsProgress cardId={id} userId={currentUser?.id} steps={steps} initialDone={initialDone} cardTitle={card.title} />
           </section>
           <aside className="space-y-8">
             <div className="p-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
