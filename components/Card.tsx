@@ -76,8 +76,9 @@ export default function Card({
         const { error } = await supabase.from('likes').delete().eq('user_id', userId).eq('card_id', card.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('likes').insert({ user_id: userId, card_id: card.id });
-        if (error) throw error;
+        const { error: likeError } = await supabase.from('likes').insert({ user_id: userId, card_id: card.id });
+        // 23505 = unique_violation: лайк уже есть — UI корректен, продолжаем
+        if (likeError && (likeError as any).code !== '23505') throw likeError;
 
         // Уведомление владельцу карточки (не себе)
         if (card.user.id !== userId) {
@@ -93,6 +94,7 @@ export default function Card({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: card.user.id,
+              actor_id: userId,
               title: 'Новый лайк ❤️',
               body: `Кто-то лайкнул вашу карточку «${card.title}»`,
               url: `/card/${card.id}`,

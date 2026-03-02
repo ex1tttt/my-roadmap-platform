@@ -666,6 +666,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 userId: cardData.user_id,
+                actor_id: currentUserId,
                 title: 'Новый комментарий 💬',
                 body: `${currentUserProfile?.username ?? 'Кто-то'} прокомментировал вашу карточку «${cardData.title}»`,
                 url: `/card/${roadmapId}`,

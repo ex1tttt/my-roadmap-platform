@@ -77,9 +77,12 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
           .eq('user_id', userId)
       } else {
         // Добавляем лайк
-        await supabase
+        const { error: likeError } = await supabase
           .from('likes')
           .insert({ card_id: cardId, user_id: userId })
+
+        // 23505 = unique_violation: лайк уже существует — UI в порядке, продолжаем
+        if (likeError && (likeError as any).code !== '23505') throw likeError
 
         // Создаём уведомление (не если пользователь лайкает свою карточку)
         const { data: card } = await supabase
@@ -103,6 +106,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: card.user_id,
+              actor_id: userId,
               title: 'Новый лайк ❤️',
               body: `Кто-то лайкнул вашу карточку «${card.title}»`,
               url: `/card/${cardId}`,

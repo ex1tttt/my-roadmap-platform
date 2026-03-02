@@ -168,6 +168,7 @@ export default function CreatePage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userIds: pushIds,
+              actor_id: user.id,
               title: '🗺️ Новая карточка',
               body: `Опубликована карточка «${title}»`,
               url: `/card/${cardId}`,

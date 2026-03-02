@@ -28,14 +28,23 @@ export async function POST(req: NextRequest) {
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey)
 
     const body_json = await req.json()
-    const { title, body, url } = body_json
+    const { title, body, url, actor_id } = body_json
 
     // Поддерживаем как одиночный userId, так и массив userIds
     const rawIds = body_json.userIds ?? (body_json.userId ? [body_json.userId] : null)
     if (!rawIds || rawIds.length === 0 || !title) {
       return NextResponse.json({ error: 'userId/userIds и title обязательны' }, { status: 400 })
     }
-    const userIds: string[] = rawIds
+
+    // ─── Фильтр безопасности ──────────────────────────────────────────────────
+    // Не отправляем Push пользователю за его собственные действия
+    const userIds: string[] = actor_id
+      ? (rawIds as string[]).filter((id: string) => id !== actor_id)
+      : (rawIds as string[])
+
+    if (userIds.length === 0) {
+      return NextResponse.json({ sent: 0 })
+    }
 
     // Берём подписки всех указанных пользователей
     const { data: subs, error } = await adminSupabase
