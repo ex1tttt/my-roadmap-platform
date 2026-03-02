@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 
 // ─── Реестр всех значков (экспортируется для настроек) ───────────────────────
@@ -129,6 +130,7 @@ function BadgeItem({
   earned: boolean
   featured: boolean
 }) {
+  const { t } = useTranslation()
   return (
     <div className="group relative flex flex-col items-center gap-1">
       {/* Корона над значком если он выбран как витринный */}
@@ -165,18 +167,18 @@ function BadgeItem({
             : 'text-slate-400 dark:text-slate-600'
         }`}
       >
-        {badge.label}
+        {t(`badges.${badge.id}.label`)}
       </span>
 
       {/* Tooltip */}
       <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-max max-w-45 -translate-x-1/2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 shadow-xl opacity-0 scale-95 transition-all duration-150 group-hover:opacity-100 group-hover:scale-100">
         <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">
-          {badge.label}{featured && earned ? ' 👑' : ''}
+          {t(`badges.${badge.id}.label`)}{featured && earned ? ' 👑' : ''}
         </p>
         <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           {earned
-            ? featured ? badge.description + ' (витрина профиля)' : badge.description
-            : `🔒 ${badge.hint}`}
+            ? featured ? `${t(`badges.${badge.id}.description`)} (${t('achievements.featured')})` : t(`badges.${badge.id}.description`)
+            : `🔒 ${t(`badges.${badge.id}.hint`)}`}
         </p>
         <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-white dark:border-t-slate-900" />
       </div>

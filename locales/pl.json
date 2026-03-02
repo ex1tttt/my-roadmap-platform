@@ -16,7 +16,8 @@
     "subscriptions": "Obserwowani",
     "backToHome": "Stróna główna",
     "feed": "Feed",
-    "history": "Historia"
+    "history": "Historia",
+    "stats": "Statystyki"
   },
   "profile": {
     "title": "Profil",
@@ -420,5 +421,66 @@
     "wrongPassword": "Obecne hasło jest nieprawidłowe.",
     "success": "Hasło zmienione pomyślnie!",
     "wrongEmailOrPassword": "Nieprawidłowy email lub hasło."
+  },
+  "history": {
+    "title": "Historia oglądania",
+    "count": "{{count}} kart w historii",
+    "empty": "Twoja historia jest pusta",
+    "emptyTitle": "Historia oglądania jest pusta",
+    "emptyDesc": "Karty, które otwierasz, pojawią się tutaj.",
+    "clear": "Wyczyść historię",
+    "clearing": "Czyszczenie...",
+    "justNow": "przed chwilą",
+    "minutesAgo": "{{count}} min temu",
+    "hoursAgo": "{{count}} godz temu",
+    "daysAgo": "{{count}} dni temu"
+  },
+  "stats": {
+    "title": "Statystyki",
+    "subtitle": "Wskaźniki Twoich kart",
+    "backToProfile": "Powrót do profilu",
+    "cards": "Karty",
+    "views": "Wyświetlenia",
+    "likes": "Lubię to",
+    "favorites": "Ulubione",
+    "comments": "Komentarze",
+    "avgRating": "Średnio",
+    "tableCard": "Karta",
+    "loading": "Ładowanie...",
+    "noCards": "Nie masz jeszcze żadnych kart."
+  },
+  "createPrivacy": {
+    "privateTitle": "Prywatna mapa drogowa",
+    "privateDesc": "Widoczna tylko dla Ciebie",
+    "successPublished": "Karta opublikowana pomyślnie!"
+  },
+  "pushNotifications": {
+    "sectionTitle": "Powiadomienia",
+    "sectionDesc": "Odbieraj powiadomienia Push w przeglądarce — o polubieniach, komentarzach i nowych kartach.",
+    "unsupported": "Twoja przeglądarka nie obsługuje powiadomień Push.",
+    "denied": "Powiadomienia są zablokowane w ustawieniach przeglądarki. Włącz je ręcznie na pasku adresu.",
+    "enabled": "Powiadomienia Push włączone",
+    "disabled": "Powiadomienia Push wyłączone",
+    "waiting": "Proszę czekać...",
+    "disable": "Wyłącz",
+    "enable": "Włącz powiadomienia"
+  },
+  "achievements": {
+    "title": "Osiągnięcia",
+    "notEarned": "Nie zdobyto",
+    "featured": "wystawa profilu"
+  },
+  "badges": {
+    "pioneer": { "label": "Pionier", "description": "Pierwsza karta mapy drogowej utworzona!", "hint": "Utwórz swoją pierwszą kartę mapy drogowej" },
+    "creator": { "label": "Kartograf", "description": "5 kart map drogowych utworzonych!", "hint": "Utwórz 5 kart map drogowych" },
+    "explorer": { "label": "Badacz", "description": "10 kart map drogowych utworzonych!", "hint": "Utwórz 10 kart map drogowych" },
+    "sensei": { "label": "Sensei", "description": "Twoje karty polubiono 100 razy!", "hint": "Zbierz 100 polubień" },
+    "popular": { "label": "Popularny", "description": "Twoje karty polubiono 500 razy!", "hint": "Zbierz 500 polubień" },
+    "critic": { "label": "Krytyk", "description": "Napisano 50 komentarzy!", "hint": "Napisz 50 komentarzy" },
+    "wordsmith": { "label": "Słowomistrz", "description": "Napisano 100 komentarzy!", "hint": "Napisz 100 komentarzy" },
+    "social": { "label": "Towarzyski", "description": "10 osób Cię obserwuje!", "hint": "Zbierz 10 obserwujących" },
+    "influencer": { "label": "Influencer", "description": "50 osób Cię obserwuje!", "hint": "Zbierz 50 obserwujących" },
+    "fan": { "label": "Fan", "description": "Polubiłeś 50 kart!", "hint": "Polub 50 kart" },
+    "collector": { "label": "Kolekcjoner", "description": "20 kart dodano do ulubionych!", "hint": "Dodaj 20 kart do ulubionych" }
   }
 }

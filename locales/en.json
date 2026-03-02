@@ -16,7 +16,8 @@
     "subscriptions": "Subscriptions",
     "backToHome": "Back to Home",
     "feed": "Feed",
-    "history": "History"
+    "history": "History",
+    "stats": "Statistics"
   },
   "profile": {
     "title": "Profile",
@@ -418,5 +419,66 @@
     "wrongPassword": "Current password is incorrect.",
     "success": "Password changed successfully!",
     "wrongEmailOrPassword": "Wrong email or password."
+  },
+  "history": {
+    "title": "View History",
+    "count": "{{count}} cards in history",
+    "empty": "Your history is empty",
+    "emptyTitle": "View history is empty",
+    "emptyDesc": "Cards you open will appear here.",
+    "clear": "Clear history",
+    "clearing": "Clearing...",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "Your card metrics",
+    "backToProfile": "Back to profile",
+    "cards": "Cards",
+    "views": "Views",
+    "likes": "Likes",
+    "favorites": "Favorites",
+    "comments": "Comments",
+    "avgRating": "Average rating",
+    "tableCard": "Card",
+    "loading": "Loading...",
+    "noCards": "You have no cards yet."
+  },
+  "createPrivacy": {
+    "privateTitle": "Private roadmap",
+    "privateDesc": "Only visible to you",
+    "successPublished": "Card published successfully!"
+  },
+  "pushNotifications": {
+    "sectionTitle": "Notifications",
+    "sectionDesc": "Get Push notifications in your browser — for likes, comments, and new cards.",
+    "unsupported": "Your browser does not support Push notifications.",
+    "denied": "Notifications are blocked in browser settings. Enable them manually in the address bar.",
+    "enabled": "Push notifications enabled",
+    "disabled": "Push notifications disabled",
+    "waiting": "Please wait...",
+    "disable": "Disable",
+    "enable": "Enable notifications"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "notEarned": "Not earned",
+    "featured": "profile showcase"
+  },
+  "badges": {
+    "pioneer": { "label": "Pioneer", "description": "First roadmap card created!", "hint": "Create your first roadmap card" },
+    "creator": { "label": "Cartographer", "description": "5 roadmap cards created!", "hint": "Create 5 roadmap cards" },
+    "explorer": { "label": "Explorer", "description": "10 roadmap cards created!", "hint": "Create 10 roadmap cards" },
+    "sensei": { "label": "Sensei", "description": "Your cards have been liked 100 times!", "hint": "Get 100 likes across all your cards" },
+    "popular": { "label": "Popular", "description": "Your cards have been liked 500 times!", "hint": "Get 500 likes across all your cards" },
+    "critic": { "label": "Critic", "description": "50 comments written!", "hint": "Write 50 comments on cards" },
+    "wordsmith": { "label": "Wordsmith", "description": "100 comments written!", "hint": "Write 100 comments on cards" },
+    "social": { "label": "Social", "description": "10 people followed you!", "hint": "Get 10 followers" },
+    "influencer": { "label": "Influencer", "description": "50 people followed you!", "hint": "Get 50 followers" },
+    "fan": { "label": "Fan", "description": "You liked 50 cards!", "hint": "Like 50 cards" },
+    "collector": { "label": "Collector", "description": "20 cards added to favorites!", "hint": "Add 20 cards to favorites" }
   }
 }

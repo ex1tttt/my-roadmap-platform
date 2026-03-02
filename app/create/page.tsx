@@ -202,7 +202,7 @@ export default function CreatePage() {
       setIsPrivate(false);
       setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
       setResources([]);
-      setToast({ message: "Карточка успешно опубликована!", type: "success" });
+      setToast({ message: t('createPrivacy.successPublished'), type: "success" });
       setTimeout(() => router.push('/'), 1500);
     } catch (err: any) {
       setToast({ message: t('common.error') + ': ' + (err?.message ?? err), type: 'error' });
@@ -285,10 +285,10 @@ export default function CreatePage() {
                 )}
                 <div>
                   <p className="text-sm font-medium text-gray-800 dark:text-slate-200">
-                    Приватная дорожная карта
+                    {t('createPrivacy.privateTitle')}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-slate-400">
-                    Приватная дорожная карта — будет видна только вам
+                    {t('createPrivacy.privateDesc')}
                   </p>
                 </div>
               </div>

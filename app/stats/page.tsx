@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { Heart, Eye, Layers, ArrowLeft, TrendingUp, Bookmark, MessageSquare, Star } from 'lucide-react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useHasMounted } from '@/hooks/useHasMounted'
+import { useTranslation } from 'react-i18next'
 
 // ─── Анимированный счётчик ────────────────────────────────────────────────────
 function AnimatedNumber({ value }: { value: number }) {
@@ -79,6 +80,7 @@ type CardRow = {
 export default function StatsPage() {
   const router = useRouter()
   const mounted = useHasMounted()
+  const { t } = useTranslation()
 
   const [loading, setLoading] = useState(true)
   const [cards, setCards] = useState<CardRow[]>([])
@@ -179,7 +181,7 @@ export default function StatsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] flex items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Загрузка...</p>
+        <p className="text-gray-500 dark:text-gray-400">{t('stats.loading')}</p>
       </div>
     )
   }
@@ -194,7 +196,7 @@ export default function StatsPage() {
           className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Назад к профилю
+          {t('stats.backToProfile')}
         </Link>
 
         {/* Заголовок */}
@@ -203,45 +205,45 @@ export default function StatsPage() {
             <TrendingUp className="h-5 w-5 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Статистика</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Показатели ваших карточек</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t('stats.title')}</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('stats.subtitle')}</p>
           </div>
         </div>
 
         {/* Сводные карточки */}
         <div className="mb-10 grid grid-cols-2 sm:grid-cols-3 gap-4">
           <StatCard
-            label="Карточки"
+            label={t('stats.cards')}
             value={cards.length}
             icon={<Layers className="h-6 w-6 text-blue-400" />}
             accent="from-blue-500/10"
           />
           <StatCard
-            label="Просмотры"
+            label={t('stats.views')}
             value={totalViews}
             icon={<Eye className="h-6 w-6 text-violet-400" />}
             accent="from-violet-500/10"
           />
           <StatCard
-            label="Лайки"
+            label={t('stats.likes')}
             value={totalLikes}
             icon={<Heart className="h-6 w-6 text-rose-400" />}
             accent="from-rose-500/10"
           />
           <StatCard
-            label="Избранное"
+            label={t('stats.favorites')}
             value={totalFavorites}
             icon={<Bookmark className="h-6 w-6 text-amber-400" />}
             accent="from-amber-500/10"
           />
           <StatCard
-            label="Комментарии"
+            label={t('stats.comments')}
             value={totalComments}
             icon={<MessageSquare className="h-6 w-6 text-emerald-400" />}
             accent="from-emerald-500/10"
           />
           <StatCard
-            label="Средняя оценка"
+            label={t('stats.avgRating')}
             value={totalAvgRating}
             icon={<Star className="h-6 w-6 text-yellow-400" />}
             accent="from-yellow-500/10"
@@ -255,30 +257,30 @@ export default function StatsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5">
-                  <th className="px-5 py-3 text-left font-medium text-slate-500 dark:text-slate-400">Карточка</th>
+                  <th className="px-5 py-3 text-left font-medium text-slate-500 dark:text-slate-400">{t('stats.tableCard')}</th>
                   <th className="px-5 py-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center justify-end gap-1">
-                      <Eye className="h-3.5 w-3.5" /> Просмотры
+                      <Eye className="h-3.5 w-3.5" /> {t('stats.views')}
                     </span>
                   </th>
                   <th className="px-5 py-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center justify-end gap-1">
-                      <Heart className="h-3.5 w-3.5" /> Лайки
+                      <Heart className="h-3.5 w-3.5" /> {t('stats.likes')}
                     </span>
                   </th>
                   <th className="px-5 py-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center justify-end gap-1">
-                      <Bookmark className="h-3.5 w-3.5" /> Избранное
+                      <Bookmark className="h-3.5 w-3.5" /> {t('stats.favorites')}
                     </span>
                   </th>
                   <th className="px-5 py-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center justify-end gap-1">
-                      <MessageSquare className="h-3.5 w-3.5" /> Комментарии
+                      <MessageSquare className="h-3.5 w-3.5" /> {t('stats.comments')}
                     </span>
                   </th>
                   <th className="px-5 py-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center justify-end gap-1">
-                      <Star className="h-3.5 w-3.5" /> Оценка
+                      <Star className="h-3.5 w-3.5" /> {t('stats.avgRating')}
                     </span>
                   </th>
                 </tr>
@@ -321,7 +323,7 @@ export default function StatsPage() {
           </div>
         ) : (
           <p className="text-center text-slate-500 dark:text-slate-400 py-16">
-            У вас пока нет карточек.
+            {t('stats.noCards')}
           </p>
         )}
       </main>

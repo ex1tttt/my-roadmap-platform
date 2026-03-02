@@ -702,7 +702,7 @@ export default function SettingsPage() {
         {/* ── Достижения ── */}
         <div className={CARD_CLS}>
           <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            🏆 Достижения
+            🏆 {t('achievements.title')}
           </h2>
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-3">
             {ALL_BADGES.map((badge) => {
@@ -717,13 +717,13 @@ export default function SettingsPage() {
                   }`}
                 >
                   <span className={`text-4xl leading-none ${earned ? '' : 'grayscale'}`}>{badge.emoji}</span>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{badge.label}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t(`badges.${badge.id}.label`)}</span>
                   <span className="text-center text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                    {earned ? badge.description : badge.hint}
+                    {earned ? t(`badges.${badge.id}.description`) : t(`badges.${badge.id}.hint`)}
                   </span>
                   {!earned && (
                     <span className="mt-1 rounded-full bg-slate-200 dark:bg-white/10 px-2 py-0.5 text-[10px] text-slate-400">
-                      Не получено
+                      {t('achievements.notEarned')}
                     </span>
                   )}
                 </div>
@@ -736,23 +736,23 @@ export default function SettingsPage() {
         <div className={CARD_CLS}>
           <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
             <Bell className="h-3.5 w-3.5" />
-            Уведомления
+            {t('pushNotifications.sectionTitle')}
           </h2>
           <p className="mb-5 text-xs text-slate-500">
-            Получайте Push-уведомления прямо в браузере — о лайках, комментариях, новых карточках.
+            {t('pushNotifications.sectionDesc')}
           </p>
 
           {pushStatus === 'unsupported' && (
             <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-500">
               <BellOff className="h-4 w-4 shrink-0" />
-              Ваш браузер не поддерживает Push-уведомления.
+              {t('pushNotifications.unsupported')}
             </div>
           )}
 
           {pushStatus === 'denied' && (
             <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
               <BellOff className="h-4 w-4 shrink-0" />
-              Уведомления заблокированы в настройках браузера. Разрешите их вручную в адресной строке.
+              {t('pushNotifications.denied')}
             </div>
           )}
 
@@ -765,7 +765,7 @@ export default function SettingsPage() {
                   <BellOff className="h-5 w-5 text-slate-400" />
                 )}
                 <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {pushStatus === 'subscribed' ? 'Push-уведомления включены' : 'Push-уведомления выключены'}
+                  {pushStatus === 'subscribed' ? t('pushNotifications.enabled') : t('pushNotifications.disabled')}
                 </span>
               </div>
               <button
@@ -786,10 +786,10 @@ export default function SettingsPage() {
                   <Bell className="h-4 w-4" />
                 )}
                 {pushLoading
-                  ? 'Подождите...'
+                  ? t('pushNotifications.waiting')
                   : pushStatus === 'subscribed'
-                  ? 'Отключить'
-                  : 'Включить уведомления'}
+                  ? t('pushNotifications.disable')
+                  : t('pushNotifications.enable')}
               </button>
             </div>
           )}

@@ -26,7 +26,7 @@ type CardType = {
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const mounted = useHasMounted();
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,11 +142,11 @@ export default function HistoryPage() {
     const diffHr = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHr / 24);
 
-    if (diffMin < 1) return "только что";
-    if (diffMin < 60) return `${diffMin} мин. назад`;
-    if (diffHr < 24) return `${diffHr} ч. назад`;
-    if (diffDay < 7) return `${diffDay} дн. назад`;
-    return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+    if (diffMin < 1) return t('history.justNow');
+    if (diffMin < 60) return t('history.minutesAgo', { count: diffMin });
+    if (diffHr < 24) return t('history.hoursAgo', { count: diffHr });
+    if (diffDay < 7) return t('history.daysAgo', { count: diffDay });
+    return date.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
   }
 
   if (!mounted) return <div className="opacity-0" />;
@@ -168,13 +168,13 @@ export default function HistoryPage() {
             <div className="flex items-center gap-2 mb-1">
               <Clock className="h-5 w-5 text-blue-400" />
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                История просмотров
+                {t('history.title')}
               </h1>
             </div>
             <p className="text-sm text-slate-400">
               {cards.length > 0
-                ? `${cards.length} карточек в истории`
-                : "Ваша история пуста"}
+                ? t('history.count', { count: cards.length })
+                : t('history.empty')}
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export default function HistoryPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/20 hover:border-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Trash2 className="h-4 w-4" />
-                {clearing ? "Очистка..." : "Очистить историю"}
+                {clearing ? t('history.clearing') : t('history.clear')}
               </button>
             )}
             <Link
@@ -204,10 +204,10 @@ export default function HistoryPage() {
           <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-20 text-center backdrop-blur-md">
             <Clock className="mb-4 h-12 w-12 text-slate-600" />
             <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200">
-              История просмотров пуста
+              {t('history.emptyTitle')}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
-              Карточки, которые вы открывали, будут отображаться здесь.
+              {t('history.emptyDesc')}
             </p>
             <Link
               href="/"
