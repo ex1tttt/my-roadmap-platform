@@ -183,13 +183,23 @@ export default function ProfileTabsSelf({
       {tab === 'my' && (
         <>
           <DeleteModal />
-          <div className="flex gap-2 mb-4">
-            <button className="btn btn-sm btn-outline" onClick={() => setIsSelectionMode((v) => !v)}>
+          <div className="flex gap-2 mb-4 justify-end">
+            <button
+              onClick={() => setIsSelectionMode((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                isSelectionMode
+                  ? 'border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
               {isSelectionMode ? "Отмена" : "Выбрать"}
             </button>
             {isSelectionMode && selectedCardIds.length > 0 && (
-              <button className="btn btn-sm btn-danger" onClick={handleBulkDelete}>
-                <Trash2 className="inline-block mr-1 h-4 w-4" /> Удалить выбранные ({selectedCardIds.length})
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-900/50 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" /> Удалить ({selectedCardIds.length})
               </button>
             )}
           </div>
