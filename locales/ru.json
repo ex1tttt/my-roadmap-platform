@@ -197,6 +197,7 @@
   "notifications": {
     "title": "Уведомления",
     "empty": "Уведомлений нет.",
+    "emptyHint": "Здесь будут появляться лайки, комментарии и подписки",
     "clearRead": "Очистить прочитанные",
     "markAllRead": "Отметить все как прочитанные",
     "newFollower": "подписался на вас",
@@ -374,5 +375,51 @@
     "suggestedTitle": "Рекомендуемые авторы",
     "followers": "{{count}} подписчиков",
     "noSuggested": "Пока нет рекомендаций."
+  },
+  "collaborator": {
+    "manage": "Управление доступом",
+    "emailPlaceholder": "Email пользователя",
+    "viewerRole": "Просмотр",
+    "editorRole": "Редактор",
+    "add": "Добавить",
+    "noUsers": "Нет пользователей с доступом",
+    "viewerOnly": "Только просмотр",
+    "canEdit": "Может редактировать",
+    "revokeAccess": "Убрать доступ",
+    "invalidEmail": "Введите корректный email"
+  },
+  "profileTabs": {
+    "sharedWithMe": "Доступные мне",
+    "noSharedCards": "У вас пока нет доступа к приватным карточкам других пользователей",
+    "noCardsYet": "У вас пока нет карточек",
+    "noLikedCards": "У вас пока нет понравившихся карточек",
+    "noFavoriteCards": "У вас пока нет избранных карточек",
+    "cardsByUser": "Карточки пользователя",
+    "noCardsUser": "Пользователь ещё не создал карточек",
+    "createFirst": "Создать первую",
+    "pinned": "Закреплено",
+    "pin": "Закрепить",
+    "unpin": "Открепить",
+    "editCard": "Изменить",
+    "select": "Выбрать",
+    "deleteRoadmap": "Удалить дорожную карту?",
+    "deleteIrreversible": "Это действие необратимо. Вы уверены?",
+    "deleteMultipleDone": "Дорожные карты успешно удалены",
+    "cardDeleted": "Карточка удалена",
+    "pinError": "Ошибка при закреплении",
+    "pinnedSuccess": "Карточка закреплена",
+    "unpinnedSuccess": "Откреплено",
+    "myCards": "Мои карточки"
+  },
+  "privacy": {
+    "privateCard": "Приватная карточка",
+    "publicCard": "Публичная карточка",
+    "privateDesc": "Видна только вам и соавторам",
+    "publicDesc": "Видна всем пользователям"
+  },
+  "passwordChange": {
+    "wrongPassword": "Текущий пароль введён неверно.",
+    "success": "Пароль успешно изменён!",
+    "wrongEmailOrPassword": "Неверная почта или пароль."
   }
 }

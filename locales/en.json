@@ -195,6 +195,7 @@
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications.",
+    "emptyHint": "Likes, comments and subscriptions will appear here.",
     "clearRead": "Clear read",
     "markAllRead": "Mark all as read",
     "newFollower": "started following you",
@@ -371,5 +372,51 @@
     "suggestedTitle": "Recommended authors",
     "followers": "{{count}} followers",
     "noSuggested": "No recommended authors at the moment."
+  },
+  "collaborator": {
+    "manage": "Access Management",
+    "emailPlaceholder": "User email",
+    "viewerRole": "Viewer",
+    "editorRole": "Editor",
+    "add": "Add",
+    "noUsers": "No users with access",
+    "viewerOnly": "View only",
+    "canEdit": "Can edit",
+    "revokeAccess": "Revoke access",
+    "invalidEmail": "Enter a valid email"
+  },
+  "profileTabs": {
+    "sharedWithMe": "Shared with me",
+    "noSharedCards": "You don't have access to any private cards from other users yet",
+    "noCardsYet": "You have no cards yet",
+    "noLikedCards": "You haven't liked any cards yet",
+    "noFavoriteCards": "You haven't saved any favorite cards yet",
+    "cardsByUser": "User's cards",
+    "noCardsUser": "This user hasn't created any cards yet",
+    "createFirst": "Create first",
+    "pinned": "Pinned",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "editCard": "Edit",
+    "select": "Select",
+    "deleteRoadmap": "Delete roadmap?",
+    "deleteIrreversible": "This action is irreversible. Are you sure?",
+    "deleteMultipleDone": "Roadmaps deleted successfully",
+    "cardDeleted": "Card deleted",
+    "pinError": "Error pinning card",
+    "pinnedSuccess": "Card pinned",
+    "unpinnedSuccess": "Unpinned",
+    "myCards": "My cards"
+  },
+  "privacy": {
+    "privateCard": "Private card",
+    "publicCard": "Public card",
+    "privateDesc": "Only visible to you and collaborators",
+    "publicDesc": "Visible to all users"
+  },
+  "passwordChange": {
+    "wrongPassword": "Current password is incorrect.",
+    "success": "Password changed successfully!",
+    "wrongEmailOrPassword": "Wrong email or password."
   }
 }

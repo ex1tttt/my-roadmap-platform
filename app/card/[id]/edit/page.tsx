@@ -311,10 +311,10 @@ export default function EditPage() {
                 )}
                 <div>
                   <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                    {isPrivate ? 'Приватная карточка' : 'Публичная карточка'}
+                    {isPrivate ? t('privacy.privateCard') : t('privacy.publicCard')}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {isPrivate ? 'Видна только вам и соавторам' : 'Видна всем пользователям'}
+                    {isPrivate ? t('privacy.privateDesc') : t('privacy.publicDesc')}
                   </p>
                 </div>
               </div>

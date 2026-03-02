@@ -35,7 +35,7 @@ export default function ProfileTabsSelf({
     { key: 'my', label: t('profile.myCards'), icon: null, count: myCards.length },
     { key: 'liked', label: t('profile.liked'), icon: null, count: likedCards.length },
     { key: 'favorites', label: t('nav.favorites'), icon: null, count: favoritesCount },
-    { key: 'shared', label: 'Доступные мне', icon: <Users className="w-4 h-4 text-amber-500" />, count: sharedCards.length },
+    { key: 'shared', label: t('profileTabs.sharedWithMe'), icon: <Users className="w-4 h-4 text-amber-500" />, count: sharedCards.length },
   ];
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
@@ -73,9 +73,9 @@ export default function ProfileTabsSelf({
       setMyCards((prev: any[]) =>
         prev.map((c: any) => (c.id === cardId ? { ...c, is_pinned: currentStatus } : c))
       );
-      toast.error('Ошибка при закреплении');
+      toast.error(t('profileTabs.pinError'));
     } else {
-      toast.success(newVal ? 'Карточка закреплена' : 'Откреплено');
+      toast.success(newVal ? t('profileTabs.pinnedSuccess') : t('profileTabs.unpinnedSuccess'));
     }
   }
 
@@ -102,9 +102,9 @@ export default function ProfileTabsSelf({
       setSelectedCardIds([]);
       setIsSelectionMode(false);
       setIsDeleteModalOpen(false);
-      toast.success("Дорожные карты успешно удалены");
+      toast.success(t('profileTabs.deleteMultipleDone'));
     } else {
-      toast.error("Ошибка при удалении");
+      toast.error(t('delete.error'));
     }
   };
 
@@ -117,7 +117,7 @@ export default function ProfileTabsSelf({
   const confirmDelete = (cardId: string) => {
     const tId = toast(
       <div className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4">
-        <span className="text-white text-sm mb-2">Вы уверены, что хотите удалить эту карточку?</span>
+        <span className="text-white text-sm mb-2">{t('delete.confirm')}</span>
         <div className="flex gap-2">
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
@@ -125,15 +125,15 @@ export default function ProfileTabsSelf({
               const { error } = await supabase.from('cards').delete().eq('id', cardId);
               if (!error) {
                 setMyCards((prev: any[]) => prev.filter((c) => c.id !== cardId));
-                toast.success("Карточка удалена", { id: tId });
+                toast.success(t('profileTabs.cardDeleted'), { id: tId });
               } else {
-                toast.error("Ошибка при удалении", { id: tId });
+                toast.error(t('delete.error'), { id: tId });
               }
               setCardToDelete(null);
               setIsModalOpen(false);
               toast.dismiss(tId);
             }}
-          >Удалить</button>
+          >{t('actions.delete')}</button>
           <button
             className="px-3 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
             onClick={() => {
@@ -141,7 +141,7 @@ export default function ProfileTabsSelf({
               setIsModalOpen(false);
               setCardToDelete(null);
             }}
-          >Отмена</button>
+          >{t('common.cancel')}</button>
         </div>
       </div>,
       { duration: 10000, id: 'delete-confirm', position: 'top-center' }
@@ -192,20 +192,20 @@ export default function ProfileTabsSelf({
                   : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              {isSelectionMode ? "Отмена" : "Выбрать"}
+              {isSelectionMode ? t('common.cancel') : t('profileTabs.select')}
             </button>
             {isSelectionMode && selectedCardIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-900/50 transition-colors"
               >
-                <Trash2 className="h-4 w-4" /> Удалить ({selectedCardIds.length})
+                <Trash2 className="h-4 w-4" /> {t('actions.delete')} ({selectedCardIds.length})
               </button>
             )}
           </div>
           {myCards.length === 0 ? (
             <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-              <p className="text-slate-500 dark:text-slate-400">У вас пока нет карточек</p>
+              <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noCardsYet')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
@@ -230,7 +230,7 @@ export default function ProfileTabsSelf({
                   {/* Плашка «Закреплено» */}
                   {c.is_pinned && (
                     <div className="absolute top-0 left-0 z-10 rounded-tl-xl rounded-br-lg bg-blue-500 px-2 py-0.5 text-[10px] font-semibold text-white select-none pointer-events-none">
-                      Закреплено
+                      {t('profileTabs.pinned')}
                     </div>
                   )}
 
@@ -257,7 +257,7 @@ export default function ProfileTabsSelf({
                             className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                           >
                             <Pin className={`h-3.5 w-3.5 ${c.is_pinned ? 'fill-blue-500 text-blue-500' : 'text-slate-400'}`} />
-                            {c.is_pinned ? 'Открепить' : 'Закрепить'}
+                            {c.is_pinned ? t('profileTabs.unpin') : t('profileTabs.pin')}
                           </button>
 
                           {/* Изменить */}
@@ -267,7 +267,7 @@ export default function ProfileTabsSelf({
                             className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                           >
                             <Pencil className="h-3.5 w-3.5 text-slate-400" />
-                            Изменить
+                            {t('profileTabs.editCard')}
                           </Link>
 
                           {/* Разделитель */}
@@ -285,7 +285,7 @@ export default function ProfileTabsSelf({
                             className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            Удалить
+                            {t('actions.delete')}
                           </button>
                         </div>
                       )}
@@ -317,7 +317,7 @@ export default function ProfileTabsSelf({
       {tab === 'liked' && (
         likedCards.length === 0 ? (
           <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400">У вас пока нет понравившихся карточек</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noLikedCards')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
@@ -343,7 +343,7 @@ export default function ProfileTabsSelf({
       {tab === 'favorites' && (
         favoriteCards.length === 0 ? (
           <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400">У вас пока нет избранных карточек</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noFavoriteCards')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
@@ -369,7 +369,7 @@ export default function ProfileTabsSelf({
       {tab === 'shared' && (
         sharedCards.length === 0 ? (
           <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400">У вас пока нет доступа к приватным карточкам других пользователей</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noSharedCards')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
@@ -399,19 +399,19 @@ export default function ProfileTabsSelf({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
         <div className="animate-fade-in animate-scale rounded-xl border border-slate-800 bg-[#0B0F1A] p-6 shadow-xl w-full max-w-xs text-center">
-          <h2 className="text-lg font-semibold text-white mb-2">Удалить дорожную карту?</h2>
-          <p className="text-sm text-slate-400 mb-4">Это действие необратимо. Вы уверены?</p>
+          <h2 className="text-lg font-semibold text-white mb-2">{t('profileTabs.deleteRoadmap')}</h2>
+          <p className="text-sm text-slate-400 mb-4">{t('profileTabs.deleteIrreversible')}</p>
           <div className="flex gap-2 justify-center">
             <button
               type="button"
               className="px-4 py-2 rounded bg-transparent border border-slate-700 text-slate-400 hover:bg-slate-800 transition"
               onClick={cancelBulkDelete}
-            >Отмена</button>
+            >{t('common.cancel')}</button>
             <button
               type="button"
               className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition"
               onClick={confirmBulkDelete}
-            >Удалить</button>
+            >{t('actions.delete')}</button>
           </div>
         </div>
       </div>

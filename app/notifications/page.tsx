@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Bell, Heart, MessageSquare, UserPlus, Zap, Trash2, CheckCheck } from 'lucide-react'
@@ -181,6 +182,7 @@ function AvatarGroup({
 // ─── Страница ─────────────────────────────────────────────────────────
 export default function NotificationsPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [groups, setGroups]       = useState<GroupedNotification[]>([])
   const [loading, setLoading]     = useState(true)
   const [userId, setUserId]       = useState<string | null>(null)
@@ -302,8 +304,8 @@ export default function NotificationsPage() {
               <Bell className="h-7 w-7 text-slate-400" />
             </span>
             <div>
-              <p className="font-semibold text-slate-700 dark:text-slate-300">Нет уведомлений</p>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-500">Здесь будут появляться лайки, комментарии и подписки</p>
+              <p className="font-semibold text-slate-700 dark:text-slate-300">{t('notifications.empty')}</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-500">{t('notifications.emptyHint')}</p>
             </div>
           </div>
         ) : (

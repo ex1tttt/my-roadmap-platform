@@ -197,6 +197,7 @@
   "notifications": {
     "title": "Powiadomienia",
     "empty": "Brak powiadomień.",
+    "emptyHint": "Tutaj będą pojawiać się lajki, komentarze i obserwacje.",
     "clearRead": "Wyczyść przeczytane",
     "markAllRead": "Oznacz wszystkie jako przeczytane",
     "newFollower": "zaczął cię obserwować",
@@ -373,5 +374,51 @@
     "suggestedTitle": "Polecani autorzy",
     "followers": "{{count}} obserwujących",
     "noSuggested": "Brak polecanych autorów w tej chwili."
+  },
+  "collaborator": {
+    "manage": "Zarządzanie dostępem",
+    "emailPlaceholder": "Email użytkownika",
+    "viewerRole": "Przeglądający",
+    "editorRole": "Edytor",
+    "add": "Dodaj",
+    "noUsers": "Brak użytkowników z dostępem",
+    "viewerOnly": "Tylko przegląd",
+    "canEdit": "Może edytować",
+    "revokeAccess": "Cofnij dostęp",
+    "invalidEmail": "Wprowadź poprawny email"
+  },
+  "profileTabs": {
+    "sharedWithMe": "Udostępnione mi",
+    "noSharedCards": "Nie masz jeszcze dostępu do prywatnych kart innych użytkowników",
+    "noCardsYet": "Nie masz jeszcze żadnych kart",
+    "noLikedCards": "Nie polubyłeś jeszcze żadnych kart",
+    "noFavoriteCards": "Nie masz jeszcze ulubionych kart",
+    "cardsByUser": "Karty użytkownika",
+    "noCardsUser": "Ten użytkownik nie stworzył jeszcze żadnych kart",
+    "createFirst": "Utwórz pierwszą",
+    "pinned": "Przypinane",
+    "pin": "Przypiń",
+    "unpin": "Odpiń",
+    "editCard": "Edytuj",
+    "select": "Wybierz",
+    "deleteRoadmap": "Usunąć mapę drogową?",
+    "deleteIrreversible": "Ta akcja jest nieodwracalna. Czy jesteś pewny?",
+    "deleteMultipleDone": "Mapy drogowe zostały usunięte",
+    "cardDeleted": "Karta usunięta",
+    "pinError": "Błąd podczas przypinania",
+    "pinnedSuccess": "Karta przypinana",
+    "unpinnedSuccess": "Odpięto",
+    "myCards": "Moje karty"
+  },
+  "privacy": {
+    "privateCard": "Prywatna karta",
+    "publicCard": "Publiczna karta",
+    "privateDesc": "Widoczna tylko dla ciebie i współpracowników",
+    "publicDesc": "Widoczna dla wszystkich użytkowników"
+  },
+  "passwordChange": {
+    "wrongPassword": "Obecne hasło jest nieprawidłowe.",
+    "success": "Hasło zmienione pomyślnie!",
+    "wrongEmailOrPassword": "Nieprawidłowy email lub hasło."
   }
 }

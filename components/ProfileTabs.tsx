@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import PublicProfileCards from "@/components/PublicProfileCards";
 import Link from "next/link";
@@ -18,6 +19,7 @@ export default function ProfileTabs({
   profile: { id: string; username: string; avatar?: string };
   currentUserId: string | null;
 }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("my");
 
   return (
@@ -28,7 +30,7 @@ export default function ProfileTabs({
           style={{ background: activeTab === "my" ? '#2563eb' : '', color: activeTab === "my" ? '#fff' : '' }}
           onClick={() => setActiveTab("my")}
         >
-          Мои карточки
+          {t("profileTabs.myCards")}
         </button>
         {isOwner && (
           <button
@@ -36,7 +38,7 @@ export default function ProfileTabs({
             style={{ background: activeTab === "shared" ? '#2563eb' : '', color: activeTab === "shared" ? '#fff' : '' }}
             onClick={() => setActiveTab("shared")}
           >
-            <Users className="w-4 h-4" /> Доступные мне
+            <Users className="w-4 h-4" /> {t("profileTabs.sharedWithMe")}
           </button>
         )}
       </div>
@@ -44,19 +46,19 @@ export default function ProfileTabs({
       {activeTab === "my" && (
         <section>
           <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">
-            {isOwner ? "Мои карточки" : `Карточки пользователя`}
+            {isOwner ? t("profileTabs.myCards") : t("profileTabs.cardsByUser")}
           </h2>
           {!cards || cards.length === 0 ? (
             <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-8 text-center">
               <p className="text-slate-600 dark:text-slate-400">
-                {isOwner ? "У вас пока нет карточек" : "Пользователь ещё не создал карточек"}
+                {isOwner ? t("profileTabs.noCardsYet") : t("profileTabs.noCardsUser")}
               </p>
               {isOwner && (
                 <Link
                   href="/create"
                   className="mt-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                 >
-                  Создать первую
+                  {t("profileTabs.createFirst")}
                 </Link>
               )}
             </div>
@@ -73,12 +75,12 @@ export default function ProfileTabs({
       {isOwner && activeTab === "shared" && (
         <section>
           <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-            <Users className="w-5 h-5" /> Доступные мне
+            <Users className="w-5 h-5" /> {t("profileTabs.sharedWithMe")}
           </h2>
           {sharedCards.length === 0 ? (
             <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-8 text-center">
               <p className="text-slate-600 dark:text-slate-400">
-                У вас пока нет доступа к приватным карточкам других пользователей
+                {t("profileTabs.noSharedCards")}
               </p>
             </div>
           ) : (

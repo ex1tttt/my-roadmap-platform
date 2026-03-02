@@ -296,7 +296,7 @@ export default function SettingsPage() {
     setPasswordError("");
     try {
       if (newPassword !== confirmPassword) {
-        setPasswordError("Пароли не совпадают.");
+        setPasswordError(t('settings.passwordMismatch'));
         return;
       }
       // Проверяем текущий пароль перед сменой
@@ -305,12 +305,12 @@ export default function SettingsPage() {
         password: currentPassword,
       });
       if (signInError) {
-        setPasswordError("Текущий пароль введён неверно.");
+        setPasswordError(t('passwordChange.wrongPassword'));
         return;
       }
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast.success("Пароль успешно изменён!");
+      toast.success(t('passwordChange.success'));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -331,7 +331,7 @@ export default function SettingsPage() {
         password: deletePassword,
       });
       if (signInError) {
-        toast.error("Неверная почта или пароль.");
+        toast.error(t('passwordChange.wrongEmailOrPassword'));
         return;
       }
 

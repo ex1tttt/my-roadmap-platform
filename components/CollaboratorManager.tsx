@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { UserPlus, X, Mail, Eye, Pencil } from "lucide-react";
 
@@ -15,6 +16,7 @@ interface Collaborator {
 }
 
 export default function CollaboratorManager({ cardId }: CollaboratorManagerProps) {
+  const { t } = useTranslation();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"viewer" | "editor">("viewer");
@@ -39,7 +41,7 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
     e.preventDefault();
     setError(null);
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError("Введите корректный email");
+      setError(t("collaborator.invalidEmail"));
       return;
     }
     setLoading(true);
@@ -80,7 +82,7 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
   return (
     <div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-8">
       <h3 className="text-xs font-semibold text-white mb-4 flex items-center gap-2 opacity-50">
-        <UserPlus className="h-5 w-5 text-blue-400" /> Управление доступом
+        <UserPlus className="h-5 w-5 text-blue-400" /> {t("collaborator.manage")}
       </h3>
       <form onSubmit={handleAdd} className="flex flex-wrap gap-2 mb-6">
         <div className="relative flex-1 min-w-50">
@@ -89,7 +91,7 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder="Email пользователя"
+            placeholder={t("collaborator.emailPlaceholder")}
             className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:border-blue-400 text-sm"
             disabled={loading}
           />
@@ -103,7 +105,7 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
               role === "viewer" ? "bg-blue-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
             }`}
           >
-            <Eye className="h-3.5 w-3.5" /> Просмотр
+            <Eye className="h-3.5 w-3.5" /> {t("collaborator.viewerRole")}
           </button>
           <button
             type="button"
@@ -112,7 +114,7 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
               role === "editor" ? "bg-blue-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
             }`}
           >
-            <Pencil className="h-3.5 w-3.5" /> Редактор
+            <Pencil className="h-3.5 w-3.5" /> {t("collaborator.editorRole")}
           </button>
         </div>
         <button
@@ -120,12 +122,12 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
           className={`px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-semibold transition ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-700"}`}
           disabled={loading}
         >
-          {loading ? "..." : "Добавить"}
+          {loading ? "..." : t("collaborator.add")}
         </button>
       </form>
       {error && <div className="text-red-400 mb-4 text-sm">{error}</div>}
       {collaborators.length === 0 && (
-        <p className="text-xs text-slate-500">Нет пользователей с доступом</p>
+        <p className="text-xs text-slate-500">{t("collaborator.noUsers")}</p>
       )}
       <ul className="flex flex-col gap-2">
         {collaborators.map(c => (
@@ -138,9 +140,9 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
                   c.role === "viewer" ? "bg-blue-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
                 }`}
                 disabled={loading}
-                title="Только просмотр"
+                title={t("collaborator.viewerOnly")}
               >
-                <Eye className="h-3 w-3" /> Просмотр
+                <Eye className="h-3 w-3" /> {t("collaborator.viewerRole")}
               </button>
               <button
                 onClick={() => handleRoleChange(c.id, "editor")}
@@ -148,16 +150,16 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
                   c.role === "editor" ? "bg-blue-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
                 }`}
                 disabled={loading}
-                title="Может редактировать"
+                title={t("collaborator.canEdit")}
               >
-                <Pencil className="h-3 w-3" /> Редактор
+                <Pencil className="h-3 w-3" /> {t("collaborator.editorRole")}
               </button>
             </div>
             <button
               onClick={() => handleDelete(c.id)}
               className="p-1.5 rounded-lg hover:bg-red-500/20 transition shrink-0"
               disabled={loading}
-              title="Убрать доступ"
+              title={t("collaborator.revokeAccess")}
             >
               <X className="h-4 w-4 text-red-400" />
             </button>

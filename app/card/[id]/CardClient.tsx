@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { ExternalLink, ArrowLeft, BookOpen, Pencil, Loader2, ShieldAlert, Eye } from "lucide-react";
@@ -22,6 +23,7 @@ function normalizeUrl(url: string): string {
 }
 
 export default function CardClient({ id }: { id: string }) {
+  const { t } = useTranslation();
   const [card, setCard] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -96,8 +98,8 @@ export default function CardClient({ id }: { id: string }) {
     <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white">
       <div className="text-center p-10 border border-white/10 rounded-2xl bg-white/5">
         <ShieldAlert className="mx-auto mb-4 text-red-500" size={48} />
-        <h2 className="text-xl font-bold">Карточка не найдена</h2>
-        <Link href="/" className="text-blue-400 mt-4 block">На главную</Link>
+        <h2 className="text-xl font-bold">{t('card.cardNotFound')}</h2>
+        <Link href="/" className="text-blue-400 mt-4 block">{t('nav.backToHome')}</Link>
       </div>
     </div>
   );
@@ -129,14 +131,14 @@ export default function CardClient({ id }: { id: string }) {
           </section>
           <aside className="space-y-8">
             <div className="p-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Оценить</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">{t('card.rating')}</h3>
               <StarRating roadmapId={id} />
             </div>
             {card.resources && card.resources.length > 0 && (
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
                 <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   <ExternalLink className="h-4 w-4" />
-                  Материалы
+                  {t('card.materials')}
                 </h2>
                 <ul className="space-y-2">
                   {card.resources.map((r: any) => (

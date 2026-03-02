@@ -197,6 +197,7 @@
   "notifications": {
     "title": "Сповіщення",
     "empty": "Сповіщень немає.",
+    "emptyHint": "Тут з'являтимуться лайки, коментарі та підписки",
     "clearRead": "Очистити прочитані",
     "markAllRead": "Позначити всі як прочитані",
     "newFollower": "підписався на вас",
@@ -374,5 +375,51 @@
     "suggestedTitle": "Рекомендовані автори",
     "followers": "{{count}} підписників",
     "noSuggested": "Поки немає рекомендацій."
+  },
+  "collaborator": {
+    "manage": "Управління доступом",
+    "emailPlaceholder": "Email користувача",
+    "viewerRole": "Перегляд",
+    "editorRole": "Редактор",
+    "add": "Додати",
+    "noUsers": "Немає користувачів з доступом",
+    "viewerOnly": "Тільки перегляд",
+    "canEdit": "Може редагувати",
+    "revokeAccess": "Гтримати доступ",
+    "invalidEmail": "Введіть коректний email"
+  },
+  "profileTabs": {
+    "sharedWithMe": "Доступні мені",
+    "noSharedCards": "У вас поки немає доступу до приватних карток інших користувачів",
+    "noCardsYet": "У вас поки немає карток",
+    "noLikedCards": "У вас поки немає полюблених карток",
+    "noFavoriteCards": "У вас поки немає обраних карток",
+    "cardsByUser": "Карточки користувача",
+    "noCardsUser": "Цей користувач ще не створив жодної карточки",
+    "createFirst": "Створити першу",
+    "pinned": "Закріплено",
+    "pin": "Закріпити",
+    "unpin": "Відкріпити",
+    "editCard": "Редагувати",
+    "select": "Вибрати",
+    "deleteRoadmap": "Видалити дорожню карту?",
+    "deleteIrreversible": "Ця дія незворотна. Ви впевнені?",
+    "deleteMultipleDone": "Дорожні карти успішно видалено",
+    "cardDeleted": "Карточку видалено",
+    "pinError": "Помилка при закріпленні",
+    "pinnedSuccess": "Карточку закріплено",
+    "unpinnedSuccess": "Відкріплено",
+    "myCards": "Мої карточки"
+  },
+  "privacy": {
+    "privateCard": "Приватна карточка",
+    "publicCard": "Публічна карточка",
+    "privateDesc": "Видна лише вам та співавторам",
+    "publicDesc": "Видна всім користувачам"
+  },
+  "passwordChange": {
+    "wrongPassword": "Поточний пароль невірний.",
+    "success": "Пароль успішно змінено!",
+    "wrongEmailOrPassword": "Невірна пошта або пароль."
   }
 }
