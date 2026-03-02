@@ -8,7 +8,6 @@ import Card from '@/components/Card'
 import FollowListModal from '@/components/FollowListModal'
 import { User, Heart, Map as MapIcon, Trash2, Bookmark, Settings, MoreVertical, Pencil, Users, TrendingUp } from 'lucide-react'
 import ProfileTabsSelf from '@/components/ProfileTabsSelf'
-import ProfileBadges from '@/components/ProfileBadges'
 import { useTranslation } from 'react-i18next'
 import { useHasMounted } from '@/hooks/useHasMounted'
 import { toast } from 'sonner'
@@ -371,8 +370,6 @@ export default function ProfilePage() {
                 {profile?.username ?? '—'}
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {myCards.length} {t('profile.cards')} · {likedCards.length} {t('profile.liked').toLowerCase()}
-                {' · '}
                 <button
                   type="button"
                   onClick={() => setModalMode('followers')}
@@ -394,7 +391,6 @@ export default function ProfilePage() {
               ) : (
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">{t('profile.noBio')}</p>
               )}
-              {profile && <ProfileBadges profileId={profile.id} />}
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -77,8 +77,6 @@ export default function SettingsPage() {
 
   // Достижения
   const [earnedBadgeIds, setEarnedBadgeIds] = useState<Set<string>>(new Set());
-  const [featuredBadge, setFeaturedBadge] = useState<string | null>(null);
-  const [badgeSaving, setBadgeSaving] = useState(false);
 
   // Инициализируем статус push при монтировании
   useEffect(() => {
@@ -125,9 +123,6 @@ export default function SettingsPage() {
         setLanguage(lang);
         i18n.changeLanguage(lang);
         saveLanguage(lang);
-        // featured_badge появится только после выполнения миграции
-        setFeaturedBadge(data.featured_badge ?? null);
-
         // Загружаем полученные значки (таблица может отсутствовать до миграции)
         const { data: badgesData, error: badgesErr } = await supabase
           .from('user_badges')
@@ -160,24 +155,6 @@ export default function SettingsPage() {
 
     loadProfile();
   }, [router]);
-
-  async function saveFeaturedBadge(badgeId: string | null) {
-    if (!profile) return;
-    const next = featuredBadge === badgeId ? null : badgeId; // toggle
-    setFeaturedBadge(next);
-    setBadgeSaving(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ featured_badge: next })
-      .eq('id', profile.id);
-    setBadgeSaving(false);
-    if (error) {
-      toast.error('Ошибка сохранения');
-      setFeaturedBadge(featuredBadge); // rollback
-    } else {
-      toast.success(next ? 'Витринный значок обновлён' : 'Витринный значок снят');
-    }
-  }
 
   // Обработчик выбора файла
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -727,49 +704,29 @@ export default function SettingsPage() {
           <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             🏆 Достижения
           </h2>
-          <p className="mb-5 text-xs text-slate-500">
-            Выберите один значок для отображения на витрине профиля — он будет отмечен короной 👑.
-          </p>
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-3">
             {ALL_BADGES.map((badge) => {
               const earned = earnedBadgeIds.has(badge.id);
-              const isFeatured = featuredBadge === badge.id;
               return (
-                <button
+                <div
                   key={badge.id}
-                  type="button"
-                  disabled={!earned || badgeSaving}
-                  onClick={() => saveFeaturedBadge(badge.id)}
-                  className={`group relative flex flex-col items-center gap-2 rounded-xl border p-4 transition-all disabled:cursor-not-allowed ${
-                    isFeatured
-                      ? 'border-amber-400/60 bg-amber-400/10 ring-2 ring-amber-400/40'
-                      : earned
-                      ? 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-blue-400/50 hover:bg-blue-400/5'
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-4 ${
+                    earned
+                      ? 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5'
                       : 'border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/2 opacity-50'
                   }`}
                 >
-                  {/* Корона над выбранным */}
-                  {isFeatured && (
-                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-base leading-none">👑</span>
-                  )}
                   <span className={`text-4xl leading-none ${earned ? '' : 'grayscale'}`}>{badge.emoji}</span>
-                  <span className={`text-xs font-semibold ${
-                    isFeatured ? 'text-amber-500 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'
-                  }`}>{badge.label}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{badge.label}</span>
                   <span className="text-center text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
                     {earned ? badge.description : badge.hint}
                   </span>
-                  {isFeatured && (
-                    <span className="mt-1 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-medium text-amber-500">
-                      Витрина
-                    </span>
-                  )}
                   {!earned && (
                     <span className="mt-1 rounded-full bg-slate-200 dark:bg-white/10 px-2 py-0.5 text-[10px] text-slate-400">
                       Не получено
                     </span>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
