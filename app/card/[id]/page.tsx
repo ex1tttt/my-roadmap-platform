@@ -160,16 +160,17 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
 
   // Если карточка не найдена или приватная и не владелец/не коллаборатор
-  let isCollaborator = false;
+  let collaboratorRole: "viewer" | "editor" | null = null;
   if (data && currentUser && currentUser.email) {
-    // Проверяем коллаборатора для всех карточек (публичных и приватных)
-    const { data: collabRows } = await supabaseAuth
+    const { data: collabRow } = await supabaseAuth
       .from('card_collaborators')
-      .select('user_email')
+      .select('role')
       .eq('card_id', id)
       .eq('user_email', currentUser.email)
-    isCollaborator = (collabRows ?? []).length > 0;
+      .maybeSingle();
+    collaboratorRole = (collabRow?.role as "viewer" | "editor") ?? null;
   }
+  const isCollaborator = collaboratorRole !== null;
   if (!data || (data.is_private && (!currentUser || (currentUser.id !== data.user_id && !isCollaborator)))) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
@@ -222,7 +223,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                 />
               </ClientOnly>
-              {(isOwner || isCollaborator) && (
+              {(isOwner || collaboratorRole === "editor") && (
                 <Link
                   href={`/card/${id}/edit`}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"

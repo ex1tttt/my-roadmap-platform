@@ -65,11 +65,11 @@ export default function EditPage() {
         if (!user.email) { setForbidden(true); setLoading(false); return; }
         const { data: collabRow } = await supabase
           .from('card_collaborators')
-          .select('id')
+          .select('id, role')
           .eq('card_id', cardId)
           .eq('user_email', user.email)
           .maybeSingle();
-        if (!collabRow) { setForbidden(true); setLoading(false); return; }
+        if (!collabRow || collabRow.role !== 'editor') { setForbidden(true); setLoading(false); return; }
         setIsOwner(false);
       }
 
