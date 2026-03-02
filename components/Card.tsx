@@ -80,14 +80,8 @@ export default function Card({
         // 23505 = unique_violation: лайк уже есть — UI корректен, продолжаем
         if (likeError && (likeError as any).code !== '23505') throw likeError;
 
-        // Уведомление владельцу карточки (не себе)
+        // Уведомление создаётся DB-триггером handle_new_like автоматически
         if (card.user.id !== userId) {
-          await supabase.from('notifications').insert({
-            receiver_id: card.user.id,
-            actor_id: userId,
-            type: 'like',
-            card_id: card.id,
-          });
           // Push-уведомление автору карточки
           fetch('/api/send-push', {
             method: 'POST',

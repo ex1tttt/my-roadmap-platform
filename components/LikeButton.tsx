@@ -84,7 +84,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
         // 23505 = unique_violation: лайк уже существует — UI в порядке, продолжаем
         if (likeError && (likeError as any).code !== '23505') throw likeError
 
-        // Создаём уведомление (не если пользователь лайкает свою карточку)
+        // Уведомление создаётся DB-триггером handle_new_like автоматически
         const { data: card } = await supabase
           .from('cards')
           .select('user_id, title')
@@ -92,12 +92,6 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
           .maybeSingle()
 
         if (card && card.user_id !== userId) {
-          await supabase.from('notifications').insert({
-            receiver_id: card.user_id,
-            actor_id: userId,
-            type: 'like',
-            card_id: cardId,
-          })
           // Проверяем достижение «Сенсей» для автора карточки
           await checkAndAwardBadges(card.user_id, 'like')
           // Push-уведомление автору карточки

@@ -112,14 +112,7 @@ export default function ProfileHeader({
         .insert({ follower_id: currentUserId, following_id: profile.id })
       error = res.error
 
-      // Создаём уведомление владельцу профиля (не себе)
-      if (!error && currentUserId !== profile.id) {
-        await supabase.from('notifications').insert({
-          receiver_id: profile.id,
-          actor_id: currentUserId,
-          type: 'follow',
-        })
-      }
+      // Уведомление создаётся DB-триггером handle_new_follow автоматически
     }
 
     // При ошибке откатываем оптимистичное обновление

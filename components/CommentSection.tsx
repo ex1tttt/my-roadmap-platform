@@ -652,14 +652,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         .eq('id', roadmapId)
         .maybeSingle()
         .then(({ data: cardData }) => {
+          // Уведомление создаётся DB-триггером handle_new_comment автоматически
           if (cardData && cardData.user_id !== currentUserId) {
-            // In-app уведомление
-            supabase.from('notifications').insert({
-              receiver_id: cardData.user_id,
-              actor_id: currentUserId,
-              type: 'comment',
-              card_id: roadmapId,
-            }).then(() => {})
             // Push
             fetch('/api/send-push', {
               method: 'POST',
