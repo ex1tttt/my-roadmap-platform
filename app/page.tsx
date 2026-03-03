@@ -45,6 +45,19 @@ export default function Home() {
   const cardsRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  const catKeyMap: Record<string, string> = {
+    'Программирование': 'catProgramming',
+    'Готовка': 'catCooking',
+    'Учеба': 'catStudy',
+    'Маркетинг': 'catMarketing',
+    'Спорт': 'catSports',
+    'Игры': 'catGames',
+    'Музыка': 'catMusic',
+  };
+  const activeCategoryLabel = isClient && catKeyMap[activeCategory]
+    ? t(`home.${catKeyMap[activeCategory]}`)
+    : activeCategory;
+
   // Закрываем дропдаун при клике вне него
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -259,23 +272,20 @@ export default function Home() {
               }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
-              {activeCategory ? `${isClient ? t('home.filterPrefix') : ''}${activeCategory}` : (isClient ? t('home.filters') : 'Filters')}
+              {activeCategory ? `${isClient ? t('home.filterPrefix') : ''}${activeCategoryLabel}` : (isClient ? t('home.filters') : 'Filters')}
             </button>
 
             {filterOpen && (
               <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl z-50">
                 {[
                   { value: '', label: isClient ? t('home.allCategories') : 'All categories' },
-                  { value: 'Frontend', label: 'Frontend' },
-                  { value: 'Backend', label: 'Backend' },
-                  { value: 'Mobile Development', label: 'Mobile Development' },
-                  { value: 'Data Science', label: 'Data Science' },
-                  { value: 'Design', label: 'Design' },
-                  { value: 'DevOps', label: 'DevOps' },
-                  { value: 'Marketing', label: 'Marketing' },
-                  { value: 'GameDev', label: 'GameDev' },
-                  { value: 'Cybersecurity', label: 'Cybersecurity' },
-                  { value: 'Soft Skills', label: 'Soft Skills' },
+                  { value: 'Программирование', label: isClient ? t('home.catProgramming') : 'Программирование' },
+                  { value: 'Готовка', label: isClient ? t('home.catCooking') : 'Готовка' },
+                  { value: 'Учеба', label: isClient ? t('home.catStudy') : 'Учеба' },
+                  { value: 'Маркетинг', label: isClient ? t('home.catMarketing') : 'Маркетинг' },
+                  { value: 'Спорт', label: isClient ? t('home.catSports') : 'Спорт' },
+                  { value: 'Игры', label: isClient ? t('home.catGames') : 'Игры' },
+                  { value: 'Музыка', label: isClient ? t('home.catMusic') : 'Музыка' },
                 ].map((cat) => (
                   <button
                     key={cat.value}
