@@ -15,7 +15,7 @@ import ViewHistoryRecorder from "./ViewHistoryRecorder";
 import BackButton from "./BackButton";
 import CardEditButton from "./CardEditButton";
 import T from "@/components/T";
-type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string; duration_minutes?: number };
+type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label?: string; url?: string };
 
 function normalizeUrl(url: string): string {

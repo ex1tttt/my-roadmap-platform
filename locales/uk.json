@@ -121,6 +121,7 @@
     "deleteCard": "Видалити роудмеп",
     "deleteConfirm": "Ви впевнені, що хочете видалити цей роудмеп?",
     "back": "Назад",
+    "home": "На головну",
     "roadmap": "Дорожня карта",
     "materials": "Матеріали",
     "editCard": "Редагувати",
@@ -412,7 +413,8 @@
     "viewerOnly": "Тільки перегляд",
     "canEdit": "Може редагувати",
     "revokeAccess": "Гтримати доступ",
-    "invalidEmail": "Введіть коректний email"
+    "invalidEmail": "Введіть коректний email",
+    "alreadyHasAccess": "Цей користувач вже має доступ до картки"
   },
   "profileTabs": {
     "sharedWithMe": "Доступні мені",

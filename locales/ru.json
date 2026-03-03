@@ -121,7 +121,7 @@
     "deleteCard": "Удалить роадмеп",
     "deleteConfirm": "Вы уверены, что хотите удалить этот роадмеп?",
     "back": "Назад",
-    "roadmap": "Дорожная карта",
+    "home": "На главную",
     "materials": "Материалы",
     "editCard": "Редактировать",
     "cardNotFound": "Карточка с таким ID не найдена.",
@@ -412,7 +412,8 @@
     "viewerOnly": "Только просмотр",
     "canEdit": "Может редактировать",
     "revokeAccess": "Убрать доступ",
-    "invalidEmail": "Введите корректный email"
+    "invalidEmail": "Введите корректный email",
+    "alreadyHasAccess": "Этот пользователь уже имеет доступ к карточке"
   },
   "profileTabs": {
     "sharedWithMe": "Доступные мне",

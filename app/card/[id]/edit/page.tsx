@@ -12,7 +12,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
-type Step = { id: string; title: string; content: string; link?: string; media_url?: string; duration_minutes?: number };
+type Step = { id: string; title: string; content: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label: string; url: string };
 
 function uid() {
@@ -107,28 +107,46 @@ function SortableStepEdit({ s, idx, updateStep, removeStep, handleFileUpload, ha
         {/* Правая колонка: медиа */}
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepMedia') : 'Media'}</div>
-          <input
-            type="file"
-            accept="image/*"
-            className="w-full text-sm text-gray-500 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-600 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-200"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (file) await handleFileUpload(file, s.id);
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              id={`file-edit-${s.id}`}
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                for (const file of files) await handleFileUpload(file, s.id);
+                e.target.value = '';
+              }}
+            />
+            <label
+              htmlFor={`file-edit-${s.id}`}
+              className="cursor-pointer rounded-md bg-gray-100 dark:bg-slate-800 px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              {hasMounted ? t('create.chooseFile') : 'Choose file'}
+            </label>
+            <span className="text-sm text-gray-400 dark:text-slate-500">
+              {(s.media_urls?.length ?? 0) > 0 ? `${s.media_urls!.length}` : (hasMounted ? t('create.noFileChosen') : 'No file chosen')}
+            </span>
+          </div>
           {uploadingStepId === s.id && (
             <p className="text-xs text-blue-400">{hasMounted ? t('create.uploading') : 'Uploading...'}</p>
           )}
-          {s.media_url && (
-            <div className="relative mt-1">
-              <img src={s.media_url} alt="media" className="h-28 w-full rounded-lg object-cover" />
-              <button
-                type="button"
-                className="absolute top-1 right-1 z-10 rounded-full bg-red-500 text-white p-1 hover:bg-red-600 transition"
-                onClick={() => handleDeleteImage(s.id, s.media_url!)}
-              >
-                <X className="w-4 h-4" />
-              </button>
+          {(s.media_urls?.length ?? 0) > 0 && (
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              {s.media_urls!.map((url) => (
+                <div key={url} className="relative group">
+                  <img src={url} alt="media" className="h-24 w-full rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 z-10 hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white hover:bg-red-600 transition"
+                    onClick={() => handleDeleteImage(s.id, url)}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
           <button
@@ -212,9 +230,10 @@ export default function EditPage() {
           content: s.content ?? "",
           link: s.link ?? "",
           media_url: s.media_url ?? undefined,
+          media_urls: s.media_urls ?? (s.media_url ? [s.media_url] : []),
           duration_minutes: s.duration_minutes ?? undefined,
         }));
-      setSteps(sortedSteps.length ? sortedSteps : [{ id: uid(), title: "", content: "", link: "", duration_minutes: undefined }]);
+      setSteps(sortedSteps.length ? sortedSteps : [{ id: uid(), title: "", content: "", link: "", media_urls: [], duration_minutes: undefined }]);
 
       const mappedResources = (card.resources ?? []).map((r: any) => ({
         id: r.id ?? uid(),
@@ -244,7 +263,7 @@ export default function EditPage() {
       const { data: publicData } = supabase.storage.from("images").getPublicUrl(fileName);
       const publicUrl = publicData.publicUrl;
 
-      setSteps((prev) => prev.map((s) => (s.id === stepId ? { ...s, media_url: publicUrl } : s)));
+      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, media_urls: [...(s.media_urls ?? []), publicUrl] } : s));
     } catch (err) {
       console.error("Upload error:", err);
       alert(t('common.error') + ': ' + (err as any)?.message);
@@ -254,7 +273,7 @@ export default function EditPage() {
   }
 
   // Управление шагами
-  const addStep = () => setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "" }]);
+  const addStep = () => setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_urls: [] }]);
   const removeStep = (id: string) => setSteps((s) => s.filter((st) => st.id !== id));
 
   const sensors = useSensors(
@@ -314,7 +333,8 @@ export default function EditPage() {
           title: s.title,
           content: s.content,
           link: s.link ?? null,
-          media_url: s.media_url ?? null,
+          media_url: (s.media_urls && s.media_urls.length > 0) ? s.media_urls[0] : (s.media_url ?? null),
+          media_urls: s.media_urls ?? [],
           duration_minutes: s.duration_minutes ?? null,
         }));
         const { error: insStepsErr } = await supabase.from("steps").insert(stepsPayload);
@@ -344,17 +364,13 @@ export default function EditPage() {
 
   async function handleDeleteImage(stepId: string, imageUrl: string) {
     try {
-      // Получаем путь из URL
       const path = imageUrl.split("/images/")[1];
       if (!path) return;
-      // Удаляем файл из Supabase Storage
-      const { error: storageError } = await supabase.storage.from("images").remove([path]);
-      if (storageError) throw storageError;
-      // Обновляем поле media_url в базе
-      const { error: dbError } = await supabase.from("steps").update({ media_url: null }).eq("id", stepId);
-      if (dbError) throw dbError;
-      // Обновляем UI
-      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, media_url: undefined } : s));
+      await supabase.storage.from("images").remove([path]);
+      const step = steps.find(s => s.id === stepId);
+      const newUrls = (step?.media_urls ?? []).filter(u => u !== imageUrl);
+      await supabase.from("steps").update({ media_urls: newUrls, media_url: newUrls[0] ?? null }).eq("id", stepId);
+      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, media_urls: newUrls, media_url: newUrls[0] } : s));
     } catch (err) {
       alert("Ошибка удаления изображения: " + (err as any)?.message);
     }

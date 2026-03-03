@@ -119,6 +119,7 @@
     "deleteCard": "Delete Roadmap",
     "deleteConfirm": "Are you sure you want to delete this roadmap?",
     "back": "Back",
+    "home": "Home",
     "roadmap": "Roadmap",
     "materials": "Materials",
     "editCard": "Edit",
@@ -405,7 +406,9 @@
     "viewerOnly": "View only",
     "canEdit": "Can edit",
     "revokeAccess": "Revoke access",
-    "invalidEmail": "Enter a valid email"
+    "invalidEmail": "Enter a valid email",
+    "alreadyHasAccess": "This user already has access to the card",
+    "alreadyHasAccess": "This user already has access to the card"
   },
   "profileTabs": {
     "sharedWithMe": "Shared with me",

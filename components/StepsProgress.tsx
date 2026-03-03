@@ -12,6 +12,7 @@ type Step = {
   content?: string
   link?: string
   media_url?: string
+  media_urls?: string[]
   duration_minutes?: number
 }
 
@@ -269,11 +270,20 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
                 )}
 
                 {/* Медиа */}
-                {s.media_url && (
-                  <div className="pl-8">
-                    {renderMedia(s.media_url, s.title)}
-                  </div>
-                )}
+                {(() => {
+                  const urls = [
+                    ...(s.media_urls ?? []),
+                    ...(s.media_url && !(s.media_urls ?? []).includes(s.media_url) ? [s.media_url] : []),
+                  ];
+                  if (!urls.length) return null;
+                  return (
+                    <div className="pl-8 flex flex-col gap-3">
+                      {urls.map((url) => (
+                        <div key={url}>{renderMedia(url, s.title)}</div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </li>
           )

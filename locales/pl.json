@@ -121,6 +121,7 @@
     "deleteCard": "Usuń mapę drogową",
     "deleteConfirm": "Czy na pewno chcesz usunąć tę mapę drogową?",
     "back": "Powrót",
+    "home": "Strona główna",
     "roadmap": "Mapa drogowa",
     "materials": "Materiały",
     "editCard": "Edytuj",
@@ -411,7 +412,8 @@
     "viewerOnly": "Tylko przegląd",
     "canEdit": "Może edytować",
     "revokeAccess": "Cofnij dostęp",
-    "invalidEmail": "Wprowadź poprawny email"
+    "invalidEmail": "Wprowadź poprawny email",
+    "alreadyHasAccess": "Ten użytkownik ma już dostęp do karty"
   },
   "profileTabs": {
     "sharedWithMe": "Udostępnione mi",

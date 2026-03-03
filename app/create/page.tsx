@@ -13,7 +13,7 @@ import { CSS } from "@dnd-kit/utilities";
 import Toast from "@/components/Toast";
 import { checkAndAwardBadges } from '@/lib/badges';
 
-type Step = { id: string; title: string; content: string; link?: string; media_url?: string; duration_minutes?: number };
+type Step = { id: string; title: string; content: string; link?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label: string; url: string };
 
 function uid() {
@@ -25,12 +25,13 @@ type SortableStepCreateProps = {
   idx: number;
   updateStep: (id: string, patch: Partial<Step>) => void;
   removeStep: (id: string) => void;
+  removeStepImage: (id: string, url: string) => void;
   handleFileUpload: (file: File, stepId: string) => Promise<void>;
   uploadingStepId: string | null;
   t: (key: string, opts?: any) => string;
 };
 
-function SortableStepCreate({ s, idx, updateStep, removeStep, handleFileUpload, uploadingStepId, t }: SortableStepCreateProps) {
+function SortableStepCreate({ s, idx, updateStep, removeStep, removeStepImage, handleFileUpload, uploadingStepId, t }: SortableStepCreateProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -112,12 +113,12 @@ function SortableStepCreate({ s, idx, updateStep, removeStep, handleFileUpload, 
             <input
               type="file"
               accept="image/*"
+              multiple
               className="sr-only"
               id={`file-${s.id}`}
               onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                await handleFileUpload(file, s.id);
+                const files = Array.from(e.target.files ?? []);
+                for (const file of files) await handleFileUpload(file, s.id);
                 e.target.value = '';
               }}
             />
@@ -127,15 +128,28 @@ function SortableStepCreate({ s, idx, updateStep, removeStep, handleFileUpload, 
             >
               {t('create.chooseFile')}
             </label>
-            <span className="text-sm text-gray-400 dark:text-slate-500 truncate max-w-[140px]">
-              {s.media_url ? s.media_url.split('/').pop() : t('create.noFileChosen')}
+            <span className="text-sm text-gray-400 dark:text-slate-500">
+              {(s.media_urls?.length ?? 0) > 0 ? `${s.media_urls!.length} ${t('create.filesSelected', { defaultValue: '\u0444\u043e\u0442\u043e' })}` : t('create.noFileChosen')}
             </span>
           </div>
           {uploadingStepId === s.id && (
             <p className="text-xs text-gray-500">{t('create.uploading')}</p>
           )}
-          {s.media_url && (
-            <img src={s.media_url} alt="media" className="mt-1 h-32 w-full rounded object-cover" />
+          {(s.media_urls?.length ?? 0) > 0 && (
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              {s.media_urls!.map((url, i) => (
+                <div key={url} className="relative group">
+                  <img src={url} alt={`media-${i}`} className="h-24 w-full rounded object-cover" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white hover:bg-red-600 transition"
+                    onClick={() => removeStepImage(s.id, url)}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
           <button
             type="button"
@@ -159,7 +173,7 @@ export default function CreatePage() {
   const [category, setCategory] = useState("");
 
   const [steps, setSteps] = useState<Step[]>([
-    { id: uid(), title: "", content: "", link: "", media_url: undefined, duration_minutes: undefined },
+    { id: uid(), title: "", content: "", link: "", media_urls: [], duration_minutes: undefined },
   ]);
   const [resources, setResources] = useState<Resource[]>([]);
 
@@ -172,7 +186,7 @@ export default function CreatePage() {
     try {
       setUploadingStepId(stepId);
       const ext = file.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '') || 'bin';
-      const fileName = `${Date.now()}.${ext}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("images")
         .upload(fileName, file);
@@ -183,7 +197,7 @@ export default function CreatePage() {
       const publicUrl = publicData.publicUrl;
 
       setSteps((prev) =>
-        prev.map((s) => (s.id === stepId ? { ...s, media_url: publicUrl } : s))
+        prev.map((s) => s.id === stepId ? { ...s, media_urls: [...(s.media_urls ?? []), publicUrl] } : s)
       );
     } catch (err) {
       console.error("Upload error:", err);
@@ -193,8 +207,14 @@ export default function CreatePage() {
     }
   }
 
+  function removeStepImage(stepId: string, url: string) {
+    setSteps((prev) =>
+      prev.map((s) => s.id === stepId ? { ...s, media_urls: (s.media_urls ?? []).filter(u => u !== url) } : s)
+    );
+  }
+
   function addStep() {
-    setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_url: undefined, duration_minutes: undefined }]);
+    setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_urls: [], duration_minutes: undefined }]);
   }
 
   function removeStep(id: string) {
@@ -322,7 +342,8 @@ export default function CreatePage() {
         title: s.title,
         content: s.content,
         link: s.link ?? null,
-        media_url: s.media_url || null,
+        media_url: (s.media_urls && s.media_urls.length > 0) ? s.media_urls[0] : null,
+        media_urls: s.media_urls ?? [],
         duration_minutes: s.duration_minutes ?? null,
       }));
 
@@ -350,7 +371,7 @@ export default function CreatePage() {
       setDescription("");
       setCategory("");
       setIsPrivate(false);
-      setSteps([{ id: uid(), title: "", content: "", link: "", media_url: undefined }]);
+      setSteps([{ id: uid(), title: "", content: "", link: "", media_urls: [] }]);
       setResources([]);
       setToast({ message: t('createPrivacy.successPublished'), type: "success" });
       setTimeout(() => router.push('/'), 1500);
@@ -477,6 +498,7 @@ export default function CreatePage() {
                       idx={idx}
                       updateStep={updateStep}
                       removeStep={removeStep}
+                      removeStepImage={removeStepImage}
                       handleFileUpload={handleFileUpload}
                       uploadingStepId={uploadingStepId}
                       t={t}

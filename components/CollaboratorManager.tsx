@@ -37,8 +37,8 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
   // eslint-disable-next-line
   }, [cardId]);
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleAdd(e?: React.FormEvent) {
+    e?.preventDefault();
     setError(null);
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       setError(t("collaborator.invalidEmail"));
@@ -48,8 +48,13 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
     const { error } = await supabase
       .from("card_collaborators")
       .insert([{ card_id: cardId, user_email: email, role }]);
-    if (error) setError(error.message);
-    else {
+    if (error) {
+      if (error.message?.includes('duplicate key') || error.code === '23505') {
+        setError(t('collaborator.alreadyHasAccess'));
+      } else {
+        setError(error.message);
+      }
+    } else {
       setEmail("");
       setRole("viewer");
       await fetchCollaborators();
@@ -84,13 +89,14 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
       <h3 className="text-xs font-semibold text-white mb-4 flex items-center gap-2 opacity-50">
         <UserPlus className="h-5 w-5 text-blue-400" /> {t("collaborator.manage")}
       </h3>
-      <form onSubmit={handleAdd} className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         <div className="relative flex-1 min-w-50">
           <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
             placeholder={t("collaborator.emailPlaceholder")}
             className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:border-blue-400 text-sm"
             disabled={loading}
@@ -118,13 +124,14 @@ export default function CollaboratorManager({ cardId }: CollaboratorManagerProps
           </button>
         </div>
         <button
-          type="submit"
+          type="button"
+          onClick={handleAdd}
           className={`px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-semibold transition ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-700"}`}
           disabled={loading}
         >
           {loading ? "..." : t("collaborator.add")}
         </button>
-      </form>
+      </div>
       {error && <div className="text-red-400 mb-4 text-sm">{error}</div>}
       {collaborators.length === 0 && (
         <p className="text-xs text-slate-500">{t("collaborator.noUsers")}</p>
