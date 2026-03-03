@@ -18,7 +18,8 @@
     "feed": "Feed",
     "history": "History",
     "stats": "Statistics",
-    "liked": "Liked"
+    "liked": "Liked",
+    "achievements": "Achievements"
   },
   "profile": {
     "title": "Profile",

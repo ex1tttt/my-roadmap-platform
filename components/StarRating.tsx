@@ -258,9 +258,9 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
   if (compact) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-        <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
-        {totalCount > 0 ? (
+        {totalCount > 0 && (
           <>
+            <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
             <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
             <span className="text-slate-400">·</span>
             <span>{totalCount} {declCount(totalCount)}</span>
@@ -268,8 +268,6 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
               <span className="text-slate-500">({t('rating.yourRating', { value: userRating })})</span>
             )}
           </>
-        ) : (
-          <span>{isMounted ? (currentUserId ? t('rating.beFirst') : t('rating.loginToRate')) : ''}</span>
         )}
       </div>
     )
