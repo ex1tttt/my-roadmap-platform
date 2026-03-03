@@ -484,6 +484,13 @@ export default function EditPage() {
             )}
           </section>
 
+          {/* Управление доступом — сразу под переключателем приватности */}
+          {isOwner && (
+            <div>
+              <CollaboratorManager cardId={cardId} />
+            </div>
+          )}
+
           {/* Шаги */}
           <section className="space-y-4">
             <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{hasMounted ? t('edit.steps') : 'Steps'}</h2>
@@ -586,11 +593,6 @@ export default function EditPage() {
             </button>
           </div>
         </form>
-        {isOwner && (
-          <div className="mt-10">
-            <CollaboratorManager cardId={cardId} />
-          </div>
-        )}
       </main>
     </div>
   );

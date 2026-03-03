@@ -452,9 +452,6 @@ export default function CreatePage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-gray-800 dark:text-slate-200">Steps</h2>
-              <button type="button" onClick={addStep} className="rounded-md bg-gray-100 dark:bg-slate-800 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700">
-                {t('create.addStep')}
-              </button>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -475,6 +472,10 @@ export default function CreatePage() {
                 </div>
               </SortableContext>
             </DndContext>
+
+            <button type="button" onClick={addStep} className="rounded-md bg-gray-100 dark:bg-slate-800 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700">
+              {t('create.addStep')}
+            </button>
           </section>
 
           <section className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md p-6">

@@ -177,7 +177,73 @@ export default function ProfilePage() {
             .from('cards')
             .select('*')
             .in('id', cardIds);
-          setSharedCards(shared ? shared.map(toCardType) : []);
+          const sharedCards = shared ?? [];
+
+          // Загружаем профили владельцев, шаги и социальные данные для shared карточек
+          const sharedOwnerIds = Array.from(new Set(sharedCards.map((c: any) => c.user_id)));
+          const [sharedProfilesRes, sharedStepsRes, sharedLikesRes, sharedUserLikesRes, sharedUserFavsRes, sharedRatingsRes, sharedCommentsRes] = await Promise.all([
+            sharedOwnerIds.length > 0
+              ? supabase.from('profiles').select('*').in('id', sharedOwnerIds)
+              : Promise.resolve({ data: [] }),
+            supabase.from('steps').select('*').in('card_id', cardIds).order('order', { ascending: true }),
+            supabase.from('likes').select('card_id').in('card_id', cardIds),
+            supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', cardIds),
+            supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', cardIds),
+            supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', cardIds),
+            supabase.from('comments').select('roadmap_id').in('roadmap_id', cardIds),
+          ]);
+
+          // Добавляем профили в profilesMap
+          (sharedProfilesRes.data ?? []).forEach((p: any) =>
+            profilesMap.set(p.id, { id: p.id, username: p.username, avatar: p.avatar })
+          );
+
+          const sharedStepsByCard = new Map<string, Step[]>();
+          (sharedStepsRes.data ?? []).forEach((s: any) => {
+            const arr = sharedStepsByCard.get(s.card_id) ?? [];
+            arr.push({ id: s.id, order: s.order, title: s.title, content: s.content, media_url: s.media_url });
+            sharedStepsByCard.set(s.card_id, arr);
+          });
+
+          const sharedLikesCountMap = new Map<string, number>();
+          (sharedLikesRes.data ?? []).forEach((l: any) =>
+            sharedLikesCountMap.set(l.card_id, (sharedLikesCountMap.get(l.card_id) ?? 0) + 1)
+          );
+          const sharedUserLikedSet = new Set<string>((sharedUserLikesRes.data ?? []).map((l: any) => l.card_id));
+          const sharedUserFavSet = new Set<string>((sharedUserFavsRes.data ?? []).map((f: any) => f.roadmap_id));
+
+          const sharedRatingsMap = new Map<string, number[]>();
+          (sharedRatingsRes.data ?? []).forEach((r: any) => {
+            const arr = sharedRatingsMap.get(r.roadmap_id) ?? [];
+            arr.push(r.rate);
+            sharedRatingsMap.set(r.roadmap_id, arr);
+          });
+          const sharedAvgRatingMap = new Map<string, number>();
+          sharedRatingsMap.forEach((values, cardId) => {
+            sharedAvgRatingMap.set(cardId, values.reduce((a: number, b: number) => a + b, 0) / values.length);
+          });
+
+          const sharedCommentsCountMap = new Map<string, number>();
+          (sharedCommentsRes.data ?? []).forEach((cm: any) =>
+            sharedCommentsCountMap.set(cm.roadmap_id, (sharedCommentsCountMap.get(cm.roadmap_id) ?? 0) + 1)
+          );
+
+          const toSharedCardType = (c: any): CardType => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            category: c.category,
+            is_pinned: c.is_pinned ?? false,
+            user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: 'Unknown' },
+            steps: sharedStepsByCard.get(c.id) ?? [],
+            likesCount: sharedLikesCountMap.get(c.id) ?? 0,
+            isLiked: sharedUserLikedSet.has(c.id),
+            isFavorite: sharedUserFavSet.has(c.id),
+            averageRating: sharedAvgRatingMap.get(c.id) ?? 0,
+            commentsCount: sharedCommentsCountMap.get(c.id) ?? 0,
+          });
+
+          setSharedCards(sharedCards.map(toSharedCardType));
         } else {
           setSharedCards([]);
         }
