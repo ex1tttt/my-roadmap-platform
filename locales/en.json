@@ -299,7 +299,10 @@
     "roadmapSteps": "Roadmap steps",
     "loginToTrack": "Log in to track steps",
     "markDone": "Mark as completed",
-    "unmark": "Unmark"
+    "unmark": "Unmark",
+    "totalDuration": "Total time: {{time}}",
+    "minutesShort": "min",
+    "hoursShort": "h"
   },
   "create": {
     "title": "Create Roadmap",
@@ -307,6 +310,8 @@
     "selectCategory": "Select a category",
     "addStep": "+ Add step",
     "stepTitle": "Step title",
+    "stepDuration": "Estimated time (min)",
+    "stepDurationPlaceholder": "e.g. 60",
     "description": "Description",
     "link": "Link (optional)",
     "media": "Media",
@@ -330,6 +335,8 @@
     "steps": "Steps",
     "stepLabel": "Step {{n}}",
     "stepTitle": "Title",
+    "stepDuration": "Estimated time (min)",
+    "stepDurationPlaceholder": "e.g. 60",
     "stepContent": "Description",
     "stepLink": "Link to resource",
     "stepLinkPlaceholder": "Link to resource (YouTube, article, etc.)",

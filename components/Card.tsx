@@ -173,7 +173,7 @@ export default function Card({
   return (
     <article
       ref={cardRef}
-      className="group relative w-full h-50 flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer overflow-hidden"
+      className="group relative w-full min-h-[200px] flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer overflow-hidden"
       onClick={() => router.push(`/card/${card.id}`)}
     >
       {/* Верхний блок: заголовок, автор, описание */}
@@ -236,7 +236,7 @@ export default function Card({
         </ol>
       </div>
       {/* Нижняя панель */}
-      <div className="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl px-2 overflow-hidden">
+      <div className="mt-auto pt-2 flex items-center justify-between border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl px-2 overflow-hidden">
         {/* Левая группа: лайки + комментарии */}
         <div className="flex items-center gap-2">
           <button

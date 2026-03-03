@@ -10,7 +10,7 @@ import { Lock, Globe } from "lucide-react";
 import Toast from "@/components/Toast";
 import { checkAndAwardBadges } from '@/lib/badges';
 
-type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
+type Step = { id: string; title: string; content: string; link?: string; media_url?: string; duration_minutes?: number };
 type Resource = { id: string; label: string; url: string };
 
 function uid() {
@@ -26,7 +26,7 @@ export default function CreatePage() {
   const [category, setCategory] = useState("");
 
   const [steps, setSteps] = useState<Step[]>([
-    { id: uid(), title: "", content: "", link: "", media_url: undefined },
+    { id: uid(), title: "", content: "", link: "", media_url: undefined, duration_minutes: undefined },
   ]);
   const [resources, setResources] = useState<Resource[]>([]);
 
@@ -61,7 +61,7 @@ export default function CreatePage() {
   }
 
   function addStep() {
-    setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_url: undefined }]);
+    setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_url: undefined, duration_minutes: undefined }]);
   }
 
   function removeStep(id: string) {
@@ -174,6 +174,7 @@ export default function CreatePage() {
         content: s.content,
         link: s.link ?? null,
         media_url: s.media_url || null,
+        duration_minutes: s.duration_minutes ?? null,
       }));
 
       if (stepsPayload.length > 0) {
@@ -334,6 +335,22 @@ export default function CreatePage() {
                           onChange={(e) => updateStep(s.id, { title: e.target.value })}
                           required
                         />
+                      </label>
+
+                      <label className="block">
+                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.stepDuration')}</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={9999}
+                            placeholder={t('create.stepDurationPlaceholder')}
+                            className="box-border w-28 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={s.duration_minutes ?? ""}
+                            onChange={(e) => updateStep(s.id, { duration_minutes: e.target.value ? Number(e.target.value) : undefined })}
+                          />
+                          <span className="text-xs text-slate-400">{t('steps.minutesShort')}</span>
+                        </div>
                       </label>
 
                       <label className="block">

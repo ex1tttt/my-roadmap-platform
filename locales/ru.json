@@ -301,7 +301,10 @@
     "roadmapSteps": "Шаги дорожной карты",
     "loginToTrack": "Войдите, чтобы отмечать шаги",
     "markDone": "Отметить выполненным",
-    "unmark": "Снять отметку"
+    "unmark": "Снять отметку",
+    "totalDuration": "Общее время: {{time}}",
+    "minutesShort": "мин",
+    "hoursShort": "ч"
   },
   "create": {
     "title": "Создать карточку",
@@ -309,6 +312,8 @@
     "selectCategory": "Выберите одну категорию",
     "addStep": "+ Добавить шаг",
     "stepTitle": "Заголовок шага",
+    "stepDuration": "Оценка времени (мин)",
+    "stepDurationPlaceholder": "напр. 60",
     "description": "Описание",
     "link": "Ссылка (необязательно)",
     "media": "Медиа",
@@ -332,6 +337,8 @@
     "steps": "Шаги",
     "stepLabel": "Шаг {{n}}",
     "stepTitle": "Заголовок",
+    "stepDuration": "Оценка времени (мин)",
+    "stepDurationPlaceholder": "напр. 60",
     "stepContent": "Описание",
     "stepLink": "Ссылка на ресурс",
     "stepLinkPlaceholder": "Ссылка на ресурс (YouTube, статья и т.д.)",

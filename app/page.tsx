@@ -211,7 +211,7 @@ export default function Home() {
   if (!isClient) return <div className="opacity-0" />;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-8 sm:py-12 px-3 sm:px-6">
       <main className="mx-auto max-w-6xl">
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Roadmaps</h1>
@@ -219,7 +219,7 @@ export default function Home() {
         </header>
 
         {/* Поиск + Фильтр + Сортировка */}
-        <div className="mb-8 flex items-center gap-3 w-full">
+        <div className="mb-8 flex flex-wrap items-center gap-2 w-full">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input

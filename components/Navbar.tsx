@@ -113,7 +113,7 @@ export default function Navbar() {
         </Link>
 
         {/* Правая часть */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           {session ? (
             <>
               {/* Колокольчик уведомлений */}
@@ -123,20 +123,20 @@ export default function Navbar() {
               <Link
                 href="/feed"
                 suppressHydrationWarning
-                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <Rss className="w-4 h-4" />
-                {mounted ? t('nav.feed') : ''}
+                <span className="hidden sm:inline">{mounted ? t('nav.feed') : ''}</span>
               </Link>
 
               {/* Кнопка Создать */}
               <Link
                 href="/create"
                 suppressHydrationWarning
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-2 sm:px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                {mounted ? t('nav.create') : ''}
+                <span className="hidden sm:inline">{mounted ? t('nav.create') : ''}</span>
               </Link>
 
               {/* Dropdown с именем пользователя */}
@@ -147,11 +147,13 @@ export default function Navbar() {
                   className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
                 >
                   <User className="w-4 h-4" />
-                  {usernameLoading ? (
-                    <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
-                  ) : (
-                    username || session.user.email?.split('@')[0] || (mounted ? t('nav.profile') : '')
-                  )}
+                  <span className="hidden sm:inline max-w-[120px] truncate">
+                    {usernameLoading ? (
+                      <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                    ) : (
+                      username || session.user.email?.split('@')[0] || (mounted ? t('nav.profile') : '')
+                    )}
+                  </span>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 

@@ -9,7 +9,7 @@ import { ArrowLeft, Save, X, Lock, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
-type Step = { id: string; title: string; content: string; link?: string; media_url?: string };
+type Step = { id: string; title: string; content: string; link?: string; media_url?: string; duration_minutes?: number };
 type Resource = { id: string; label: string; url: string };
 
 function uid() {
@@ -87,8 +87,9 @@ export default function EditPage() {
           content: s.content ?? "",
           link: s.link ?? "",
           media_url: s.media_url ?? undefined,
+          duration_minutes: s.duration_minutes ?? undefined,
         }));
-      setSteps(sortedSteps.length ? sortedSteps : [{ id: uid(), title: "", content: "", link: "" }]);
+      setSteps(sortedSteps.length ? sortedSteps : [{ id: uid(), title: "", content: "", link: "", duration_minutes: undefined }]);
 
       const mappedResources = (card.resources ?? []).map((r: any) => ({
         id: r.id ?? uid(),
@@ -173,6 +174,7 @@ export default function EditPage() {
           content: s.content,
           link: s.link ?? null,
           media_url: s.media_url ?? null,
+          duration_minutes: s.duration_minutes ?? null,
         }));
         const { error: insStepsErr } = await supabase.from("steps").insert(stepsPayload);
         if (insStepsErr) { console.error(insStepsErr); alert(t('common.error') + ': ' + insStepsErr.message); return; }
@@ -359,6 +361,21 @@ export default function EditPage() {
                           onChange={(e) => updateStep(s.id, { title: e.target.value })}
                           required
                         />
+                      </label>
+                      <label className="block w-full">
+                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepDuration') : 'Estimated time (min)'}</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={9999}
+                            placeholder={hasMounted ? t('edit.stepDurationPlaceholder') : 'e.g. 60'}
+                            className={`${INPUT_CLS} w-28`}
+                            value={s.duration_minutes ?? ""}
+                            onChange={(e) => updateStep(s.id, { duration_minutes: e.target.value ? Number(e.target.value) : undefined })}
+                          />
+                          <span className="text-xs text-slate-400">{t('steps.minutesShort')}</span>
+                        </div>
                       </label>
                       <label className="block w-full">
                         <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepContent') : 'Content'}</div>

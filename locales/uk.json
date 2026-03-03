@@ -301,7 +301,10 @@
     "roadmapSteps": "Кроки дорожньої карти",
     "loginToTrack": "Увійдіть, щоб відзначати кроки",
     "markDone": "Позначити виконаним",
-    "unmark": "Зняти позначку"
+    "unmark": "Зняти позначку",
+    "totalDuration": "Загальний час: {{time}}",
+    "minutesShort": "хв",
+    "hoursShort": "г"
   },
   "create": {
     "title": "Створити картку",
@@ -309,6 +312,8 @@
     "selectCategory": "Виберіть одну категорію",
     "addStep": "+ Додати крок",
     "stepTitle": "Заголовок кроку",
+    "stepDuration": "Оцінка часу (хв)",
+    "stepDurationPlaceholder": "напр. 60",
     "description": "Опис",
     "link": "Посилання (необов’язково)",
     "media": "Медіа",
@@ -332,6 +337,8 @@
     "steps": "Кроки",
     "stepLabel": "Крок {{n}}",
     "stepTitle": "Заголовок",
+    "stepDuration": "Оцінка часу (хв)",
+    "stepDurationPlaceholder": "напр. 60",
     "stepContent": "Опис",
     "stepLink": "Посилання на ресурс",
     "stepLinkPlaceholder": "Посилання на ресурс (YouTube, стаття тощо)",

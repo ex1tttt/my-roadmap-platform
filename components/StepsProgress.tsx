@@ -12,6 +12,7 @@ type Step = {
   content?: string
   link?: string
   media_url?: string
+  duration_minutes?: number
 }
 
 interface Props {
@@ -19,6 +20,13 @@ interface Props {
   userId: string | null
   steps: Step[]
   initialDone: string[]   // step_id-ы уже выполненных шагов
+}
+
+function formatDuration(minutes: number, hShort: string, mShort: string): string {
+  if (minutes < 60) return `${minutes} ${mShort}`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m > 0 ? `${h} ${hShort} ${m} ${mShort}` : `${h} ${hShort}`
 }
 
 function normalizeUrl(url: string): string {
@@ -107,6 +115,9 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
   const total = steps.length
   const completedCount = steps.filter((s) => done.has(s.id)).length
   const percent = total === 0 ? 0 : Math.round((completedCount / total) * 100)
+  const totalMinutes = steps.reduce((sum, s) => sum + (s.duration_minutes ?? 0), 0)
+  const hShort = isMounted ? t('steps.hoursShort') : 'h'
+  const mShort = isMounted ? t('steps.minutesShort') : 'min'
 
   async function toggleStep(stepId: string) {
     if (!userId) return
@@ -153,6 +164,11 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
               <span className="tabular-nums text-slate-500 dark:text-slate-400">
                 {completedCount} / {total}
                 <span className="ml-1.5 font-semibold text-blue-400">{percent}%</span>
+              </span>
+            )}
+            {totalMinutes > 0 && isMounted && (
+              <span className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+                &#x23F1; {t('steps.totalDuration', { time: formatDuration(totalMinutes, hShort, mShort) })}
               </span>
             )}
 
@@ -221,6 +237,11 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
                   >
                     {s.title}
                   </h3>
+                  {s.duration_minutes && isMounted && (
+                    <span className="ml-auto shrink-0 text-xs text-slate-400 dark:text-slate-500">
+                      &#x23F1; {formatDuration(s.duration_minutes, hShort, mShort)}
+                    </span>
+                  )}
                 </button>
 
                 {/* Описание */}

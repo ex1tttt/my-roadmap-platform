@@ -301,7 +301,10 @@
     "roadmapSteps": "Kroki mapy drogowej",
     "loginToTrack": "Zaloguj się, aby śledzić kroki",
     "markDone": "Oznacz jako wykonane",
-    "unmark": "Odznacz"
+    "unmark": "Odznacz",
+    "totalDuration": "Całkowity czas: {{time}}",
+    "minutesShort": "min",
+    "hoursShort": "h"
   },
   "create": {
     "title": "Utwórz kartę",
@@ -309,6 +312,8 @@
     "selectCategory": "Wybierz kategorię",
     "addStep": "+ Dodaj krok",
     "stepTitle": "Tytuł kroku",
+    "stepDuration": "Szacowany czas (min)",
+    "stepDurationPlaceholder": "np. 60",
     "description": "Opis",
     "link": "Link (opcjonalnie)",
     "media": "Media",
@@ -332,6 +337,8 @@
     "steps": "Kroki",
     "stepLabel": "Krok {{n}}",
     "stepTitle": "Tytuł",
+    "stepDuration": "Szacowany czas (min)",
+    "stepDurationPlaceholder": "np. 60",
     "stepContent": "Opis",
     "stepLink": "Link do zasobu",
     "stepLinkPlaceholder": "Link do zasobu (YouTube, artykuł itp.)",
