@@ -504,5 +504,20 @@
     "influencer": { "label": "Influencer", "description": "50 people followed you!", "hint": "Get 50 followers" },
     "fan": { "label": "Fan", "description": "You liked 50 cards!", "hint": "Like 50 cards" },
     "collector": { "label": "Collector", "description": "20 cards added to favorites!", "hint": "Add 20 cards to favorites" }
+  },
+  "block": {
+    "block": "Block",
+    "unblock": "Unblock",
+    "blocked": "User blocked",
+    "unblocked": "User unblocked",
+    "confirmBlock": "Block this user? They won't be able to see your profile or cards.",
+    "blockAction": "Block",
+    "blockHint": "Block this user",
+    "unblockHint": "Unblock this user",
+    "blockedPage": "Access Restricted",
+    "blockedPageDesc": "This profile is not available.",
+    "settingsTitle": "Blocked Users",
+    "settingsEmpty": "No blocked users",
+    "unblockInSettings": "Unblock"
   }
 }

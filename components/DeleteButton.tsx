@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
@@ -10,14 +10,23 @@ import { toast } from "sonner";
 
 export default function DeleteButton({ cardId }: { cardId: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useTranslation();
   const mounted = useHasMounted();
   const [deleting, setDeleting] = useState(false);
+  const toastIdRef = useRef<string | number | null>(null);
+
+  // Закрываем тост при смене страницы или размонтировании
+  useEffect(() => {
+    return () => {
+      if (toastIdRef.current !== null) toast.dismiss(toastIdRef.current);
+    };
+  }, [pathname]);
 
   function handleDelete() {
     const tId = toast(
-      <div className="flex flex-col items-center justify-center gap-3 bg-slate-900 rounded-xl p-4 w-full text-center">
-        <span className="text-white text-sm mb-2 block w-full text-center">{t('delete.confirm')}</span>
+      <div style={{ textAlign: 'center' }} className="flex flex-col items-center justify-center gap-3 bg-slate-900 rounded-xl p-4 w-full">
+        <span className="text-white text-sm mb-2 block w-full" style={{ textAlign: 'center' }}>{t('delete.confirm')}</span>
         <div className="flex gap-2">
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
@@ -45,6 +54,7 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
       </div>,
       { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false }
     );
+    toastIdRef.current = tId;
   }
 
   return (

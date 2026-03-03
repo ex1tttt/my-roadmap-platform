@@ -5,7 +5,7 @@ import CollaboratorManager from "@/components/CollaboratorManager";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Save, X, Lock, Globe, GripVertical } from "lucide-react";
+import { ArrowLeft, Home, Save, X, Lock, Globe, GripVertical } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -392,7 +392,8 @@ export default function EditPage() {
         <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-950/40 px-8 py-10 text-center">
           <p className="text-lg font-semibold text-red-600 dark:text-red-400">{hasMounted ? t('edit.forbidden') : 'Access denied'}</p>
           <p className="mt-1 text-sm text-red-500 dark:text-red-300">{hasMounted ? t('edit.forbiddenText') : ''}</p>
-          <Link href="/" className="mt-4 inline-block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline">
+          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline">
+            <Home className="h-3.5 w-3.5" />
             {hasMounted ? t('edit.backToHome') : 'Back to home'}
           </Link>
         </div>

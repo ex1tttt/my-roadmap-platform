@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { ArrowLeft, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff } from "lucide-react";
+import { Home, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
@@ -32,6 +32,51 @@ const LANGUAGE_OPTIONS: { value: SupportedLanguage; label: string }[] = [
   { value: "pl", label: "Polish" },
   { value: "ru", label: "Russian" },
 ];
+
+function BlockedUsersSection({
+  t, blockedUsers, blocksLoading, unblockingId, onUnblock,
+}: {
+  t: (key: string, opts?: any) => string;
+  blockedUsers: { id: string; blocked_id: string; username: string; avatar: string | null }[];
+  blocksLoading: boolean;
+  unblockingId: string | null;
+  onUnblock: (blockId: string, blockedId: string) => Promise<void>;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6">
+      <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+        <ShieldBan className="h-3.5 w-3.5" />
+        {t('block.settingsTitle')}
+      </h2>
+      {blocksLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+        </div>
+      ) : blockedUsers.length === 0 ? (
+        <p className="text-sm text-slate-400 dark:text-slate-500">{t('block.settingsEmpty')}</p>
+      ) : (
+        <ul className="space-y-3">
+          {blockedUsers.map((b) => (
+            <li key={b.id} className="flex items-center justify-between gap-3">
+              <Link href={`/profile/${b.blocked_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <UserAvatar username={b.username} avatarUrl={b.avatar} size={36} />
+                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{b.username}</span>
+              </Link>
+              <button
+                onClick={() => onUnblock(b.id, b.blocked_id)}
+                disabled={unblockingId === b.id}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 transition-all hover:border-green-500/40 hover:bg-green-950/30 hover:text-green-400 disabled:opacity-50"
+              >
+                {unblockingId === b.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                {t('block.unblockInSettings')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -73,6 +118,11 @@ export default function SettingsPage() {
   // Push-уведомления
   const [pushStatus, setPushStatus] = useState<PushStatus>('unsupported');
   const [pushLoading, setPushLoading] = useState(false);
+
+  // Заблокированные пользователи
+  const [blockedUsers, setBlockedUsers] = useState<{ id: string; blocked_id: string; username: string; avatar: string | null }[]>([]);
+  const [blocksLoading, setBlocksLoading] = useState(false);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
 
   // Инициализируем статус push при монтировании
   useEffect(() => {
@@ -139,6 +189,29 @@ export default function SettingsPage() {
       }
 
       setLoading(false);
+
+      // Загружаем заблокированных пользователей
+      setBlocksLoading(true);
+      const { data: blocks } = await supabase
+        .from('user_blocks')
+        .select('id, blocked_id')
+        .eq('blocker_id', user.id)
+        .order('created_at', { ascending: false });
+      if (blocks && blocks.length > 0) {
+        const blockedIds = blocks.map((b: any) => b.blocked_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar')
+          .in('id', blockedIds);
+        const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+        setBlockedUsers(blocks.map((b: any) => ({
+          id: b.id,
+          blocked_id: b.blocked_id,
+          username: profileMap.get(b.blocked_id)?.username ?? b.blocked_id,
+          avatar: profileMap.get(b.blocked_id)?.avatar ?? null,
+        })));
+      }
+      setBlocksLoading(false);
     }
 
     loadProfile();
@@ -427,7 +500,7 @@ export default function SettingsPage() {
             href="/"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <Home className="h-4 w-4" />
             {t('nav.backToHome')}
           </Link>
           <button
@@ -754,6 +827,31 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+
+        {/* ── Заблокированные пользователи ── */}
+        <BlockedUsersSection
+          t={t}
+          blockedUsers={blockedUsers}
+          blocksLoading={blocksLoading}
+          unblockingId={unblockingId}
+          onUnblock={async (blockId, blockedId) => {
+            setUnblockingId(blockId);
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { error } = await supabase
+              .from('user_blocks')
+              .delete()
+              .eq('blocker_id', user.id)
+              .eq('blocked_id', blockedId);
+            if (!error) {
+              setBlockedUsers((prev) => prev.filter((b) => b.id !== blockId));
+              toast.success(t('block.unblocked'));
+            } else {
+              toast.error(t('common.error'));
+            }
+            setUnblockingId(null);
+          }}
+        />
 
         {/* ── Danger Zone ── */}
         <form onSubmit={handleDeleteAccount}>

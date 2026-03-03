@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { ArrowLeft } from "lucide-react";
+import { Home } from "lucide-react";
 import ProfileTabsWrapper from "./ProfileTabsWrapper";
 import PublicProfileCards from "@/components/PublicProfileCards";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -84,17 +84,41 @@ export default async function PublicProfilePage({
     }
   }
 
-  // Проверяем подписку текущего пользователя отдельным точечным запросом
-  const followRow = currentUser && !isOwner
-    ? await supabaseAuth
-        .from("follows")
-        .select("notify_new_cards")
-        .eq("follower_id", currentUser.id)
-        .eq("following_id", id)
-        .maybeSingle()
-    : { data: null }
+  // Проверяем подписку и блокировки параллельно
+  const [followRow, blockByOwner, blockByViewer] = await Promise.all([
+    currentUser && !isOwner
+      ? supabaseAuth
+          .from("follows")
+          .select("notify_new_cards")
+          .eq("follower_id", currentUser.id)
+          .eq("following_id", id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Заблокировал ли владелец профиля текущего пользователя?
+    currentUser && !isOwner
+      ? supabaseAuth
+          .from("user_blocks")
+          .select("id")
+          .eq("blocker_id", id)
+          .eq("blocked_id", currentUser.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Заблокировал ли текущий пользователь владельца профиля?
+    currentUser && !isOwner
+      ? supabaseAuth
+          .from("user_blocks")
+          .select("id")
+          .eq("blocker_id", currentUser.id)
+          .eq("blocked_id", id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
   const isFollowing = !!followRow.data
   const initialNotifyEnabled = (followRow.data as any)?.notify_new_cards ?? false
+  // Если владелец профиля заблокировал просматривателя — доступ закрыт
+  const isBlockedByOwner = !!blockByOwner.data
+  // Заблокировал ли текущий пользователь владельца профиля
+  const isBlocked = !!blockByViewer.data
 
   // Загружаем социальные данные для карточек
   const cardIds = (cards ?? []).map((c: any) => c.id as string);
@@ -150,7 +174,24 @@ export default async function PublicProfilePage({
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
         <div className="text-center">
           <p className="text-lg text-slate-500 dark:text-slate-400">Пользователь не найден</p>
-          <Link href="/" className="mt-4 inline-block text-sm text-blue-400 hover:underline">
+          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:underline">
+            <Home className="h-3.5 w-3.5" />
+            На главную
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Если владелец профиля заблокировал просматривающего
+  if (isBlockedByOwner) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
+        <div className="text-center">
+          <p className="text-lg text-slate-500 dark:text-slate-400">Доступ ограничен</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Этот профиль недоступен.</p>
+          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:underline">
+            <Home className="h-3.5 w-3.5" />
             На главную
           </Link>
         </div>
@@ -166,7 +207,7 @@ export default async function PublicProfilePage({
           href="/"
           className="mb-8 inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <Home className="h-4 w-4" />
           На главную
         </Link>
 
@@ -180,6 +221,7 @@ export default async function PublicProfilePage({
           initialNotifyEnabled={initialNotifyEnabled}
           isOwner={isOwner}
           currentUserId={currentUser?.id ?? null}
+          initialIsBlocked={isBlocked}
         />
 
         {/* Вкладки профиля (client) */}

@@ -10,6 +10,7 @@ import FollowListModal from '@/components/FollowListModal'
 import Toast from '@/components/Toast'
 import { useTranslation } from 'react-i18next'
 import { checkAndAwardBadges } from '@/lib/badges'
+import BlockButton from '@/components/BlockButton'
 
 interface Props {
   profile: {
@@ -23,6 +24,7 @@ interface Props {
   followingCount: number
   initialIsFollowing: boolean
   initialNotifyEnabled?: boolean
+  initialIsBlocked?: boolean
   isOwner: boolean
   currentUserId: string | null
 }
@@ -34,6 +36,7 @@ export default function ProfileHeader({
   followingCount,
   initialIsFollowing,
   initialNotifyEnabled = false,
+  initialIsBlocked = false,
   isOwner,
   currentUserId,
 }: Props) {
@@ -186,6 +189,12 @@ export default function ProfileHeader({
               >
                 {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
               </button>
+              {/* Кнопка блокировки */}
+              <BlockButton
+                targetUserId={profile.id}
+                currentUserId={currentUserId}
+                initialIsBlocked={initialIsBlocked}
+              />
             </div>
           ) : null}
         </div>

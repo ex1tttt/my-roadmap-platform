@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { Users, Trash2, Pin, MoreVertical, Pencil } from "lucide-react";
 import Card from "@/components/Card";
 import Link from "next/link";
@@ -44,6 +45,15 @@ export default function ProfileTabsSelf({
   // Дропдаун три точки
   const [cardMenuOpenId, setCardMenuOpenId] = useState<string | null>(null);
   const cardMenuRef = useRef<HTMLDivElement>(null);
+  const confirmToastRef = useRef<string | number | null>(null);
+  const pathname = usePathname();
+
+  // Закрываем тост подтверждения при смене страницы
+  useEffect(() => {
+    return () => {
+      if (confirmToastRef.current !== null) toast.dismiss(confirmToastRef.current);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (!cardMenuOpenId) return;
@@ -114,8 +124,8 @@ export default function ProfileTabsSelf({
   // cardId передаётся явно, т.к. setCardToDelete — асинхронный
   const confirmDelete = (cardId: string) => {
     const tId = toast(
-      <div className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4 w-full">
-        <span className="text-white text-sm mb-2 text-center w-full">{t('delete.confirm')}</span>
+      <div style={{ textAlign: 'center' }} className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4 w-full">
+        <span className="text-white text-sm mb-2 block w-full" style={{ textAlign: 'center' }}>{t('delete.confirm')}</span>
         <div className="flex gap-2">
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
@@ -144,6 +154,7 @@ export default function ProfileTabsSelf({
       </div>,
       { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false }
     );
+    confirmToastRef.current = tId;
   };
 
   return (

@@ -161,18 +161,45 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  // Если карточка не найдена или приватная и не владелец/не коллаборатор
+  // Проверяем коллаборацию и блокировку параллельно
   let collaboratorRole: "viewer" | "editor" | null = null;
-  if (data && currentUser && currentUser.email) {
-    const { data: collabRow } = await supabaseAuth
-      .from('card_collaborators')
-      .select('role')
-      .eq('card_id', id)
-      .eq('user_email', currentUser.email)
-      .maybeSingle();
-    collaboratorRole = (collabRow?.role as "viewer" | "editor") ?? null;
+  let isBlockedByAuthor = false;
+  if (data && currentUser) {
+    const [collabResult, blockResult] = await Promise.all([
+      currentUser.email
+        ? supabaseAuth
+            .from('card_collaborators')
+            .select('role')
+            .eq('card_id', id)
+            .eq('user_email', currentUser.email)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabaseAuth
+        .from('user_blocks')
+        .select('id')
+        .eq('blocker_id', data.user_id)
+        .eq('blocked_id', currentUser.id)
+        .maybeSingle(),
+    ]);
+    collaboratorRole = (collabResult.data?.role as "viewer" | "editor") ?? null;
+    isBlockedByAuthor = !!blockResult.data;
   }
   const isCollaborator = collaboratorRole !== null;
+  // Если автор карточки заблокировал текущего пользователя — закрываем доступ
+  const isOwner = !!currentUser && data && currentUser.id === data.user_id;
+  if (data && !isOwner && isBlockedByAuthor) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+        <main className="mx-auto max-w-4xl">
+          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-10 text-center text-slate-500 dark:text-slate-400">
+            <p className="text-lg font-medium">\u0414\u043e\u0441\u0442\u0443\u043f \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d</p>
+            <p className="mt-2 text-sm">\u042d\u0442\u0430 \u043a\u0430\u0440\u0442\u043e\u0447\u043a\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!data || (data.is_private && (!currentUser || (currentUser.id !== data.user_id && !isCollaborator)))) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
@@ -197,7 +224,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const authorAvatar: string | null = author?.avatar ?? null;
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
-  const isOwner = !!currentUser && currentUser.id === data.user_id;
   const stepIds = steps.map((s) => s.id)
   let initialDoneArr: string[] = []
   if (currentUser && stepIds.length > 0) {

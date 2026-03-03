@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Card from "@/components/Card";
-import { Bookmark, ArrowLeft } from "lucide-react";
+import { Bookmark, Home } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
@@ -136,7 +136,7 @@ export default function FavoritesPage() {
             href="/"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-white/5 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-700 hover:text-slate-200"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <Home className="h-4 w-4" />
             {t('nav.backToHome')}
           </Link>
         </header>
@@ -154,7 +154,7 @@ export default function FavoritesPage() {
               href="/"
               className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <Home className="h-4 w-4" />
               {t('nav.backToHome')}
             </Link>
           </div>

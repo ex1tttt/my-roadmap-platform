@@ -508,6 +508,19 @@
     "social": { "label": "Towarzyski", "description": "10 osób Cię obserwuje!", "hint": "Zbierz 10 obserwujących" },
     "influencer": { "label": "Influencer", "description": "50 osób Cię obserwuje!", "hint": "Zbierz 50 obserwujących" },
     "fan": { "label": "Fan", "description": "Polubiłeś 50 kart!", "hint": "Polub 50 kart" },
-    "collector": { "label": "Kolekcjoner", "description": "20 kart dodano do ulubionych!", "hint": "Dodaj 20 kart do ulubionych" }
-  }
+    "collector": { "label": "Kolekcjoner", "description": "20 kart dodano do ulubionych!", "hint": "Dodaj 20 kart do ulubionych" }  },
+  "block": {
+    "block": "Zablokuj",
+    "unblock": "Odblokuj",
+    "blocked": "Użytkownik zablokowany",
+    "unblocked": "Użytkownik odblokowany",
+    "confirmBlock": "Zablokować tego użytkownika? Nie będzie mógł widzieć Twojego profilu ani kart.",
+    "blockAction": "Zablokuj",
+    "blockHint": "Zablokuj użytkownika",
+    "unblockHint": "Odblokuj użytkownika",
+    "blockedPage": "Dostęp ograniczony",
+    "blockedPageDesc": "Ten profil jest niedostępny.",
+    "settingsTitle": "Zablokowani użytkownicy",
+    "settingsEmpty": "Brak zablokowanych użytkowników",
+    "unblockInSettings": "Odblokuj"  }
 }
