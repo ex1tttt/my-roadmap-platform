@@ -301,6 +301,7 @@ function MentionTextarea({
   className,
   innerRef,
   autoFocus,
+  onEnterSubmit,
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -310,6 +311,7 @@ function MentionTextarea({
   className?: string;
   innerRef?: React.RefObject<HTMLTextAreaElement | null>;
   autoFocus?: boolean;
+  onEnterSubmit?: () => void;
 }) {
   const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([]);
   const [query, setQuery] = useState<string | null>(null);
@@ -341,6 +343,11 @@ function MentionTextarea({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey && !suggestions.length) {
+      e.preventDefault();
+      onEnterSubmit?.();
+      return;
+    }
     if (!suggestions.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -444,6 +451,7 @@ function ReplyForm({
         placeholder={t('comments.replyPlaceholder')}
         rows={2}
         className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
+        onEnterSubmit={() => { if (replyText.trim() && !replySending) onReplySubmit(parentId); }}
       />
       <div className="mt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/5 pt-2">
         <button
@@ -928,11 +936,21 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   async function notifyMentions(text: string, cardId: string, _commentId: string) {
     const usernames = [...text.matchAll(/@(\w+)/g)].map(m => m[1])
     if (!usernames.length || !currentUserId) return
+
     const { data: profiles, error: profilesErr } = await supabase
       .from('profiles').select('id, username').in('username', usernames)
     if (profilesErr) { console.error('[notifyMentions] profiles lookup failed:', profilesErr); return }
+
     const toNotify = (profiles ?? []).filter((p: { id: string; username: string }) => p.id !== currentUserId)
     if (!toNotify.length) return
+
+    // Получаем название карточки для push-уведомления
+    const { data: cardData } = await supabase
+      .from('cards').select('title').eq('id', cardId).maybeSingle()
+    const cardTitle = cardData?.title ?? ''
+    const actorName = currentUserProfile?.username ?? 'Кто-то'
+
+    // Вставляем DB-уведомления
     const { error: insertErr } = await supabase.from('notifications').insert(
       toNotify.map((p: { id: string; username: string }) => ({
         receiver_id: p.id,
@@ -941,7 +959,24 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         card_id: cardId,
       }))
     )
-    if (insertErr) console.error('[notifyMentions] insert failed:', insertErr)
+    if (insertErr) { console.error('[notifyMentions] insert failed:', insertErr); return }
+
+    // Push-уведомление каждому упомянутому (fire-and-forget)
+    for (const p of toNotify as { id: string; username: string }[]) {
+      fetch('/api/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: p.id,
+          actor_id: currentUserId,
+          title: `${actorName} упомянул вас 🔔`,
+          body: cardTitle
+            ? `В комментарии к «${cardTitle}»`
+            : 'В комментарии к карточке',
+          url: `/card/${cardId}#comments`,
+        }),
+      }).catch(() => {})
+    }
   }
 
   async function handleDelete(commentId: string) {
@@ -1051,6 +1086,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             disabled={!currentUserId || sending}
             rows={3}
             className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            onEnterSubmit={() => { if (currentUserId && text.trim() && !sending) handleSubmit({ preventDefault: () => {} } as React.FormEvent); }}
           />
           <div className="mt-3 flex justify-end border-t border-slate-200 dark:border-white/5 pt-3">
             <button
