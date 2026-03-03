@@ -820,7 +820,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       // Проверяем достижение «Критик»
       await checkAndAwardBadges(currentUserId, 'comment')
       // Уведомления упомянутым @-пользователям
-      notifyMentions(trimmed, roadmapId, data.id).catch(() => {})
+      notifyMentions(trimmed, roadmapId, data.id).catch(e => console.error('[notifyMentions]', e))
       // Push-уведомление автору карточки (fire-and-forget)
       supabase
         .from('cards')
@@ -887,7 +887,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       // Авто-раскрываем ветку родителя
       setExpandedIds((prev) => new Set([...prev, parentId]))
       // Уведомления упомянутым @-пользователям
-      notifyMentions(trimmed, roadmapId, data.id).catch(() => {})
+      notifyMentions(trimmed, roadmapId, data.id).catch(e => console.error('[notifyMentions]', e))
     }
     setReplySending(false)
   }
@@ -928,18 +928,20 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   async function notifyMentions(text: string, cardId: string, _commentId: string) {
     const usernames = [...text.matchAll(/@(\w+)/g)].map(m => m[1])
     if (!usernames.length || !currentUserId) return
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesErr } = await supabase
       .from('profiles').select('id, username').in('username', usernames)
+    if (profilesErr) { console.error('[notifyMentions] profiles lookup failed:', profilesErr); return }
     const toNotify = (profiles ?? []).filter((p: { id: string; username: string }) => p.id !== currentUserId)
     if (!toNotify.length) return
-    await supabase.from('notifications').insert(
+    const { error: insertErr } = await supabase.from('notifications').insert(
       toNotify.map((p: { id: string; username: string }) => ({
-        user_id: p.id,
+        receiver_id: p.id,
         actor_id: currentUserId,
         type: 'mention',
         card_id: cardId,
       }))
     )
+    if (insertErr) console.error('[notifyMentions] insert failed:', insertErr)
   }
 
   async function handleDelete(commentId: string) {
