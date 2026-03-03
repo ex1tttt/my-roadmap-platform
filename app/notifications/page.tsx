@@ -190,8 +190,15 @@ export default function NotificationsPage() {
   const [loading, setLoading]     = useState(true)
   const [userId, setUserId]       = useState<string | null>(null)
   const [mounted, setMounted]     = useState(false)
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({})
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+    try {
+      const saved = localStorage.getItem('notif_type_prefs')
+      if (saved) setNotifPrefs(JSON.parse(saved))
+    } catch {}
+  }, [])
 
   // Загрузка и агрегация
   async function load() {
@@ -270,6 +277,8 @@ export default function NotificationsPage() {
 
   if (!mounted) return null
 
+  const filteredGroups = groups.filter(g => notifPrefs[g.type] !== false)
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4">
       <main className="mx-auto max-w-2xl">
@@ -279,7 +288,7 @@ export default function NotificationsPage() {
             <Bell className="h-6 w-6 text-blue-400" />
             Уведомления
           </h1>
-          {groups.length > 0 && (
+          {filteredGroups.length > 0 && (
             <button
               onClick={deleteAll}
               className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-400"
@@ -300,7 +309,7 @@ export default function NotificationsPage() {
               />
             ))}
           </div>
-        ) : groups.length === 0 ? (
+        ) : filteredGroups.length === 0 ? (
           /* Пусто */
           <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 py-24 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5">
@@ -314,7 +323,7 @@ export default function NotificationsPage() {
         ) : (
           /* Список групп */
           <ul className="space-y-2">
-            {groups.map((g) => {
+            {filteredGroups.map((g) => {
               const href     = getHref(g)
               const text     = buildText(g, t)
               const timeText = timeAgo(g.latest_at)

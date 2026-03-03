@@ -119,10 +119,34 @@ export default function SettingsPage() {
   const [pushStatus, setPushStatus] = useState<PushStatus>('unsupported');
   const [pushLoading, setPushLoading] = useState(false);
 
+  // Настройки типов уведомлений (localStorage)
+  const NOTIF_TYPES = [
+    { key: 'like',         label: 'Лайки' },
+    { key: 'comment',      label: 'Комментарии' },
+    { key: 'comment_like', label: 'Лайки на комментарии' },
+    { key: 'follow',       label: 'Новые подписчики' },
+    { key: 'mention',      label: 'Упоминания' },
+    { key: 'new_card',     label: 'Новые карточки от подписок' },
+  ];
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(() => {
+    const defaults: Record<string, boolean> = {};
+    ['like','comment','comment_like','follow','mention','new_card'].forEach(k => { defaults[k] = true; });
+    return defaults;
+  });
+  const [notifSaved, setNotifSaved] = useState(false);
+
   // Заблокированные пользователи
   const [blockedUsers, setBlockedUsers] = useState<{ id: string; blocked_id: string; username: string; avatar: string | null }[]>([]);
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
+
+  // Загружаем настройки типов уведомлений из localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('notif_type_prefs');
+      if (saved) setNotifPrefs(JSON.parse(saved));
+    } catch {}
+  }, []);
 
   // Инициализируем статус push при монтировании
   useEffect(() => {
@@ -649,50 +673,88 @@ export default function SettingsPage() {
 
             {/* ─── УВЕДОМЛЕНИЯ ─── */}
             {activeSection === 'notifications' && (
-              <div className={CARD_CLS}>
-                <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  <Bell className="h-3.5 w-3.5" />
-                  {mounted ? t('pushNotifications.sectionTitle') : 'Уведомления'}
-                </h2>
-                <p className="mb-5 text-xs text-slate-500">{mounted ? t('pushNotifications.sectionDesc') : ''}</p>
+              <div className="space-y-6">
+                {/* Push-уведомления */}
+                <div className={CARD_CLS}>
+                  <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    <Bell className="h-3.5 w-3.5" />
+                    {mounted ? t('pushNotifications.sectionTitle') : 'Push-уведомления'}
+                  </h2>
+                  <p className="mb-5 text-xs text-slate-500">{mounted ? t('pushNotifications.sectionDesc') : ''}</p>
 
-                {pushStatus === 'unsupported' && (
-                  <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-500">
-                    <BellOff className="h-4 w-4 shrink-0" />
-                    {mounted ? t('pushNotifications.unsupported') : ''}
-                  </div>
-                )}
-                {pushStatus === 'denied' && (
-                  <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
-                    <BellOff className="h-4 w-4 shrink-0" />
-                    {mounted ? t('pushNotifications.denied') : ''}
-                  </div>
-                )}
-                {(pushStatus === 'default' || pushStatus === 'subscribed') && (
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      {pushStatus === 'subscribed'
-                        ? <Bell className="h-5 w-5 text-blue-500" />
-                        : <BellOff className="h-5 w-5 text-slate-400" />}
-                      <span className="text-sm text-slate-700 dark:text-slate-300">
-                        {mounted ? (pushStatus === 'subscribed' ? t('pushNotifications.enabled') : t('pushNotifications.disabled')) : ''}
-                      </span>
+                  {pushStatus === 'unsupported' && (
+                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-500">
+                      <BellOff className="h-4 w-4 shrink-0" />
+                      {mounted ? t('pushNotifications.unsupported') : ''}
                     </div>
+                  )}
+                  {pushStatus === 'denied' && (
+                    <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+                      <BellOff className="h-4 w-4 shrink-0" />
+                      {mounted ? t('pushNotifications.denied') : ''}
+                    </div>
+                  )}
+                  {(pushStatus === 'default' || pushStatus === 'subscribed') && (
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        {pushStatus === 'subscribed'
+                          ? <Bell className="h-5 w-5 text-blue-500" />
+                          : <BellOff className="h-5 w-5 text-slate-400" />}
+                        <span className="text-sm text-slate-700 dark:text-slate-300">
+                          {mounted ? (pushStatus === 'subscribed' ? t('pushNotifications.enabled') : t('pushNotifications.disabled')) : ''}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={pushLoading}
+                        onClick={handleTogglePush}
+                        className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                          pushStatus === 'subscribed'
+                            ? 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300'
+                            : 'bg-blue-600 text-white hover:bg-blue-500'
+                        }`}
+                      >
+                        {pushLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : pushStatus === 'subscribed' ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                        {mounted ? (pushLoading ? t('pushNotifications.waiting') : pushStatus === 'subscribed' ? t('pushNotifications.disable') : t('pushNotifications.enable')) : ''}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Типы уведомлений */}
+                <div className={CARD_CLS}>
+                  <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    <Bell className="h-3.5 w-3.5" />
+                    Типы уведомлений
+                  </h2>
+                  <p className="mb-4 text-xs text-slate-500">Выберите, о чём хотите получать уведомления</p>
+                  <div className="space-y-3">
+                    {NOTIF_TYPES.map(({ key, label }) => (
+                      <label key={key} className="flex cursor-pointer items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={notifPrefs[key] ?? true}
+                          onChange={(e) => setNotifPrefs(prev => ({ ...prev, [key]: e.target.checked }))}
+                          className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 accent-blue-500"
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex items-center gap-3">
                     <button
                       type="button"
-                      disabled={pushLoading}
-                      onClick={handleTogglePush}
-                      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
-                        pushStatus === 'subscribed'
-                          ? 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300'
-                          : 'bg-blue-600 text-white hover:bg-blue-500'
-                      }`}
+                      onClick={() => {
+                        try { localStorage.setItem('notif_type_prefs', JSON.stringify(notifPrefs)); } catch {}
+                        setNotifSaved(true);
+                        setTimeout(() => setNotifSaved(false), 2000);
+                      }}
+                      className={BTN_PRIMARY}
                     >
-                      {pushLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : pushStatus === 'subscribed' ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                      {mounted ? (pushLoading ? t('pushNotifications.waiting') : pushStatus === 'subscribed' ? t('pushNotifications.disable') : t('pushNotifications.enable')) : ''}
+                      {notifSaved ? <span className="text-green-300">✓ Сохранено</span> : <><Save className="h-4 w-4" /> Сохранить</>}
                     </button>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
