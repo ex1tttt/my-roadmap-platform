@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { Home, LogOut, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan } from "lucide-react";
+import { Home, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
@@ -475,6 +475,9 @@ export default function SettingsPage() {
     }
   }
 
+  // Активная секция сайдбара
+  const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'blocked' | 'security'>('profile');
+
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push("/");
@@ -491,428 +494,364 @@ export default function SettingsPage() {
     );
   }
 
+  const NAV_ITEMS = [
+    { id: 'profile' as const, label: t('settings.title') !== 'Settings' ? 'Профиль' : 'Profile', icon: User },
+    { id: 'notifications' as const, label: mounted ? t('pushNotifications.sectionTitle') : 'Уведомления', icon: Bell },
+    { id: 'blocked' as const, label: mounted ? t('block.settingsTitle') : 'Заблокированные', icon: ShieldBan },
+    { id: 'security' as const, label: mounted ? t('settings.security') : 'Безопасность и вход', icon: Lock },
+  ];
+
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100">
-      {/* Шапка */}
-      <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
-          >
-            <Home className="h-4 w-4" />
-            {t('nav.backToHome')}
-          </Link>
-          <button
-            onClick={handleSignOut}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-3 py-1.5 text-sm text-red-500 dark:text-red-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 dark:hover:text-red-300"
-          >
-            <LogOut className="h-4 w-4" />
-            {t('auth.logout')}
-          </button>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100">
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+        <div className="flex gap-6">
+
+          {/* ── Сайдбар ── */}
+          <aside className="w-52 shrink-0">
+            {/* На главную над сайдбаром */}
+            <Link
+              href="/"
+              className="mb-3 flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-900 dark:hover:text-slate-200"
+            >
+              <Home className="h-4 w-4 shrink-0" />
+              {mounted ? t('nav.backToHome') : 'На главную'}
+            </Link>
+
+            <nav className="sticky top-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 py-2 overflow-hidden">
+              {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveSection(id)}
+                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors text-left ${
+                    activeSection === id
+                      ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          {/* ── Контент ── */}
+          <main className="flex-1 min-w-0 space-y-6">
+
+            {/* ─── ПРОФИЛЬ ─── */}
+            {activeSection === 'profile' && (
+              <>
+                {/* Аватар */}
+                <div className={CARD_CLS}>
+                  <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{mounted ? t('settings.avatar') : 'Аватар'}</h2>
+                  <div className="flex items-center gap-5">
+                    <div className="relative shrink-0">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="Аватар" className="h-20 w-20 rounded-full object-cover ring-2 ring-blue-500/40" />
+                      ) : (
+                        <UserAvatar username={username || "?"} size={80} />
+                      )}
+                      {uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/5 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                        {uploading ? (mounted ? t('settings.uploading') : '...') : (mounted ? t('settings.changeAvatar') : 'Изменить')}
+                      </button>
+                      {avatarUrl && (
+                        <button type="button" onClick={() => setAvatarUrl(null)} className="text-left text-xs text-red-400 hover:text-red-300">
+                          {mounted ? t('settings.deleteAvatarLabel') : 'Удалить аватар'}
+                        </button>
+                      )}
+                      <p className="text-xs text-slate-500">{mounted ? t('settings.avatarHint') : 'PNG, JPG до 5 МБ'}</p>
+                    </div>
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </div>
+                </div>
+
+                {/* Данные профиля */}
+                <form onSubmit={handleSaveProfile}>
+                  <div className={CARD_CLS}>
+                    <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{mounted ? t('settings.profileInfo') : 'Информация'}</h2>
+                    <label className="block">
+                      <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.username') : 'Никнейм'}</div>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                        required
+                        maxLength={32}
+                        placeholder="только буквы, цифры, _"
+                        className={INPUT_CLS}
+                      />
+                    </label>
+                    <label className="mt-4 block">
+                      <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.email') : 'Email'}</div>
+                      <input
+                        type="email"
+                        value={userEmail}
+                        readOnly
+                        className="box-border w-full cursor-not-allowed rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 outline-none"
+                      />
+                      <p className="mt-1.5 text-xs text-slate-500">{mounted ? t('settings.emailReadonlyHint') : ''}</p>
+                    </label>
+                    <label className="mt-4 block">
+                      <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.bio') : 'О себе'}</div>
+                      <textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        maxLength={200}
+                        rows={3}
+                        placeholder={mounted ? t('settings.bioPlaceholder') : ''}
+                        className="box-border w-full resize-none rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <p className="mt-1 text-right text-xs text-slate-500">
+                        <span className={bio.length >= 180 ? 'text-amber-400' : ''}>{bio.length}</span>/200
+                      </p>
+                    </label>
+                    <div className="mt-4">
+                      <div className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <Globe className="h-4 w-4" />
+                        {mounted ? t('settings.language_label') : 'Язык'}
+                      </div>
+                      <div className="relative">
+                        <select
+                          value={language}
+                          onChange={(e) => handleLanguageChange(e.target.value as SupportedLanguage)}
+                          className={INPUT_CLS + " cursor-pointer appearance-none pr-10"}
+                        >
+                          {LANGUAGE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <button type="submit" disabled={saving || uploading} className={BTN_PRIMARY}>
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {saving ? (mounted ? t('settings.saving') : '...') : (mounted ? t('settings.save_button') : 'Сохранить')}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {/* ─── УВЕДОМЛЕНИЯ ─── */}
+            {activeSection === 'notifications' && (
+              <div className={CARD_CLS}>
+                <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                  <Bell className="h-3.5 w-3.5" />
+                  {mounted ? t('pushNotifications.sectionTitle') : 'Уведомления'}
+                </h2>
+                <p className="mb-5 text-xs text-slate-500">{mounted ? t('pushNotifications.sectionDesc') : ''}</p>
+
+                {pushStatus === 'unsupported' && (
+                  <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-500">
+                    <BellOff className="h-4 w-4 shrink-0" />
+                    {mounted ? t('pushNotifications.unsupported') : ''}
+                  </div>
+                )}
+                {pushStatus === 'denied' && (
+                  <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+                    <BellOff className="h-4 w-4 shrink-0" />
+                    {mounted ? t('pushNotifications.denied') : ''}
+                  </div>
+                )}
+                {(pushStatus === 'default' || pushStatus === 'subscribed') && (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {pushStatus === 'subscribed'
+                        ? <Bell className="h-5 w-5 text-blue-500" />
+                        : <BellOff className="h-5 w-5 text-slate-400" />}
+                      <span className="text-sm text-slate-700 dark:text-slate-300">
+                        {mounted ? (pushStatus === 'subscribed' ? t('pushNotifications.enabled') : t('pushNotifications.disabled')) : ''}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={pushLoading}
+                      onClick={handleTogglePush}
+                      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                        pushStatus === 'subscribed'
+                          ? 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300'
+                          : 'bg-blue-600 text-white hover:bg-blue-500'
+                      }`}
+                    >
+                      {pushLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : pushStatus === 'subscribed' ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                      {mounted ? (pushLoading ? t('pushNotifications.waiting') : pushStatus === 'subscribed' ? t('pushNotifications.disable') : t('pushNotifications.enable')) : ''}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ─── ЗАБЛОКИРОВАННЫЕ ─── */}
+            {activeSection === 'blocked' && (
+              <BlockedUsersSection
+                t={t}
+                blockedUsers={blockedUsers}
+                blocksLoading={blocksLoading}
+                unblockingId={unblockingId}
+                onUnblock={async (blockId, blockedId) => {
+                  setUnblockingId(blockId);
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) return;
+                  const { error } = await supabase
+                    .from('user_blocks')
+                    .delete()
+                    .eq('blocker_id', user.id)
+                    .eq('blocked_id', blockedId);
+                  if (!error) {
+                    setBlockedUsers((prev) => prev.filter((b) => b.id !== blockId));
+                    toast.success(t('block.unblocked'));
+                  } else {
+                    toast.error(t('common.error'));
+                  }
+                  setUnblockingId(null);
+                }}
+              />
+            )}
+
+            {/* ─── БЕЗОПАСНОСТЬ ─── */}
+            {activeSection === 'security' && (
+              <>
+                {/* Изменить email */}
+                <form onSubmit={handleEmailUpdate}>
+                  <div className={CARD_CLS}>
+                    <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                      <Mail className="h-3.5 w-3.5" />
+                      {mounted ? t('settings.changeEmail') : 'Изменить Email'}
+                    </h2>
+                    <label className="block">
+                      <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.newEmail') : 'Новый Email'}</div>
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        required
+                        placeholder="new@example.com"
+                        className={INPUT_CLS}
+                      />
+                    </label>
+                    <div className="mt-4 flex justify-end">
+                      <button type="submit" disabled={emailSaving || !newEmail.trim()} className={BTN_PRIMARY}>
+                        {emailSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                        {mounted ? (emailSaving ? t('settings.sending') : t('settings.updateEmail')) : 'Обновить'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Изменить пароль */}
+                <form onSubmit={handlePasswordUpdate}>
+                  <div className={CARD_CLS}>
+                    <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                      <Lock className="h-3.5 w-3.5" />
+                      {mounted ? t('settings.security') : 'Безопасность'}
+                    </h2>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.currentPassword') : 'Текущий пароль'}</div>
+                        <div className="relative">
+                          <input type={showCurrent ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required placeholder="••••••••" className={INPUT_CLS + " pr-10"} />
+                          <button type="button" onClick={() => setShowCurrent((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                            {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.newPassword') : 'Новый пароль'}</div>
+                        <div className="relative">
+                          <input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" className={INPUT_CLS + " pr-10"} />
+                          <button type="button" onClick={() => setShowNew((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                            {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.confirmPassword') : 'Подтвердите пароль'}</div>
+                        <div className="relative">
+                          <input
+                            type={showConfirm ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            placeholder="••••••••"
+                            className={`box-border w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 ${
+                              confirmPassword && newPassword !== confirmPassword
+                                ? "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/20"
+                                : "border-slate-200 dark:border-slate-800 focus:border-blue-500/60 focus:ring-blue-500/20"
+                            }`}
+                          />
+                          <button type="button" onClick={() => setShowConfirm((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                            {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        {confirmPassword && newPassword !== confirmPassword && (
+                          <p className="mt-1 text-xs text-red-400">{mounted ? t('settings.passwordMismatch') : ''}</p>
+                        )}
+                      </div>
+                    </div>
+                    {passwordError && (
+                      <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{passwordError}</div>
+                    )}
+                    <div className="mt-4 flex justify-end">
+                      <button type="submit" disabled={passwordSaving || !currentPassword || newPassword.length < 6 || newPassword !== confirmPassword} className={BTN_PRIMARY}>
+                        {passwordSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                        {mounted ? (passwordSaving ? t('settings.saving') : t('settings.changePassword')) : 'Сменить'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Удалить аккаунт */}
+                <form onSubmit={handleDeleteAccount}>
+                  <div className="rounded-xl border border-red-900/50 bg-red-950/10 p-6">
+                    <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-500">
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {mounted ? t('settings.dangerZone') : 'Удалить аккаунт'}
+                    </h2>
+                    <p className="mb-4 text-xs text-slate-500">{mounted ? t('settings.dangerHint') : ''}</p>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.yourEmail') : 'Email'}</div>
+                        <input type="email" value={deleteEmail} onChange={(e) => setDeleteEmail(e.target.value)} required placeholder="email@example.com" className={INPUT_CLS} />
+                      </div>
+                      <div>
+                        <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.yourPassword') : 'Пароль'}</div>
+                        <div className="relative">
+                          <input type={showDeletePassword ? "text" : "password"} value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} required placeholder="••••••••" className={INPUT_CLS + " pr-10"} />
+                          <button type="button" onClick={() => setShowDeletePassword((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                            {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <button type="submit" disabled={deleteLoading || !deleteEmail.trim() || !deletePassword} className="inline-flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/50 px-5 py-2.5 text-sm font-medium text-red-400 transition-all hover:bg-red-900/60 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50">
+                        {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        {mounted ? (deleteLoading ? t('settings.deleting') : t('settings.deleteForever')) : 'Удалить'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </>
+            )}
+
+          </main>
         </div>
       </div>
-
-      {/* Контент */}
-      <main className="mx-auto max-w-2xl space-y-6 px-6 py-12">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
-
-        {/* ── Аватар ── */}
-        <div className={CARD_CLS}>
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('settings.avatar')}</h2>
-          <div className="flex items-center gap-5">
-            <div className="relative shrink-0">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Аватар" className="h-20 w-20 rounded-full object-cover ring-2 ring-blue-500/40" />
-              ) : (
-                <UserAvatar username={username || "?"} size={80} />
-              )}
-              {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/5 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {uploading
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Camera className="h-4 w-4" />}
-                {uploading ? t('settings.uploading') : t('settings.changeAvatar')}
-              </button>
-              {avatarUrl && (
-                <button type="button" onClick={() => setAvatarUrl(null)} className="text-left text-xs text-red-400 hover:text-red-300">
-                  {t('settings.deleteAvatarLabel')}
-                </button>
-              )}
-              <p className="text-xs text-slate-500">{t('settings.avatarHint')}</p>
-            </div>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-          </div>
-        </div>
-
-        {/* ── Данные (имя) ── */}
-        <form onSubmit={handleSaveProfile}>
-          <div className={CARD_CLS}>
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('settings.profileInfo')}</h2>
-            <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.username')}</div>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                required
-                maxLength={32}
-                placeholder="только буквы, цифры, _"
-                className={INPUT_CLS}
-              />
-            </label>
-
-            <label className="mt-4 block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.email')}</div>
-              {loading ? (
-                <div className="h-10 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800/60" />
-              ) : (
-                <input
-                  type="email"
-                  value={userEmail}
-                  readOnly
-                  className="box-border w-full cursor-not-allowed rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 outline-none"
-                />
-              )}
-              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{t('settings.emailReadonlyHint')}</p>
-            </label>
-
-            <label className="mt-4 block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.bio')}</div>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                maxLength={200}
-                rows={3}
-                placeholder={t('settings.bioPlaceholder')}
-                className="box-border w-full resize-none rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-              <p className="mt-1 text-right text-xs text-slate-500 dark:text-slate-400">
-                <span className={bio.length >= 180 ? 'text-amber-400' : ''}>{bio.length}</span>/200
-              </p>
-            </label>
-
-            {/* ── Язык интерфейса ── */}
-            <div className="mt-4">
-              <div className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                <Globe className="h-4 w-4" />
-                {t('settings.language_label')}
-              </div>
-              <div className="relative">
-                <select
-                  value={language}
-                  onChange={(e) => handleLanguageChange(e.target.value as SupportedLanguage)}
-                  className={INPUT_CLS + " cursor-pointer appearance-none pr-10"}
-                >
-                  {LANGUAGE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              </div>
-              <p className="mt-1.5 text-xs text-slate-500">{t('settings.languageHint')}</p>
-            </div>
-
-            <div className="mt-4 flex justify-end">
-              <button type="submit" disabled={saving || uploading} className={BTN_PRIMARY}>
-                {saving
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Save className="h-4 w-4" />}
-                {saving ? t('settings.saving') : t('settings.save_button')}
-              </button>
-            </div>
-          </div>
-        </form>
-
-        {/* ── Изменить почту ── */}
-        <form onSubmit={handleEmailUpdate}>
-          <div className={CARD_CLS}>
-            <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              <Mail className="h-3.5 w-3.5" />
-              {t('settings.changeEmail')}
-            </h2>
-            <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.newEmail')}</div>
-              <input
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                required
-                placeholder="new@example.com"
-                className={INPUT_CLS}
-              />
-            </label>
-            <div className="mt-4 flex justify-end">
-              <button type="submit" disabled={emailSaving || !newEmail.trim()} className={BTN_PRIMARY}>
-                {emailSaving
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Mail className="h-4 w-4" />}
-                {emailSaving ? t('settings.sending') : t('settings.updateEmail')}
-              </button>
-            </div>
-          </div>
-        </form>
-
-        {/* ── Безопасность (пароль) ── */}
-        <form onSubmit={handlePasswordUpdate}>
-          <div className={CARD_CLS}>
-            <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              <Lock className="h-3.5 w-3.5" />
-              {t('settings.security')}
-            </h2>
-            <div className="space-y-3">
-              {/* Текущий пароль */}
-              <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.currentPassword')}</div>
-                <div className="relative">
-                  <input
-                    type={showCurrent ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className={INPUT_CLS + " pr-10"}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrent((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                  >
-                    {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Новый пароль */}
-              <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.newPassword')}</div>
-                <div className="relative">
-                  <input
-                    type={showNew ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className={INPUT_CLS + " pr-10"}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNew((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                  >
-                    {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Подтвердите новый пароль */}
-              <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.confirmPassword')}</div>
-                <div className="relative">
-                  <input
-                    type={showConfirm ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className={`box-border w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 ${
-                      confirmPassword && newPassword !== confirmPassword
-                        ? "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/20"
-                        : "border-slate-200 dark:border-slate-800 focus:border-blue-500/60 focus:ring-blue-500/20"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                  >
-                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="mt-1 text-xs text-red-400">{t('settings.passwordMismatch')}</p>
-                )}
-              </div>
-            </div>
-            {passwordError && (
-              <div className="mt-3 rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-400">{passwordError}</div>
-            )}
-            <div className="mt-4 flex justify-end">
-              <button
-                type="submit"
-                disabled={passwordSaving || !currentPassword || newPassword.length < 6 || newPassword !== confirmPassword}
-                className={BTN_PRIMARY}
-              >
-                {passwordSaving
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Lock className="h-4 w-4" />}
-                {passwordSaving ? t('settings.saving') : t('settings.changePassword')}
-              </button>
-            </div>
-          </div>
-        </form>
-
-        {/* ── Push-уведомления ── */}
-        <div className={CARD_CLS}>
-          <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-            <Bell className="h-3.5 w-3.5" />
-            {t('pushNotifications.sectionTitle')}
-          </h2>
-          <p className="mb-5 text-xs text-slate-500">
-            {t('pushNotifications.sectionDesc')}
-          </p>
-
-          {pushStatus === 'unsupported' && (
-            <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-500">
-              <BellOff className="h-4 w-4 shrink-0" />
-              {t('pushNotifications.unsupported')}
-            </div>
-          )}
-
-          {pushStatus === 'denied' && (
-            <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
-              <BellOff className="h-4 w-4 shrink-0" />
-              {t('pushNotifications.denied')}
-            </div>
-          )}
-
-          {(pushStatus === 'default' || pushStatus === 'subscribed') && (
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                {pushStatus === 'subscribed' ? (
-                  <Bell className="h-5 w-5 text-blue-500" />
-                ) : (
-                  <BellOff className="h-5 w-5 text-slate-400" />
-                )}
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {pushStatus === 'subscribed' ? t('pushNotifications.enabled') : t('pushNotifications.disabled')}
-                </span>
-              </div>
-              <button
-                type="button"
-                disabled={pushLoading}
-                onClick={handleTogglePush}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                  pushStatus === 'subscribed'
-                    ? 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'
-                    : 'bg-blue-600 text-white hover:bg-blue-500'
-                }`}
-              >
-                {pushLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : pushStatus === 'subscribed' ? (
-                  <BellOff className="h-4 w-4" />
-                ) : (
-                  <Bell className="h-4 w-4" />
-                )}
-                {pushLoading
-                  ? t('pushNotifications.waiting')
-                  : pushStatus === 'subscribed'
-                  ? t('pushNotifications.disable')
-                  : t('pushNotifications.enable')}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* ── Заблокированные пользователи ── */}
-        <BlockedUsersSection
-          t={t}
-          blockedUsers={blockedUsers}
-          blocksLoading={blocksLoading}
-          unblockingId={unblockingId}
-          onUnblock={async (blockId, blockedId) => {
-            setUnblockingId(blockId);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const { error } = await supabase
-              .from('user_blocks')
-              .delete()
-              .eq('blocker_id', user.id)
-              .eq('blocked_id', blockedId);
-            if (!error) {
-              setBlockedUsers((prev) => prev.filter((b) => b.id !== blockId));
-              toast.success(t('block.unblocked'));
-            } else {
-              toast.error(t('common.error'));
-            }
-            setUnblockingId(null);
-          }}
-        />
-
-        {/* ── Danger Zone ── */}
-        <form onSubmit={handleDeleteAccount}>
-          <div className="rounded-xl border border-red-900/50 bg-red-950/10 p-6">
-            <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-500">
-              <Trash2 className="h-3.5 w-3.5" />
-              {t('settings.dangerZone')}
-            </h2>
-            <p className="mb-4 text-xs text-slate-500">
-              {t('settings.dangerHint')}
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.yourEmail')}</div>
-                <input
-                  type="email"
-                  value={deleteEmail}
-                  onChange={(e) => setDeleteEmail(e.target.value)}
-                  required
-                  placeholder="email@example.com"
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div>
-                <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.yourPassword')}</div>
-                <div className="relative">
-                  <input
-                    type={showDeletePassword ? "text" : "password"}
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className={INPUT_CLS + " pr-10"}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowDeletePassword((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                  >
-                    {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-end">
-              <button
-                type="submit"
-                disabled={deleteLoading || !deleteEmail.trim() || !deletePassword}
-                className="inline-flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/50 px-5 py-2.5 text-sm font-medium text-red-400 transition-all hover:bg-red-900/60 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {deleteLoading
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Trash2 className="h-4 w-4" />}
-                {deleteLoading ? t('settings.deleting') : t('settings.deleteForever')}
-              </button>
-            </div>
-          </div>
-        </form>
-      </main>
     </div>
   );
 }
