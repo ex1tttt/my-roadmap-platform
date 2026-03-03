@@ -25,9 +25,9 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
 
   function handleDelete() {
     const tId = toast(
-      <div style={{ textAlign: 'center' }} className="flex flex-col items-center justify-center gap-3 bg-slate-900 rounded-xl p-4 w-full">
-        <span className="text-white text-sm mb-2 block w-full" style={{ textAlign: 'center' }}>{t('delete.confirm')}</span>
-        <div className="flex gap-2">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+        <span style={{ color: '#fff', fontSize: '13px', textAlign: 'center', display: 'block', width: '100%' }}>{t('delete.confirm')}</span>
+        <div style={{ display: 'flex', gap: '6px' }}>
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
             onClick={async () => {
@@ -52,7 +52,7 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
           >{t('common.cancel') || 'Отмена'}</button>
         </div>
       </div>,
-      { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false }
+      { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false, style: { padding: '10px 14px', minWidth: '0', width: 'auto', maxWidth: '300px' } }
     );
     toastIdRef.current = tId;
   }

@@ -24,15 +24,16 @@ export default function ProfileTabs({
 
   return (
     <>
-      <div className="flex gap-2 mt-8 mb-6">
-        <button
-          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          style={{ background: activeTab === "my" ? '#2563eb' : '', color: activeTab === "my" ? '#fff' : '' }}
-          onClick={() => setActiveTab("my")}
-        >
-          {t("profileTabs.myCards")}
-        </button>
-        {isOwner && (
+      {/* Вкладки показываем только владельцу (у него есть вторая вкладка «Доступные мне») */}
+      {isOwner && (
+        <div className="flex gap-2 mt-8 mb-6">
+          <button
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={{ background: activeTab === "my" ? '#2563eb' : '', color: activeTab === "my" ? '#fff' : '' }}
+            onClick={() => setActiveTab("my")}
+          >
+            {t("profileTabs.myCards")}
+          </button>
           <button
             className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
             style={{ background: activeTab === "shared" ? '#2563eb' : '', color: activeTab === "shared" ? '#fff' : '' }}
@@ -40,11 +41,11 @@ export default function ProfileTabs({
           >
             <Users className="w-4 h-4" /> {t("profileTabs.sharedWithMe")}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {activeTab === "my" && (
-        <section>
+      {(activeTab === "my" || !isOwner) && (
+        <section className={isOwner ? "" : "mt-8"}>
           <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">
             {isOwner ? t("profileTabs.myCards") : t("profileTabs.cardsByUser")}
           </h2>

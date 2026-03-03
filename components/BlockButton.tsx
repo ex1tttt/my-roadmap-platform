@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { ShieldBan, ShieldCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +23,7 @@ export default function BlockButton({
   onUnblock,
 }: Props) {
   const { t } = useTranslation()
+  const router = useRouter()
   const [isBlocked, setIsBlocked] = useState(initialIsBlocked)
   const [loading, setLoading] = useState(false)
 
@@ -33,9 +35,20 @@ export default function BlockButton({
         .from('user_blocks')
         .insert({ blocker_id: currentUserId, blocked_id: targetUserId })
       if (error) throw error
+
+      // Удаляем подписку текущего пользователя на заблокированного (клиентская сторона)
+      // Триггер в БД также удалит подписку в обе стороны
+      await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', currentUserId)
+        .eq('following_id', targetUserId)
+
       setIsBlocked(true)
       toast.success(t('block.blocked'))
       onBlock?.()
+      // Перезагружаем страницу чтобы обновить состояние подписки и колокольчика
+      router.refresh()
     } catch (err: any) {
       toast.error(t('common.error') + ': ' + (err?.message ?? ''))
     } finally {
@@ -65,11 +78,11 @@ export default function BlockButton({
 
   function confirmBlock() {
     const tId = toast(
-      <div style={{ textAlign: 'center' }} className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4 w-full">
-        <span className="text-white text-sm block w-full" style={{ textAlign: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
+        <span style={{ color: '#fff', fontSize: '14px', textAlign: 'center', display: 'block', width: '100%' }}>
           {t('block.confirmBlock')}
         </span>
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
             onClick={() => { toast.dismiss(tId); handleBlock() }}
