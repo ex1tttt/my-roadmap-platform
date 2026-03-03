@@ -519,7 +519,7 @@ export default function SettingsPage() {
   }
 
   const NAV_ITEMS = [
-    { id: 'profile' as const, label: t('settings.title') !== 'Settings' ? 'Профиль' : 'Profile', icon: User },
+    { id: 'profile' as const, label: mounted ? t('nav.profile') : 'Профиль', icon: User },
     { id: 'notifications' as const, label: mounted ? t('pushNotifications.sectionTitle') : 'Уведомления', icon: Bell },
     { id: 'blocked' as const, label: mounted ? t('block.settingsTitle') : 'Заблокированные', icon: ShieldBan },
     { id: 'security' as const, label: mounted ? t('settings.security') : 'Безопасность и вход', icon: Lock },

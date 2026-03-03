@@ -414,7 +414,6 @@
     "canEdit": "Can edit",
     "revokeAccess": "Revoke access",
     "invalidEmail": "Enter a valid email",
-    "alreadyHasAccess": "This user already has access to the card",
     "alreadyHasAccess": "This user already has access to the card"
   },
   "profileTabs": {
