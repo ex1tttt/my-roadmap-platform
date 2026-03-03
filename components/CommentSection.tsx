@@ -74,6 +74,7 @@ function ActionBar({ comment, currentUserId, onReaction, onReplyClick }: {
 interface CommentRowProps {
   comment: AppComment;
   currentUserId: string | null;
+  currentUsername?: string | null;
   cardOwnerId: string | null;
   deletingId: string | null;
   replyingTo: string | null;
@@ -98,15 +99,23 @@ function RootCommentRow(props: RootCommentRowProps) {
   const { comment, replies, expanded, onToggle, onPin, ...rest } = props;
   const { t, i18n } = useTranslation();
   const isReplying = rest.replyingTo === comment.id;
+  const isMentioned = !!rest.currentUsername &&
+    new RegExp(`@${rest.currentUsername}\\b`, 'i').test(comment.content)
   return (
-    <div className={`group flex gap-3 ${comment.is_pinned ? 'border-l-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 pl-2' : ''}`}>
+    <div className={`group flex gap-3 ${
+      comment.is_pinned
+        ? 'border-l-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 pl-2'
+        : isMentioned
+          ? 'border-l-2 border-sky-400 bg-sky-100/80 dark:bg-sky-400/10 pl-2 rounded-r'
+          : ''
+    }`}>
       <Avatar username={comment.author.username} avatarUrl={comment.author.avatar} size={40} />
       <div className="min-w-0 flex-1">
         {/* Имя + дата + удалить + pin */}
         <div className="flex items-center gap-2">
           <Link
             href={`/profile/${comment.user_id}`}
-            className="text-sm font-semibold text-slate-200 underline-offset-2 transition-colors hover:text-blue-400 hover:underline"
+            className="text-sm font-semibold text-slate-800 dark:text-slate-200 underline-offset-2 transition-colors hover:text-blue-500 dark:hover:text-blue-400 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             {comment.author.username}
@@ -168,7 +177,7 @@ function RootCommentRow(props: RootCommentRowProps) {
         {replies.length > 0 && (
           <button
             onClick={onToggle}
-            className="mt-2 flex items-center gap-1 text-sm font-medium text-blue-400 transition-colors hover:text-blue-300"
+            className="mt-2 flex items-center gap-1 text-sm font-medium text-blue-500 dark:text-blue-400 transition-colors hover:text-blue-600 dark:hover:text-blue-300"
           >
             <ChevronDown
               className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
@@ -251,7 +260,16 @@ function renderWithMentions(text: string): React.ReactNode {
   const parts = text.split(/(@\w+)/g);
   return parts.map((part, i) =>
     /^@\w+$/.test(part)
-      ? <span key={i} className="font-medium text-blue-400">{part}</span>
+      ? (
+        <Link
+          key={i}
+          href={`/u/${part.slice(1)}`}
+          className="font-medium text-blue-500 dark:text-blue-400 hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </Link>
+      )
       : part
   );
 }
@@ -450,8 +468,10 @@ function ReplyForm({
 function ReplyRow({ comment, ...rest }: CommentRowProps) {
   const { t, i18n } = useTranslation()
   const isReplying = rest.replyingTo === comment.id
+  const isMentioned = !!rest.currentUsername &&
+    new RegExp(`@${rest.currentUsername}\\b`, 'i').test(comment.content)
   return (
-    <div className="group ml-12 flex gap-2">
+    <div className={`group ml-12 flex gap-2 ${isMentioned ? 'border-l-2 border-sky-400 bg-sky-100/80 dark:bg-sky-400/10 pl-2 rounded-r' : ''}`}>
       <Avatar username={comment.author.username} avatarUrl={comment.author.avatar} size={24} />
       <div className="min-w-0 flex-1">
         {/* Имя + дата + удалить */}
@@ -481,7 +501,7 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
           {comment.parentAuthorName && (
             <Link
               href={`/profile/${comment.parentAuthorUserId}`}
-              className="mr-1 font-medium text-blue-400 hover:underline"
+              className="mr-1 font-medium text-blue-500 dark:text-blue-400 hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
               @{comment.parentAuthorName}
@@ -989,6 +1009,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
   const rowProps = {
     currentUserId,
+    currentUsername: currentUserProfile?.username ?? null,
     cardOwnerId,
     deletingId,
     replyingTo,

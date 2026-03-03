@@ -116,7 +116,7 @@ function buildText(g: GroupedNotification): string {
     case 'follow':
       return `${first}${others} подписал${rest > 0 ? 'ись' : 'ся/ась'} на вас`
     case 'mention':
-      return `${first}${others} упомянул${rest > 0 ? 'и' : ''} вас в ${card}`
+      return `${first}${others} упомянул${rest > 0 ? 'и' : ''} вас в комментарии к ${card}`
     default:
       return `${first} отправил уведомление`
   }
@@ -133,7 +133,7 @@ function plural(n: number, one: string, few: string, many: string): string {
 
 function getHref(g: GroupedNotification): string {
   if (g.type === 'follow' && g.actors[0]) return `/profile/${g.actors[0].id}`
-  if (g.card_id) return `/card/${g.card_id}${g.type === 'comment' ? '#comments' : ''}`
+  if (g.card_id) return `/card/${g.card_id}${(g.type === 'comment' || g.type === 'mention') ? '#comments' : ''}`
   return '#'
 }
 

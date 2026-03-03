@@ -25,7 +25,7 @@ const STORAGE_KEY = "app-language";
  * 2. Browser navigator.language (first match from supported list)
  * 3. Fallback: "en"
  */
-function detectLanguage(): SupportedLanguage {
+export function detectLanguage(): SupportedLanguage {
   if (typeof window === "undefined") return "en";
 
   // 1. Manual preference
@@ -69,7 +69,9 @@ if (!i18n.isInitialized) {
       pl: { translation: pl },
       ru: { translation: ru },
     },
-    lng: detectLanguage(),
+    // Always start with 'en' so server and client first render match.
+    // I18nProvider will switch to the user's stored locale after hydration.
+    lng: "en",
     fallbackLng: "en",
     // Force synchronous initialization so translations are ready
     // before the first React render (critical when using inline resources)
