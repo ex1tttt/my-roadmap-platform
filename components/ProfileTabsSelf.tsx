@@ -142,7 +142,7 @@ export default function ProfileTabsSelf({
           >{t('common.cancel')}</button>
         </div>
       </div>,
-      { duration: 10000, id: 'delete-confirm', position: 'top-center' }
+      { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false }
     );
   };
 

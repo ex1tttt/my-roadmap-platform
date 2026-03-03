@@ -234,7 +234,9 @@
     "yourCard": "twój kartę",
     "didAction": "zrobił coś",
     "someone": "Ktoś",
-    "seeAll": "Wszystkie powiadomienia"
+    "seeAll": "Wszystkie powiadomienia",
+    "mentionedOne": "wspomniał o tobie w komentarzu do",
+    "mentionedMany": "wspomnieli o tobie w komentarzu do"
   },
   "notification": {
     "follow": "{{name}} zaczął cię obserwować",
@@ -324,6 +326,8 @@
     "description": "Opis",
     "link": "Link (opcjonalnie)",
     "media": "Media",
+    "chooseFile": "Wybierz plik",
+    "noFileChosen": "Nie wybrano pliku",
     "uploading": "Przesływanie...",
     "deleteStep": "Usuń krok",
     "usefulLinks": "Przydatne linki",

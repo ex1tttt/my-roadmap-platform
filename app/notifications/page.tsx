@@ -100,25 +100,25 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
-function buildText(g: GroupedNotification): string {
-  const first = g.actors[0]?.username ?? 'Кто-то'
+function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): string {
+  const first = g.actors[0]?.username ?? t('notifications.someone', { defaultValue: 'Кто-то' })
   const rest  = g.actors.length - 1
-  const others = rest > 0 ? ` и ещё ${rest} ${plural(rest, 'человек', 'человека', 'человек')}` : ''
-  const card  = g.card_title ? `«${g.card_title}»` : 'вашу карточку'
+  const others = rest > 0 ? ` ${t('notifications.andMore', { count: rest, defaultValue: `и ещё ${rest}` })}` : ''
+  const card  = g.card_title ? `«${g.card_title}»` : t('notifications.yourCard', { defaultValue: 'вашу карточку' })
 
   switch (g.type) {
     case 'like':
-      return `${first}${others} лайкнул${rest > 0 ? 'и' : ''} ${card}`
+      return `${first}${others} ${t('notifications.liked', { defaultValue: 'лайкнул' })}${rest > 0 ? '' : ''} ${card}`
     case 'comment':
-      return `${first}${others} оставил${rest > 0 ? 'и' : ''} комментарий к ${card}`
+      return `${first}${others} ${t('notifications.commented', { defaultValue: 'прокомментировал' })} ${card}`
     case 'comment_like':
-      return `${first}${others} лайкнул${rest > 0 ? 'и' : ''} ваш комментарий в ${card}`
+      return `${first}${others} ${t('notifications.likedComment', { defaultValue: 'лайкнул ваш комментарий в' })} ${card}`
     case 'follow':
-      return `${first}${others} подписал${rest > 0 ? 'ись' : 'ся/ась'} на вас`
+      return `${first}${others} ${t('notifications.startedFollowing', { defaultValue: 'подписался на вас' })}`
     case 'mention':
-      return `${first}${others} упомянул${rest > 0 ? 'и' : ''} вас в комментарии к ${card}`
+      return `${first}${others} ${rest > 0 ? t('notifications.mentionedMany', { defaultValue: 'упомянули вас в комментарии к' }) : t('notifications.mentionedOne', { defaultValue: 'упомянул вас в комментарии к' })} ${card}`
     default:
-      return `${first} отправил уведомление`
+      return `${first} ${t('notifications.didAction', { defaultValue: 'совершил действие' })}`
   }
 }
 
@@ -316,7 +316,7 @@ export default function NotificationsPage() {
           <ul className="space-y-2">
             {groups.map((g) => {
               const href     = getHref(g)
-              const text     = buildText(g)
+              const text     = buildText(g, t)
               const timeText = timeAgo(g.latest_at)
               const unread   = !g.is_read
 

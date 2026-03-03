@@ -108,16 +108,29 @@ function SortableStepCreate({ s, idx, updateStep, removeStep, handleFileUpload, 
         {/* Правая колонка: медиа + удаление */}
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.media')}</div>
-          <input
-            type="file"
-            accept="image/*"
-            className="text-sm"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              await handleFileUpload(file, s.id);
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              id={`file-${s.id}`}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                await handleFileUpload(file, s.id);
+                e.target.value = '';
+              }}
+            />
+            <label
+              htmlFor={`file-${s.id}`}
+              className="cursor-pointer rounded-md bg-gray-100 dark:bg-slate-800 px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              {t('create.chooseFile')}
+            </label>
+            <span className="text-sm text-gray-400 dark:text-slate-500 truncate max-w-[140px]">
+              {s.media_url ? s.media_url.split('/').pop() : t('create.noFileChosen')}
+            </span>
+          </div>
           {uploadingStepId === s.id && (
             <p className="text-xs text-gray-500">{t('create.uploading')}</p>
           )}

@@ -73,7 +73,7 @@ function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): s
     case 'comment':      return `${first}${others} ${t('notifications.commented', { defaultValue: 'прокомментировали' })} ${card}`
     case 'comment_like': return `${first}${others} ${t('notifications.likedComment', { defaultValue: 'лайкнули ваш комментарий в' })} ${card}`
     case 'follow':       return `${first}${others} ${t('notifications.startedFollowing', { defaultValue: 'подписались на вас' })}`
-    case 'mention':      return `${first}${others} упомянул${rest > 0 ? 'и' : ''} вас в комментарии к ${card}`
+    case 'mention':      return `${first}${others} ${rest > 0 ? t('notifications.mentionedMany', { defaultValue: 'упомянули вас в комментарии к' }) : t('notifications.mentionedOne', { defaultValue: 'упомянул вас в комментарии к' })} ${card}`
     case 'new_card':     return `${first} ${t('notifications.publishedCard', { defaultValue: 'опубликовал новую дорожную карту' })} ${card}`
     default:             return `${first} ${t('notifications.didAction', { defaultValue: 'совершил действие' })}`
   }

@@ -16,8 +16,8 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
 
   function handleDelete() {
     const tId = toast(
-      <div className="flex flex-col items-center gap-3 bg-slate-900 rounded-xl p-4 w-full">
-        <span className="text-white text-sm mb-2 text-center w-full">{t('delete.confirm')}</span>
+      <div className="flex flex-col items-center justify-center gap-3 bg-slate-900 rounded-xl p-4 w-full text-center">
+        <span className="text-white text-sm mb-2 block w-full text-center">{t('delete.confirm')}</span>
         <div className="flex gap-2">
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
@@ -43,7 +43,7 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
           >{t('common.cancel') || 'Отмена'}</button>
         </div>
       </div>,
-      { duration: 10000, id: 'delete-confirm', position: 'top-center' }
+      { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false }
     );
   }
 

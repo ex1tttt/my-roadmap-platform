@@ -320,6 +320,8 @@
     "description": "Description",
     "link": "Link (optional)",
     "media": "Media",
+    "chooseFile": "Choose file",
+    "noFileChosen": "No file chosen",
     "uploading": "Uploading...",
     "deleteStep": "Delete step",
     "usefulLinks": "Useful links",

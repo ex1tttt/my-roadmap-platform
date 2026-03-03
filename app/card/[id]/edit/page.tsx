@@ -482,14 +482,14 @@ export default function EditPage() {
               </button>
             </div>
             )}
-          </section>
 
-          {/* Управление доступом — сразу под переключателем приватности */}
-          {isOwner && (
-            <div>
-              <CollaboratorManager cardId={cardId} />
-            </div>
-          )}
+            {/* Управление доступом — внутри того же бокса */}
+            {isOwner && (
+              <div className="mt-4 border-t border-slate-200 dark:border-white/10 pt-4">
+                <CollaboratorManager cardId={cardId} />
+              </div>
+            )}
+          </section>
 
           {/* Шаги */}
           <section className="space-y-4">

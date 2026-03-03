@@ -234,7 +234,9 @@
     "yourCard": "вашій картці",
     "didAction": "здійснив дію",
     "someone": "Хтось",
-    "seeAll": "Усі сповіщення"
+    "seeAll": "Всі сповіщення",
+    "mentionedOne": "згадав вас у коментарі до",
+    "mentionedMany": "згадали вас у коментарі до"
   },
   "notification": {
     "follow": "{{name}} підписався на вас",
@@ -324,6 +326,8 @@
     "description": "Опис",
     "link": "Посилання (необов’язково)",
     "media": "Медіа",
+    "chooseFile": "Вибрати файл",
+    "noFileChosen": "Файл не вибрано",
     "uploading": "Завантаження...",
     "deleteStep": "Видалити крок",
     "usefulLinks": "Корисні посилання",
