@@ -240,6 +240,10 @@ export default function SettingsPage() {
         toast.error("Имя пользователя не может быть пустым.");
         return;
       }
+      if (!/^[a-zA-Z0-9_]{1,32}$/.test(trimmed)) {
+        toast.error("Ник может содержать только латинские буквы, цифры и знак _. Пробелы запрещены.");
+        return;
+      }
 
       const { error } = await supabase
         .from("profiles")
@@ -500,9 +504,10 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                 required
-                placeholder="username"
+                maxLength={32}
+                placeholder="только буквы, цифры, _"
                 className={INPUT_CLS}
               />
             </label>

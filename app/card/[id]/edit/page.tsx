@@ -5,7 +5,10 @@ import CollaboratorManager from "@/components/CollaboratorManager";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Save, X, Lock, Globe } from "lucide-react";
+import { ArrowLeft, Save, X, Lock, Globe, GripVertical } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
@@ -18,6 +21,128 @@ function uid() {
 
 const INPUT_CLS =
   "w-full rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
+
+type SortableStepEditProps = {
+  s: Step;
+  idx: number;
+  updateStep: (id: string, patch: Partial<Step>) => void;
+  removeStep: (id: string) => void;
+  handleFileUpload: (file: File, stepId: string) => Promise<void>;
+  handleDeleteImage: (stepId: string, url: string) => Promise<void>;
+  uploadingStepId: string | null;
+  hasMounted: boolean;
+  t: (key: string, opts?: any) => string;
+};
+
+function SortableStepEdit({ s, idx, updateStep, removeStep, handleFileUpload, handleDeleteImage, uploadingStepId, hasMounted, t }: SortableStepEditProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="box-border w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none p-0.5 text-slate-300 hover:text-slate-500 dark:hover:text-slate-200 transition-colors"
+          tabIndex={-1}
+          aria-label="Перетащить шаг"
+        >
+          <GripVertical className="h-5 w-5" />
+        </button>
+        <span className="text-xs font-semibold text-slate-500">{hasMounted ? t('edit.stepLabel', { n: idx + 1 }) : `Step ${idx + 1}`}</span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {/* Левая колонка: текстовые поля */}
+        <div className="flex flex-col gap-3">
+          <label className="block w-full">
+            <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepTitle') : 'Step title'}</div>
+            <input
+              className={INPUT_CLS}
+              value={s.title}
+              onChange={(e) => updateStep(s.id, { title: e.target.value })}
+              required
+            />
+          </label>
+          <label className="block w-full">
+            <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepDuration') : 'Estimated time (min)'}</div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={9999}
+                placeholder={hasMounted ? t('edit.stepDurationPlaceholder') : 'e.g. 60'}
+                className={`${INPUT_CLS} w-28`}
+                value={s.duration_minutes ?? ""}
+                onChange={(e) => updateStep(s.id, { duration_minutes: e.target.value ? Number(e.target.value) : undefined })}
+              />
+              <span className="text-xs text-slate-400">{t('steps.minutesShort')}</span>
+            </div>
+          </label>
+          <label className="block w-full">
+            <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepContent') : 'Content'}</div>
+            <textarea
+              className={INPUT_CLS}
+              rows={3}
+              value={s.content}
+              onChange={(e) => updateStep(s.id, { content: e.target.value })}
+            />
+          </label>
+          <label className="block w-full">
+            <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepLink') : 'Link'}</div>
+            <input
+              className={INPUT_CLS}
+              placeholder={hasMounted ? t('edit.stepLinkPlaceholder') : ''}
+              value={s.link ?? ""}
+              onChange={(e) => updateStep(s.id, { link: e.target.value })}
+            />
+          </label>
+        </div>
+        {/* Правая колонка: медиа */}
+        <div className="flex flex-col gap-2">
+          <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepMedia') : 'Media'}</div>
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full text-sm text-gray-500 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-600 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-200"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) await handleFileUpload(file, s.id);
+            }}
+          />
+          {uploadingStepId === s.id && (
+            <p className="text-xs text-blue-400">{hasMounted ? t('create.uploading') : 'Uploading...'}</p>
+          )}
+          {s.media_url && (
+            <div className="relative mt-1">
+              <img src={s.media_url} alt="media" className="h-28 w-full rounded-lg object-cover" />
+              <button
+                type="button"
+                className="absolute top-1 right-1 z-10 rounded-full bg-red-500 text-white p-1 hover:bg-red-600 transition"
+                onClick={() => handleDeleteImage(s.id, s.media_url!)}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            className="mt-auto w-fit text-sm text-red-500 hover:text-red-400"
+            onClick={() => removeStep(s.id)}
+          >
+            {hasMounted ? t('edit.deleteStep') : 'Delete'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function EditPage() {
   const params = useParams();
@@ -131,6 +256,22 @@ export default function EditPage() {
   // Управление шагами
   const addStep = () => setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "" }]);
   const removeStep = (id: string) => setSteps((s) => s.filter((st) => st.id !== id));
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: any) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setSteps((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
   const updateStep = (id: string, patch: Partial<Step>) =>
     setSteps((s) => s.map((st) => (st.id === id ? { ...st, ...patch } : st)));
 
@@ -346,95 +487,26 @@ export default function EditPage() {
           {/* Шаги */}
           <section className="space-y-4">
             <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">{hasMounted ? t('edit.steps') : 'Steps'}</h2>
-            <div className="space-y-3">
-              {steps.map((s, idx) => (
-                <div key={s.id} className="box-border w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4">
-                  <div className="mb-3 text-xs font-semibold text-slate-500">{hasMounted ? t('edit.stepLabel', { n: idx + 1 }) : `Step ${idx + 1}`}</div>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {/* Левая колонка: текстовые поля */}
-                    <div className="flex flex-col gap-3">
-                      <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepTitle') : 'Step title'}</div>
-                        <input
-                          className={INPUT_CLS}
-                          value={s.title}
-                          onChange={(e) => updateStep(s.id, { title: e.target.value })}
-                          required
-                        />
-                      </label>
-                      <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepDuration') : 'Estimated time (min)'}</div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min={1}
-                            max={9999}
-                            placeholder={hasMounted ? t('edit.stepDurationPlaceholder') : 'e.g. 60'}
-                            className={`${INPUT_CLS} w-28`}
-                            value={s.duration_minutes ?? ""}
-                            onChange={(e) => updateStep(s.id, { duration_minutes: e.target.value ? Number(e.target.value) : undefined })}
-                          />
-                          <span className="text-xs text-slate-400">{t('steps.minutesShort')}</span>
-                        </div>
-                      </label>
-                      <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepContent') : 'Content'}</div>
-                        <textarea
-                          className={INPUT_CLS}
-                          rows={3}
-                          value={s.content}
-                          onChange={(e) => updateStep(s.id, { content: e.target.value })}
-                        />
-                      </label>
-                      <label className="block w-full">
-                        <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepLink') : 'Link'}</div>
-                        <input
-                          className={INPUT_CLS}
-                          placeholder={hasMounted ? t('edit.stepLinkPlaceholder') : ''}
-                          value={s.link ?? ""}
-                          onChange={(e) => updateStep(s.id, { link: e.target.value })}
-                        />
-                      </label>
-                    </div>
-                    {/* Правая колонка: медиа */}
-                    <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepMedia') : 'Media'}</div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="w-full text-sm text-gray-500 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-600 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-200"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) await handleFileUpload(file, s.id);
-                        }}
-                      />
-                      {uploadingStepId === s.id && (
-                        <p className="text-xs text-blue-400">{hasMounted ? t('create.uploading') : 'Uploading...'}</p>
-                      )}
-                      {s.media_url && (
-                        <div className="relative mt-1">
-                          <img src={s.media_url} alt="media" className="h-28 w-full rounded-lg object-cover" />
-                          <button
-                            type="button"
-                            className="absolute top-1 right-1 z-10 rounded-full bg-red-500 text-white p-1 hover:bg-red-600 transition"
-                            onClick={() => handleDeleteImage(s.id, s.media_url!)}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        className="mt-auto w-fit text-sm text-red-500 hover:text-red-400"
-                        onClick={() => removeStep(s.id)}
-                      >
-                        {hasMounted ? t('edit.deleteStep') : 'Delete'}
-                      </button>
-                    </div>
-                  </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={steps.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-3">
+                  {steps.map((s, idx) => (
+                    <SortableStepEdit
+                      key={s.id}
+                      s={s}
+                      idx={idx}
+                      updateStep={updateStep}
+                      removeStep={removeStep}
+                      handleFileUpload={handleFileUpload}
+                      handleDeleteImage={handleDeleteImage}
+                      uploadingStepId={uploadingStepId}
+                      hasMounted={hasMounted}
+                      t={t}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
             <button
               type="button"
               onClick={addStep}

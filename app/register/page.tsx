@@ -14,11 +14,18 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const USERNAME_RE = /^[a-zA-Z0-9_]{1,32}$/;
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
+      if (!USERNAME_RE.test(username.trim())) {
+        setError("Ник может содержать только латинские буквы, цифры и знак _. Пробелы и спецсимволы запрещены.");
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
 
@@ -49,8 +56,10 @@ export default function RegisterPage() {
             <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">{t('auth.username')}</div>
             <input
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+              maxLength={32}
               required
+              placeholder="только буквы, цифры, _"
               className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
             />
           </label>

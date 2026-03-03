@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Bell, Heart, MessageSquare, UserPlus, Zap, Trash2, CheckCheck } from 'lucide-react'
+import { Bell, Heart, MessageSquare, UserPlus, Zap, Trash2, CheckCheck, AtSign } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 
@@ -115,6 +115,8 @@ function buildText(g: GroupedNotification): string {
       return `${first}${others} лайкнул${rest > 0 ? 'и' : ''} ваш комментарий в ${card}`
     case 'follow':
       return `${first}${others} подписал${rest > 0 ? 'ись' : 'ся/ась'} на вас`
+    case 'mention':
+      return `${first}${others} упомянул${rest > 0 ? 'и' : ''} вас в ${card}`
     default:
       return `${first} отправил уведомление`
   }
@@ -142,6 +144,7 @@ function GroupIcon({ type }: { type: string }) {
     case 'comment':      return <MessageSquare className={`${cls} text-emerald-400`} />
     case 'comment_like': return <Heart        className={`${cls} text-orange-400`} />
     case 'follow':       return <UserPlus     className={`${cls} text-blue-400`} />
+    case 'mention':      return <AtSign       className={`${cls} text-sky-400`} />
     default:             return <Zap          className={`${cls} text-slate-400`} />
   }
 }

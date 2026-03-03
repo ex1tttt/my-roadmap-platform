@@ -141,7 +141,7 @@ function RootCommentRow(props: RootCommentRowProps) {
 
         {/* Текст */}
         <p className="mt-1 wrap-break-word overflow-anywhere whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          {comment.content}
+          {renderWithMentions(comment.content)}
         </p>
 
         {/* Панель действий */}
@@ -246,6 +246,160 @@ function getDescendants(flat: AppComment[], rootId: string): AppComment[] {
 /** Склонение слова «ответ» — заменён на i18next */
 // pluralReplies removed — used t('comments.showReplies') instead
 
+/* ─── renderWithMentions ─────────────────────────────────────── */
+function renderWithMentions(text: string): React.ReactNode {
+  const parts = text.split(/(@\w+)/g);
+  return parts.map((part, i) =>
+    /^@\w+$/.test(part)
+      ? <span key={i} className="font-medium text-blue-400">{part}</span>
+      : part
+  );
+}
+
+/* ─── MentionTextarea ─────────────────────────────────────────── */
+type MentionSuggestion = { id: string; username: string; avatar?: string };
+
+function getMentionQuery(text: string, cursor: number): string | null {
+  const before = text.slice(0, cursor);
+  const match = before.match(/@(\w*)$/);
+  return match ? match[1] : null;
+}
+
+function applyMention(text: string, cursor: number, username: string): { newText: string; newCursor: number } {
+  const before = text.slice(0, cursor);
+  const after = text.slice(cursor);
+  const atIdx = before.lastIndexOf('@');
+  const newText = before.slice(0, atIdx) + '@' + username + ' ' + after;
+  const newCursor = atIdx + username.length + 2;
+  return { newText, newCursor };
+}
+
+function MentionTextarea({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  rows = 3,
+  className,
+  innerRef,
+  autoFocus,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  rows?: number;
+  className?: string;
+  innerRef?: React.RefObject<HTMLTextAreaElement | null>;
+  autoFocus?: boolean;
+}) {
+  const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([]);
+  const [query, setQuery] = useState<string | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  const taRef = (innerRef ?? localRef) as React.RefObject<HTMLTextAreaElement>;
+
+  useEffect(() => {
+    if (!query) { setSuggestions([]); return; }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, username, avatar')
+        .ilike('username', `${query}%`)
+        .limit(5);
+      setSuggestions(data ?? []);
+      setActiveIdx(0);
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const val = e.target.value;
+    const cursor = e.target.selectionStart ?? val.length;
+    onChange(val);
+    setQuery(getMentionQuery(val, cursor));
+    setActiveIdx(0);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (!suggestions.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIdx((i) => (i + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIdx((i) => (i - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      selectSuggestion(suggestions[activeIdx]);
+    } else if (e.key === 'Escape') {
+      setSuggestions([]);
+      setQuery(null);
+    }
+  }
+
+  function selectSuggestion(s: MentionSuggestion) {
+    const ta = taRef.current;
+    if (!ta) return;
+    const cursor = ta.selectionStart ?? value.length;
+    const { newText, newCursor } = applyMention(value, cursor, s.username);
+    onChange(newText);
+    setSuggestions([]);
+    setQuery(null);
+    requestAnimationFrame(() => {
+      ta.setSelectionRange(newCursor, newCursor);
+      ta.focus();
+    });
+  }
+
+  useEffect(() => {
+    if (!suggestions.length) return;
+    function handler(e: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setSuggestions([]); setQuery(null);
+      }
+    }
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [suggestions.length]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <textarea
+        ref={taRef}
+        value={value}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        disabled={disabled}
+        rows={rows}
+        autoFocus={autoFocus}
+        className={className}
+      />
+      {suggestions.length > 0 && (
+        <div className="absolute left-0 right-0 bottom-full mb-1 z-50 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+          {suggestions.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              onPointerDown={(e) => { e.preventDefault(); selectSuggestion(s); }}
+              className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${
+                i === activeIdx
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+              }`}
+            >
+              <Avatar username={s.username} avatarUrl={s.avatar} size={24} />
+              <span className="font-medium">@{s.username}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Форма ответа ──────────────────────────────────────────────── */
 function ReplyForm({
   replyText,
@@ -265,10 +419,10 @@ function ReplyForm({
   const { t } = useTranslation()
   return (
     <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-50 dark:bg-slate-900/60 p-3">
-      <textarea
+      <MentionTextarea
         autoFocus
         value={replyText}
-        onChange={(e) => onReplyTextChange(e.target.value)}
+        onChange={onReplyTextChange}
         placeholder={t('comments.replyPlaceholder')}
         rows={2}
         className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
@@ -333,7 +487,7 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
               @{comment.parentAuthorName}
             </Link>
           )}
-          {comment.content}
+          {renderWithMentions(comment.content)}
         </p>
 
         {/* Панель действий */}
@@ -645,6 +799,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       textareaRef.current?.focus()
       // Проверяем достижение «Критик»
       await checkAndAwardBadges(currentUserId, 'comment')
+      // Уведомления упомянутым @-пользователям
+      notifyMentions(trimmed, roadmapId, data.id).catch(() => {})
       // Push-уведомление автору карточки (fire-and-forget)
       supabase
         .from('cards')
@@ -710,6 +866,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       setTotalCount((prev) => prev + 1)
       // Авто-раскрываем ветку родителя
       setExpandedIds((prev) => new Set([...prev, parentId]))
+      // Уведомления упомянутым @-пользователям
+      notifyMentions(trimmed, roadmapId, data.id).catch(() => {})
     }
     setReplySending(false)
   }
@@ -745,6 +903,23 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         ])
       }
     }
+  }
+
+  async function notifyMentions(text: string, cardId: string, _commentId: string) {
+    const usernames = [...text.matchAll(/@(\w+)/g)].map(m => m[1])
+    if (!usernames.length || !currentUserId) return
+    const { data: profiles } = await supabase
+      .from('profiles').select('id, username').in('username', usernames)
+    const toNotify = (profiles ?? []).filter((p: { id: string; username: string }) => p.id !== currentUserId)
+    if (!toNotify.length) return
+    await supabase.from('notifications').insert(
+      toNotify.map((p: { id: string; username: string }) => ({
+        user_id: p.id,
+        actor_id: currentUserId,
+        type: 'mention',
+        card_id: cardId,
+      }))
+    )
   }
 
   async function handleDelete(commentId: string) {
@@ -845,10 +1020,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       {/* Форма верхнего уровня */}
       <form onSubmit={handleSubmit} className="mb-8">
         <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/60 p-4 backdrop-blur-sm transition-colors focus-within:border-blue-500/40">
-          <textarea
-            ref={textareaRef}
+          <MentionTextarea
+            innerRef={textareaRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={setText}
             placeholder={currentUserId ? t('comments.placeholder') : t('comments.loginToComment')}
             disabled={!currentUserId || sending}
             rows={3}

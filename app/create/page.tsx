@@ -6,7 +6,10 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
-import { Lock, Globe } from "lucide-react";
+import { Lock, Globe, GripVertical } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import Toast from "@/components/Toast";
 import { checkAndAwardBadges } from '@/lib/badges';
 
@@ -15,6 +18,123 @@ type Resource = { id: string; label: string; url: string };
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+type SortableStepCreateProps = {
+  s: Step;
+  idx: number;
+  updateStep: (id: string, patch: Partial<Step>) => void;
+  removeStep: (id: string) => void;
+  handleFileUpload: (file: File, stepId: string) => Promise<void>;
+  uploadingStepId: string | null;
+  t: (key: string, opts?: any) => string;
+};
+
+function SortableStepCreate({ s, idx, updateStep, removeStep, handleFileUpload, uploadingStepId, t }: SortableStepCreateProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="box-border w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-sm p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none p-0.5 text-slate-300 hover:text-slate-500 dark:hover:text-slate-200 transition-colors"
+          tabIndex={-1}
+          aria-label="Перетащить шаг"
+        >
+          <GripVertical className="h-5 w-5" />
+        </button>
+        <span className="text-xs font-semibold text-slate-400">Шаг {idx + 1}</span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {/* Левая колонка: текстовые поля */}
+        <div className="flex flex-col gap-3">
+          <label className="block">
+            <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.stepTitle')}</div>
+            <input
+              className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={s.title}
+              onChange={(e) => updateStep(s.id, { title: e.target.value })}
+              required
+            />
+          </label>
+
+          <label className="block">
+            <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.stepDuration')}</div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={9999}
+                placeholder={t('create.stepDurationPlaceholder')}
+                className="box-border w-28 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={s.duration_minutes ?? ""}
+                onChange={(e) => updateStep(s.id, { duration_minutes: e.target.value ? Number(e.target.value) : undefined })}
+              />
+              <span className="text-xs text-slate-400">{t('steps.minutesShort')}</span>
+            </div>
+          </label>
+
+          <label className="block">
+            <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.description')}</div>
+            <textarea
+              className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              value={s.content}
+              onChange={(e) => updateStep(s.id, { content: e.target.value })}
+            />
+          </label>
+
+          <label className="block">
+            <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.link')}</div>
+            <input
+              type="url"
+              placeholder="https://..."
+              className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={s.link ?? ""}
+              onChange={(e) => updateStep(s.id, { link: e.target.value })}
+            />
+          </label>
+        </div>
+
+        {/* Правая колонка: медиа + удаление */}
+        <div className="flex flex-col gap-2">
+          <div className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.media')}</div>
+          <input
+            type="file"
+            accept="image/*"
+            className="text-sm"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              await handleFileUpload(file, s.id);
+            }}
+          />
+          {uploadingStepId === s.id && (
+            <p className="text-xs text-gray-500">{t('create.uploading')}</p>
+          )}
+          {s.media_url && (
+            <img src={s.media_url} alt="media" className="mt-1 h-32 w-full rounded object-cover" />
+          )}
+          <button
+            type="button"
+            className="mt-auto self-start text-sm text-red-600 hover:text-red-800"
+            onClick={() => removeStep(s.id)}
+          >
+            {t('create.deleteStep')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function CreatePage() {
@@ -82,6 +202,22 @@ export default function CreatePage() {
 
   function removeResource(id: string) {
     setResources((r) => r.filter((res) => res.id !== id));
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: any) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setSteps((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   }
 
   async function handlePublish(e: React.FormEvent) {
@@ -321,91 +457,24 @@ export default function CreatePage() {
               </button>
             </div>
 
-            <div className="space-y-3">
-              {steps.map((s, idx) => (
-                <div key={s.id} className="box-border w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-sm p-4">
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {/* Левая колонка: текстовые поля */}
-                    <div className="flex flex-col gap-3">
-                      <label className="block">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.stepTitle')}</div>
-                        <input
-                          className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          value={s.title}
-                          onChange={(e) => updateStep(s.id, { title: e.target.value })}
-                          required
-                        />
-                      </label>
-
-                      <label className="block">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.stepDuration')}</div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min={1}
-                            max={9999}
-                            placeholder={t('create.stepDurationPlaceholder')}
-                            className="box-border w-28 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={s.duration_minutes ?? ""}
-                            onChange={(e) => updateStep(s.id, { duration_minutes: e.target.value ? Number(e.target.value) : undefined })}
-                          />
-                          <span className="text-xs text-slate-400">{t('steps.minutesShort')}</span>
-                        </div>
-                      </label>
-
-                      <label className="block">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.description')}</div>
-                        <textarea
-                          className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows={3}
-                          value={s.content}
-                          onChange={(e) => updateStep(s.id, { content: e.target.value })}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.link')}</div>
-                        <input
-                          type="url"
-                          placeholder="https://..."
-                          className="box-border w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          value={s.link ?? ""}
-                          onChange={(e) => updateStep(s.id, { link: e.target.value })}
-                        />
-                      </label>
-                    </div>
-
-                    {/* Правая колонка: медиа + удаление */}
-                    <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.media')}</div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="text-sm"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          await handleFileUpload(file, s.id);
-                        }}
-                      />
-                      {uploadingStepId === s.id && (
-                        <p className="text-xs text-gray-500">{t('create.uploading')}</p>
-                      )}
-                      {s.media_url && (
-                        <img src={s.media_url} alt="media" className="mt-1 h-32 w-full rounded object-cover" />
-                      )}
-                      <button
-                        type="button"
-                        className="mt-auto self-start text-sm text-red-600 hover:text-red-800"
-                        onClick={() => removeStep(s.id)}
-                      >
-                        {t('create.deleteStep')}
-                      </button>
-                    </div>
-                  </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={steps.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-3">
+                  {steps.map((s, idx) => (
+                    <SortableStepCreate
+                      key={s.id}
+                      s={s}
+                      idx={idx}
+                      updateStep={updateStep}
+                      removeStep={removeStep}
+                      handleFileUpload={handleFileUpload}
+                      uploadingStepId={uploadingStepId}
+                      t={t}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           </section>
 
           <section className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md p-6">
