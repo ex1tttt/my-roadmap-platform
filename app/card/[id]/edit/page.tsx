@@ -147,9 +147,12 @@ export default function EditPage() {
       if (!user) { alert(t('edit.errorNotAuth')); return; }
 
       // 1) Обновляем карточку
+      // is_private меняет только владелец; коллабораторам эта колонка недоступна
+      const cardPatch: Record<string, unknown> = { title, description, category };
+      if (isOwner) cardPatch.is_private = isPrivate;
       const { error: cardError } = await supabase
         .from("cards")
-        .update({ title, description, category, is_private: isPrivate })
+        .update(cardPatch)
         .eq("id", cardId);
 
       if (cardError) {
@@ -301,7 +304,8 @@ export default function EditPage() {
               />
             </label>
 
-            {/* Приватность */}
+            {/* Приватность — только для владельца */}
+            {isOwner && (
             <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 py-3">
               <div className="flex items-center gap-3">
                 {isPrivate ? (
@@ -334,6 +338,7 @@ export default function EditPage() {
                 />
               </button>
             </div>
+            )}
           </section>
 
           {/* Шаги */}
