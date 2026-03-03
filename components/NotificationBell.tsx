@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell, X, UserPlus, Heart, MessageSquare, Zap, Map as MapIcon } from 'lucide-react'
+import { Bell, X, UserPlus, Heart, MessageSquare, Zap, Map as MapIcon, AtSign } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import { useTranslation } from 'react-i18next'
@@ -73,6 +73,7 @@ function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): s
     case 'comment':      return `${first}${others} ${t('notifications.commented', { defaultValue: 'прокомментировали' })} ${card}`
     case 'comment_like': return `${first}${others} ${t('notifications.likedComment', { defaultValue: 'лайкнули ваш комментарий в' })} ${card}`
     case 'follow':       return `${first}${others} ${t('notifications.startedFollowing', { defaultValue: 'подписались на вас' })}`
+    case 'mention':      return `${first}${others} упомянул${rest > 0 ? 'и' : ''} вас в комментарии к ${card}`
     case 'new_card':     return `${first} ${t('notifications.publishedCard', { defaultValue: 'опубликовал новую дорожную карту' })} ${card}`
     default:             return `${first} ${t('notifications.didAction', { defaultValue: 'совершил действие' })}`
   }
@@ -80,7 +81,7 @@ function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): s
 
 function getGroupHref(g: GroupedNotification): string {
   if (g.type === 'follow' && g.actors[0]) return `/profile/${g.actors[0].id}`
-  if (g.card_id) return `/card/${g.card_id}${g.type === 'comment' ? '#comments' : ''}`
+  if (g.card_id) return `/card/${g.card_id}${(g.type === 'comment' || g.type === 'mention') ? '#comments' : ''}`
   return '#'
 }
 
@@ -90,6 +91,7 @@ function getGroupIcon(type: string) {
     case 'like':         return <Heart       className="h-3.5 w-3.5 text-rose-400" />
     case 'comment':      return <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
     case 'comment_like': return <Heart       className="h-3.5 w-3.5 text-orange-400" />
+    case 'mention':      return <AtSign      className="h-3.5 w-3.5 text-sky-400" />
     case 'new_card':     return <MapIcon      className="h-3.5 w-3.5 text-violet-400" />
     default:             return <Zap         className="h-3.5 w-3.5 text-slate-400" />
   }
