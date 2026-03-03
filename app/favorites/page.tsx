@@ -185,27 +185,18 @@ function FavoriteCardWrapper({
   userId: string | null;
   onUnfavorite: (id: string) => void;
 }) {
-  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
-    // Если клик по кнопке закладки внутри Card — убираем из списка
-    const target = e.target as HTMLElement;
-    const btn = target.closest("button");
-    if (btn && btn.title.includes("Убрать")) {
-      // Небольшая задержка, чтобы Card успел выполнить запрос
-      setTimeout(() => onUnfavorite(card.id), 300);
-    }
-  }
-
   return (
-    <div onClick={handleClick}>
-      <Link href={`/card/${card.id}`} className="cursor-pointer h-full block">
-        <Card
-          card={card}
-          userId={userId}
-          initialLikesCount={card.likesCount}
-          initialIsLiked={card.isLiked}
-          initialIsFavorite={card.isFavorite}
-        />
-      </Link>
+    <div>
+      <Card
+        card={card}
+        userId={userId}
+        initialLikesCount={card.likesCount}
+        initialIsLiked={card.isLiked}
+        initialIsFavorite={card.isFavorite}
+        onFavorite={(cardId, isFavorite) => {
+          if (!isFavorite) setTimeout(() => onUnfavorite(cardId), 300);
+        }}
+      />
     </div>
   );
 }

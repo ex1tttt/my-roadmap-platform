@@ -17,7 +17,8 @@
     "backToHome": "Stróna główna",
     "feed": "Feed",
     "history": "Historia",
-    "stats": "Statystyki"
+    "stats": "Statystyki",
+    "liked": "Polubione"
   },
   "profile": {
     "title": "Profil",
@@ -158,6 +159,11 @@
     "saved": "Zapisane mapy drogowe",
     "empty": "Brak zapisanych map drogowych.",
     "emptyHint": "Dodaj mapę drogową do ulubionych, aby ją tu zobaczyć."
+  },
+  "liked": {
+    "subtitle": "Mapy drogowe, które polubiłeś",
+    "empty": "Brak polubionych map drogowych.",
+    "emptyHint": "Polub mapę drogową, aby ją tu zobaczyć."
   },
   "common": {
     "loading": "Ładowanie...",

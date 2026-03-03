@@ -17,7 +17,8 @@
     "backToHome": "Back to Home",
     "feed": "Feed",
     "history": "History",
-    "stats": "Statistics"
+    "stats": "Statistics",
+    "liked": "Liked"
   },
   "profile": {
     "title": "Profile",
@@ -156,8 +157,11 @@
     "saved": "Saved roadmaps",
     "empty": "No saved roadmaps yet.",
     "emptyHint": "Add a roadmap to favorites to see it here."
-  },
-  "common": {
+  },  "liked": {
+    "subtitle": "Roadmaps you have liked",
+    "empty": "No liked roadmaps yet.",
+    "emptyHint": "Like a roadmap to see it here."
+  },  "common": {
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",

@@ -33,8 +33,6 @@ export default function ProfileTabsSelf({
 }: any) {
   const tabs = [
     { key: 'my', label: t('profile.myCards'), icon: null, count: myCards.length },
-    { key: 'liked', label: t('profile.liked'), icon: null, count: likedCards.length },
-    { key: 'favorites', label: t('nav.favorites'), icon: null, count: favoritesCount },
     { key: 'shared', label: t('profileTabs.sharedWithMe'), icon: <Users className="w-4 h-4 text-amber-500" />, count: sharedCards.length },
   ];
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -312,58 +310,6 @@ export default function ProfileTabsSelf({
             </div>
           )}
         </>
-      )}
-
-      {tab === 'liked' && (
-        likedCards.length === 0 ? (
-          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noLikedCards')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-            {likedCards.map((c: any) => (
-              <div key={c.id} className="relative">
-                <Card
-                  card={c}
-                  userId={profile?.id}
-                  initialIsLiked={c.isLiked}
-                  initialIsFavorite={c.isFavorite}
-                  initialLikesCount={c.likesCount}
-                  initialAverageRating={c.averageRating}
-                  initialCommentsCount={c.commentsCount}
-                  onLike={handleCardLike}
-                  onFavorite={handleCardFavorite}
-                />
-              </div>
-            ))}
-          </div>
-        )
-      )}
-
-      {tab === 'favorites' && (
-        favoriteCards.length === 0 ? (
-          <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noFavoriteCards')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-            {favoriteCards.map((c: any) => (
-              <div key={c.id} className="relative">
-                <Card
-                  card={c}
-                  userId={profile?.id}
-                  initialIsLiked={c.isLiked}
-                  initialIsFavorite={c.isFavorite}
-                  initialLikesCount={c.likesCount}
-                  initialAverageRating={c.averageRating}
-                  initialCommentsCount={c.commentsCount}
-                  onLike={handleCardLike}
-                  onFavorite={handleCardFavorite}
-                />
-              </div>
-            ))}
-          </div>
-        )
       )}
 
       {tab === 'shared' && (

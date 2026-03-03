@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
@@ -147,7 +147,7 @@ export default function Navbar() {
                   className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
                 >
                   <User className="w-4 h-4" />
-                  <span className="hidden sm:inline max-w-[120px] truncate">
+                  <span className="hidden sm:inline max-w-30 truncate">
                     {usernameLoading ? (
                       <span className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
                     ) : (
@@ -177,6 +177,26 @@ export default function Navbar() {
                     >
                       <Clock className="w-4 h-4" />
                       {t('nav.history')}
+                    </Link>
+
+                    {/* Понравилось */}
+                    <Link
+                      href="/liked"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <Heart className="w-4 h-4" />
+                      {t('nav.liked')}
+                    </Link>
+
+                    {/* Избранное */}
+                    <Link
+                      href="/favorites"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      {t('nav.favorites')}
                     </Link>
 
                     {/* Смена темы */}
