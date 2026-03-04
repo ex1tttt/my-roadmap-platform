@@ -69,7 +69,7 @@ export default function AdminSupportPage() {
   async function loadSessions() {
     const { data } = await supabase
       .from('support_messages')
-      .select('session_id, username, user_id, content, is_from_support, created_at')
+      .select('session_id, username, user_id, content, image_url, is_from_support, created_at')
       .order('created_at', { ascending: false })
 
     if (!data) return
@@ -80,14 +80,22 @@ export default function AdminSupportPage() {
       if (!map.has(msg.session_id)) {
         map.set(msg.session_id, {
           session_id: msg.session_id,
-          username: msg.username,
-          user_id: msg.user_id,
-          last_message: msg.content,
+          // Пока берём данные как есть, ниже перезапишем имя пользователя
+          username: msg.is_from_support ? null : msg.username,
+          user_id: msg.is_from_support ? null : msg.user_id,
+          last_message: msg.content || (msg.image_url ? '📷 Изображение' : ''),
           last_at: msg.created_at,
           unread: !msg.is_from_support,
           last_seen: null,
           avatar: null,
         })
+      } else {
+        // Обновляем имя пользователя, если нашли сообщение от него
+        const s = map.get(msg.session_id)!
+        if (!msg.is_from_support && !s.username) {
+          s.username = msg.username
+          s.user_id = msg.user_id
+        }
       }
     }
     const list = Array.from(map.values())
@@ -371,14 +379,14 @@ export default function AdminSupportPage() {
                 {/* Сообщения */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-950/30">
                   {messages.map((msg) => (
-                    <div key={msg.id} className={`flex items-end gap-2 ${msg.is_from_support ? 'justify-start' : 'justify-end'}`}>
+                    <div key={msg.id} className={`flex items-end gap-2 ${msg.is_from_support ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                         msg.is_from_support
-                          ? 'rounded-tl-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10'
-                          : 'rounded-br-sm bg-blue-600 text-white'
+                          ? 'rounded-br-sm bg-blue-600 text-white'
+                          : 'rounded-tl-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10'
                       }`}>
-                    {!msg.is_from_support && (
-                          <p className="mb-0.5 text-[10px] text-blue-200 font-semibold">{msg.username ?? t('support.guest')}</p>
+                        {!msg.is_from_support && (
+                          <p className="mb-0.5 text-[10px] text-slate-400 font-semibold">{msg.username ?? t('support.guest')}</p>
                         )}
                         {msg.image_url ? (
                           <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
@@ -387,7 +395,7 @@ export default function AdminSupportPage() {
                         ) : (
                           <p className="leading-relaxed whitespace-pre-wrap wrap-break-word">{msg.content}</p>
                         )}
-                        <p className={`mt-1 text-[10px] ${msg.is_from_support ? 'text-slate-400' : 'text-blue-200'}`}>
+                        <p className={`mt-1 text-[10px] ${msg.is_from_support ? 'text-blue-200' : 'text-slate-400'}`}>
                           {formatTime(msg.created_at)}
                         </p>
                       </div>
