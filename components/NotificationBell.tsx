@@ -175,12 +175,25 @@ export default function NotificationBell({ userId }: { userId: string }) {
   }, [userId])
 
   const fetchNotifications = useCallback(async () => {
-    const { data } = await supabase
+    // Определяем отключённые типы уведомлений из актуального ref
+    const prefs = notifPrefsRef.current
+    const disabledTypes = Object.entries(prefs)
+      .filter(([, enabled]) => enabled === false)
+      .map(([type]) => type)
+
+    let query = supabase
       .from('notifications')
       .select('id, type, is_read, created_at, card_id, actor_id')
       .eq('receiver_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
+
+    // Исключаем отключённые типы прямо в запросе (самый надёжный способ)
+    if (disabledTypes.length > 0) {
+      query = query.not('type', 'in', `(${disabledTypes.join(',')})`)
+    }
+
+    const { data } = await query
 
     if (!data) return
 
@@ -212,7 +225,13 @@ export default function NotificationBell({ userId }: { userId: string }) {
   // Держим актуальную ссылку для реалтайм-обработчика (избегаем stale closure)
   useEffect(() => { fetchRef.current = fetchNotifications }, [fetchNotifications])
 
-  // Фильтруем группы реактивно при изменении настроек
+  // Когда настройки загрузились из Supabase — перезапрашиваем уведомления с новым фильтром
+  useEffect(() => {
+    if (userId) fetchNotifications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifPrefs])
+
+  // Фильтруем группы реактивно при изменении настроек (двойная защита)
   const groups = useMemo(
     () => allGroups.filter((g) => notifPrefs[g.type] !== false),
     [allGroups, notifPrefs]
