@@ -7,7 +7,10 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948', // atrybut2006
+]
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,12 +23,12 @@ export async function POST(req: NextRequest) {
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Только администратор может отправлять ответы поддержки
-    if (!ADMIN_USER_ID || user.id !== ADMIN_USER_ID) {
+    if (!ADMIN_IDS || !ADMIN_IDS.includes(user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { session_id, content } = await req.json()
-    if (!session_id || !content?.trim()) {
+    const { session_id, content, image_url } = await req.json()
+    if (!session_id || (!content?.trim() && !image_url)) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
@@ -33,7 +36,8 @@ export async function POST(req: NextRequest) {
       session_id,
       user_id: null,
       username: 'Поддержка',
-      content: content.trim(),
+      content: content?.trim() ?? '',
+      image_url: image_url ?? null,
       is_from_support: true,
     })
 

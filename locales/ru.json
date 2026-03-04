@@ -236,7 +236,9 @@
     "someone": "Кто-то",
     "seeAll": "Все уведомления",
     "mentionedOne": "упомянул вас в комментарии к",
-    "mentionedMany": "упомянули вас в комментарии к"
+    "mentionedMany": "упомянули вас в комментарии к",
+    "wroteToSupport": "написал в поддержку",
+    "guestWroteToSupport": "Гость написал в поддержку"
   },
   "notification": {
     "follow": "{{name}} подписался на вас",
@@ -531,5 +533,35 @@
     "settingsTitle": "Заблокированные пользователи",
     "settingsEmpty": "Нет заблокированных пользователей",
     "unblockInSettings": "Разблокировать"
+  },
+  "support": {
+    "title": "Техническая поддержка",
+    "subtitle": "Обычно отвечаем в течение дня",
+    "emptyTitle": "Напишите нам!",
+    "emptyDesc": "Опишите вашу проблему и мы поможем",
+    "fromSupport": "Поддержка",
+    "placeholder": "Написать сообщение...",
+    "sendImage": "Отправить изображение",
+    "fileTooLarge": "Файл слишком большой. Максимум 5 МБ.",
+    "uploadError": "Ошибка загрузки: ",
+    "adminTitle": "Панель поддержки",
+    "backToHome": "На главную",
+    "sessions": "Обращения",
+    "noSessions": "Нет обращений",
+    "selectSession": "Выберите обращение",
+    "replyPlaceholder": "Написать ответ...",
+    "deleteChat": "Удалить чат",
+    "deleteConfirm": "Удалить весь чат? Это действие необратимо.",
+    "lastSeen": "был в сети:",
+    "justNow": "только что",
+    "minutesAgo": "мин. назад",
+    "hoursAgo": "ч. назад",
+    "daysAgo": "дн. назад",
+    "lastSeenUnknown": "не определено",
+    "guest": "Гость",
+    "dialogs_one": "диалог",
+    "dialogs_few": "диалога",
+    "dialogs_many": "диалогов",
+    "cancel": "Отмена"
   }
 }

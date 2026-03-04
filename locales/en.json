@@ -231,7 +231,9 @@
     "yourCard": "your card",
     "didAction": "did something",
     "someone": "Someone",
-    "seeAll": "All notifications"
+    "seeAll": "All notifications",
+    "wroteToSupport": "wrote to support",
+    "guestWroteToSupport": "Guest wrote to support"
   },
   "notification": {
     "follow": "{{name}} started following you",
@@ -525,5 +527,35 @@
     "settingsTitle": "Blocked Users",
     "settingsEmpty": "No blocked users",
     "unblockInSettings": "Unblock"
+  },
+  "support": {
+    "title": "Technical Support",
+    "subtitle": "We usually reply within a day",
+    "emptyTitle": "Write to us!",
+    "emptyDesc": "Describe your problem and we will help",
+    "fromSupport": "Support",
+    "placeholder": "Write a message...",
+    "sendImage": "Send image",
+    "fileTooLarge": "File is too large. Maximum 5 MB.",
+    "uploadError": "Upload error: ",
+    "adminTitle": "Support Panel",
+    "backToHome": "Back to Home",
+    "sessions": "Tickets",
+    "noSessions": "No tickets",
+    "selectSession": "Select a ticket",
+    "replyPlaceholder": "Write a reply...",
+    "deleteChat": "Delete chat",
+    "deleteConfirm": "Delete entire chat? This action is irreversible.",
+    "lastSeen": "last seen:",
+    "justNow": "just now",
+    "minutesAgo": "min. ago",
+    "hoursAgo": "h. ago",
+    "daysAgo": "d. ago",
+    "lastSeenUnknown": "unknown",
+    "guest": "Guest",
+    "dialogs_one": "ticket",
+    "dialogs_few": "tickets",
+    "dialogs_many": "tickets",
+    "cancel": "Cancel"
   }
 }

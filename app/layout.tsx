@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar"
-import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
 import I18nProvider from "@/components/I18nProvider"
 import SupportChat from "@/components/SupportChat"
+import { ThemeAwareToaster } from "@/components/ThemeAwareToaster"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,7 +42,7 @@ export default function RootLayout({
             <Navbar />
             {children}
             <SupportChat />
-            <Toaster theme="dark" position="top-right" richColors />
+            <ThemeAwareToaster />
           </I18nProvider>
         </ThemeProvider>
       </body>

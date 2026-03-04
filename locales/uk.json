@@ -237,7 +237,9 @@
     "someone": "Хтось",
     "seeAll": "Всі сповіщення",
     "mentionedOne": "згадав вас у коментарі до",
-    "mentionedMany": "згадали вас у коментарі до"
+    "mentionedMany": "згадали вас у коментарі до",
+    "wroteToSupport": "написав в підтримку",
+    "guestWroteToSupport": "Гість написав в підтримку"
   },
   "notification": {
     "follow": "{{name}} підписався на вас",
@@ -532,5 +534,35 @@
     "settingsTitle": "Заблоковані користувачі",
     "settingsEmpty": "Немає заблокованих користувачів",
     "unblockInSettings": "Розблокувати"
+  },
+  "support": {
+    "title": "Технічна підтримка",
+    "subtitle": "Звичайно відповідаємо протягом дня",
+    "emptyTitle": "Напишіть нам!",
+    "emptyDesc": "Опишіть вашу проблему і ми допоможемо",
+    "fromSupport": "Підтримка",
+    "placeholder": "Написати повідомлення...",
+    "sendImage": "Надіслати зображення",
+    "fileTooLarge": "Файл завеликий. Максимум 5 МБ.",
+    "uploadError": "Помилка завантаження: ",
+    "adminTitle": "Панель підтримки",
+    "backToHome": "На головну",
+    "sessions": "Звернення",
+    "noSessions": "Немає звернень",
+    "selectSession": "Оберіть звернення",
+    "replyPlaceholder": "Написати відповідь...",
+    "deleteChat": "Видалити чат",
+    "deleteConfirm": "Видалити весь чат? Цю дію неможливо скасувати.",
+    "lastSeen": "був у мережі:",
+    "justNow": "щойно",
+    "minutesAgo": "хв. тому",
+    "hoursAgo": "год. тому",
+    "daysAgo": "дн. тому",
+    "lastSeenUnknown": "невідомо",
+    "guest": "Гість",
+    "dialogs_one": "діалог",
+    "dialogs_few": "діалоги",
+    "dialogs_many": "діалогів",
+    "cancel": "Скасувати"
   }
 }

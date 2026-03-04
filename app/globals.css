@@ -11,7 +11,7 @@ html {
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  color-scheme: only light; /* prevents Brave/Chrome force dark from overriding light theme */
+  color-scheme: light; /* light by default; dark class overrides below */
 }
 
 .dark {

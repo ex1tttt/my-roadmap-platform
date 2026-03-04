@@ -237,7 +237,9 @@
     "someone": "Ktoś",
     "seeAll": "Wszystkie powiadomienia",
     "mentionedOne": "wspomniał o tobie w komentarzu do",
-    "mentionedMany": "wspomnieli o tobie w komentarzu do"
+    "mentionedMany": "wspomnieli o tobie w komentarzu do",
+    "wroteToSupport": "napisał do wsparcia",
+    "guestWroteToSupport": "Gość napisał do wsparcia"
   },
   "notification": {
     "follow": "{{name}} zaczął cię obserwować",
@@ -529,5 +531,36 @@
     "blockedPageDesc": "Ten profil jest niedostępny.",
     "settingsTitle": "Zablokowani użytkownicy",
     "settingsEmpty": "Brak zablokowanych użytkowników",
-    "unblockInSettings": "Odblokuj"  }
+    "unblockInSettings": "Odblokuj"
+  },
+  "support": {
+    "title": "Pomoc techniczna",
+    "subtitle": "Zwykle odpowiadamy w ciągu dnia",
+    "emptyTitle": "Napisz do nas!",
+    "emptyDesc": "Opisz swój problem, a my pomożemy",
+    "fromSupport": "Wsparcie",
+    "placeholder": "Napisz wiadomość...",
+    "sendImage": "Wyślij zdjęcie",
+    "fileTooLarge": "Plik jest za duży. Maksimum 5 MB.",
+    "uploadError": "Błąd przesyłania: ",
+    "adminTitle": "Panel wsparcia",
+    "backToHome": "Na stronę główną",
+    "sessions": "Zgłoszenia",
+    "noSessions": "Brak zgłoszeń",
+    "selectSession": "Wybierz zgłoszenie",
+    "replyPlaceholder": "Napisz odpowiedź...",
+    "deleteChat": "Usuń czat",
+    "deleteConfirm": "Usunąć cały czat? Tej czynności nie można cofnąć.",
+    "lastSeen": "ostatnio widziany:",
+    "justNow": "przed chwilą",
+    "minutesAgo": "min. temu",
+    "hoursAgo": "g. temu",
+    "daysAgo": "d. temu",
+    "lastSeenUnknown": "nieznane",
+    "guest": "Gość",
+    "dialogs_one": "dialog",
+    "dialogs_few": "dialogi",
+    "dialogs_many": "dialogów",
+    "cancel": "Anuluj"
+  }
 }

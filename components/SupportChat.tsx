@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { MessageCircle, X, Send, Headphones, Loader2, ChevronDown } from 'lucide-react'
+import { MessageCircle, X, Send, Headphones, Loader2, ChevronDown, ImageIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 type Message = {
   id: string
   content: string
+  image_url?: string | null
   is_from_support: boolean
   created_at: string
   username?: string | null
@@ -23,6 +25,7 @@ function getOrCreateSessionId(): string {
 }
 
 export default function SupportChat() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -31,8 +34,10 @@ export default function SupportChat() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<{ id: string; username: string } | null>(null)
   const [unread, setUnread] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Инициализация сессии и пользователя
   useEffect(() => {
@@ -118,7 +123,62 @@ export default function SupportChat() {
       content: text,
       is_from_support: false,
     })
+
+    // Уведомляем админов
+    fetch('/api/notify-support-admins', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser?.id ?? null,
+        username: currentUser?.username ?? null,
+        session_id: sessionId,
+      }),
+    }).catch(() => {})
+
     setSending(false)
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !sessionId) return
+    if (file.size > 5 * 1024 * 1024) {
+      alert(t('support.fileTooLarge'))
+      return
+    }
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${sessionId}/${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage
+      .from('support-images')
+      .upload(path, file, { upsert: false })
+    if (upErr) {
+      alert(t('support.uploadError') + upErr.message)
+      setUploading(false)
+      return
+    }
+    const { data: urlData } = supabase.storage.from('support-images').getPublicUrl(path)
+    await supabase.from('support_messages').insert({
+      session_id: sessionId,
+      user_id: currentUser?.id ?? null,
+      username: currentUser?.username ?? null,
+      content: '',
+      image_url: urlData.publicUrl,
+      is_from_support: false,
+    })
+
+    // Уведомляем админов
+    fetch('/api/notify-support-admins', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser?.id ?? null,
+        username: currentUser?.username ?? null,
+        session_id: sessionId,
+      }),
+    }).catch(() => {})
+
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -143,8 +203,8 @@ export default function SupportChat() {
               <Headphones className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-white">Техническая поддержка</p>
-              <p className="text-xs text-blue-100">Обычно отвечаем в течение дня</p>
+              <p className="text-sm font-semibold text-white">{t('support.title')}</p>
+              <p className="text-xs text-blue-100">{t('support.subtitle')}</p>
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -163,8 +223,8 @@ export default function SupportChat() {
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Headphones className="mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Напишите нам!</p>
-                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Опишите вашу проблему и мы поможем</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('support.emptyTitle')}</p>
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{t('support.emptyDesc')}</p>
               </div>
             ) : (
               messages.map((msg) => (
@@ -180,9 +240,15 @@ export default function SupportChat() {
                     }`}
                   >
                     {msg.is_from_support && (
-                      <p className="mb-0.5 text-[10px] font-semibold text-blue-500">Поддержка</p>
+                      <p className="mb-0.5 text-[10px] font-semibold text-blue-500">{t('support.fromSupport')}</p>
                     )}
-                    <p className="leading-relaxed whitespace-pre-wrap wrap-break-word">{msg.content}</p>
+                    {msg.image_url ? (
+                      <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                        <img src={msg.image_url} alt="изображение" className="rounded-lg max-w-full max-h-48 object-contain mt-0.5" />
+                      </a>
+                    ) : (
+                      <p className="leading-relaxed whitespace-pre-wrap wrap-break-word">{msg.content}</p>
+                    )}
                     <p className={`mt-1 text-[10px] ${msg.is_from_support ? 'text-slate-400' : 'text-blue-200'}`}>
                       {formatTime(msg.created_at)}
                     </p>
@@ -195,12 +261,28 @@ export default function SupportChat() {
 
           {/* Ввод */}
           <div className="flex items-end gap-2 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || sending}
+              title={t('support.sendImage')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-blue-500 hover:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+            </button>
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Написать сообщение..."
+              placeholder={t('support.placeholder')}
               rows={1}
               className="flex-1 resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20 max-h-24"
               style={{ fieldSizing: 'content' } as any}
@@ -220,7 +302,7 @@ export default function SupportChat() {
       <button
         onClick={() => { setOpen((v) => !v); setUnread(false) }}
         className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-500 hover:scale-105 active:scale-95 sm:right-6"
-        aria-label="Техническая поддержка"
+        aria-label={t('support.title')}
       >
         {open ? (
           <X className="h-5 w-5" />

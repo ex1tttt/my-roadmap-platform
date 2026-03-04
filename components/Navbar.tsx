@@ -6,11 +6,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy, Headphones } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { saveLanguage, type SupportedLanguage } from '@/lib/i18n'
+
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651',
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948',
+]
 
 export default function Navbar() {
   const [session, setSession] = useState<Session | null>(null)
@@ -46,7 +51,11 @@ export default function Navbar() {
     // Получаем текущую сессию при монтировании
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session?.user) loadUsername(session.user.id)
+      if (session?.user) {
+        loadUsername(session.user.id)
+        // Обновляем время последнего онлайна
+        supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', session.user.id)
+      }
     })
 
     // Подписываемся на изменения состояния авторизации
@@ -227,6 +236,21 @@ export default function Navbar() {
                       <TrendingUp className="w-4 h-4" />
                       {t('nav.stats')}
                     </Link>
+
+                    {/* Панель поддержки — только для администраторов */}
+                    {ADMIN_IDS.includes(session.user.id) && (
+                      <>
+                        <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+                        <Link
+                          href="/admin/support"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors"
+                        >
+                          <Headphones className="w-4 h-4" />
+                          {t('support.adminTitle')}
+                        </Link>
+                      </>
+                    )}
 
                     <div className="my-1 border-t border-slate-100 dark:border-white/5" />
 
