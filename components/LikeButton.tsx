@@ -101,6 +101,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
             body: JSON.stringify({
               userId: card.user_id,
               actor_id: userId,
+              notificationType: 'like',
               title: 'Новый лайк ❤️',
               body: `Кто-то лайкнул вашу карточку «${card.title}»`,
               url: `/card/${cardId}`,

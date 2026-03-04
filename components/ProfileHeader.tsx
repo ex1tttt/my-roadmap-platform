@@ -126,6 +126,7 @@ export default function ProfileHeader({
           body: JSON.stringify({
             userId: profile.id,
             actor_id: currentUserId,
+            notificationType: 'follow',
             title: '👤 Новый подписчик',
             body: 'На вас подписался новый пользователь',
             url: `/profile/${currentUserId}`,

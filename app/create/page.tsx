@@ -327,6 +327,7 @@ export default function CreatePage() {
             body: JSON.stringify({
               userIds: pushIds,
               actor_id: user.id,
+              notificationType: 'new_card',
               title: '🗺️ Новая карточка',
               body: `Опубликована карточка «${title}»`,
               url: `/card/${cardId}`,

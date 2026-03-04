@@ -140,14 +140,6 @@ export default function SettingsPage() {
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
 
-  // Загружаем настройки типов уведомлений из localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('notif_type_prefs');
-      if (saved) setNotifPrefs(JSON.parse(saved));
-    } catch {}
-  }, []);
-
   // Инициализируем статус push при монтировании
   useEffect(() => {
     const initPush = async () => {
@@ -193,6 +185,15 @@ export default function SettingsPage() {
         setLanguage(lang);
         i18n.changeLanguage(lang);
         saveLanguage(lang);
+        // Загружаем настройки типов push-уведомлений из БД (приоритет) или localStorage
+        if (data.push_notif_prefs && typeof data.push_notif_prefs === 'object') {
+          setNotifPrefs((prev) => ({ ...prev, ...data.push_notif_prefs }));
+        } else {
+          try {
+            const saved = localStorage.getItem('notif_type_prefs');
+            if (saved) setNotifPrefs(JSON.parse(saved));
+          } catch {}
+        }
       } else {
         // Профиль ещё не создан — создаём с дефолтными значениями
         const { data: newProfile, error: upsertError } = await supabase
@@ -744,8 +745,14 @@ export default function SettingsPage() {
                   <div className="mt-5 flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         try { localStorage.setItem('notif_type_prefs', JSON.stringify(notifPrefs)); } catch {}
+                        if (profile?.id) {
+                          await supabase
+                            .from('profiles')
+                            .update({ push_notif_prefs: notifPrefs })
+                            .eq('id', profile.id);
+                        }
                         setNotifSaved(true);
                         setTimeout(() => setNotifSaved(false), 2000);
                       }}

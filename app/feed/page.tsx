@@ -73,6 +73,7 @@ function MiniFollowButton({
           body: JSON.stringify({
             userId: author.id,
             actor_id: currentUserId,
+            notificationType: "follow",
             title: "👤 Новый подписчик",
             body: "На вас подписался новый пользователь",
             url: `/profile/${currentUserId}`,

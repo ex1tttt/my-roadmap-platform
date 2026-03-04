@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey)
 
     const body_json = await req.json()
-    const { title, body, url, actor_id } = body_json
+    const { title, body, url, actor_id, notificationType } = body_json
 
     // Поддерживаем как одиночный userId, так и массив userIds
     const rawIds = body_json.userIds ?? (body_json.userId ? [body_json.userId] : null)
@@ -38,9 +38,29 @@ export async function POST(req: NextRequest) {
 
     // ─── Фильтр безопасности ──────────────────────────────────────────────────
     // Не отправляем Push пользователю за его собственные действия
-    const userIds: string[] = actor_id
+    let userIds: string[] = actor_id
       ? (rawIds as string[]).filter((id: string) => id !== actor_id)
       : (rawIds as string[])
+
+    if (userIds.length === 0) {
+      return NextResponse.json({ sent: 0 })
+    }
+
+    // ─── Фильтр по настройкам типов уведомлений ──────────────────────────────
+    if (notificationType) {
+      const { data: prefsRows } = await adminSupabase
+        .from('profiles')
+        .select('id, push_notif_prefs')
+        .in('id', userIds)
+      if (prefsRows) {
+        const prefsMap = new Map(prefsRows.map((r: any) => [r.id, r.push_notif_prefs]))
+        userIds = userIds.filter((id) => {
+          const prefs = prefsMap.get(id)
+          if (!prefs) return true // нет настроек — отправляем
+          return prefs[notificationType] !== false
+        })
+      }
+    }
 
     if (userIds.length === 0) {
       return NextResponse.json({ sent: 0 })

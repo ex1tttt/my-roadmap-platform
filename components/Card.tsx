@@ -90,6 +90,7 @@ export default function Card({
             body: JSON.stringify({
               userId: card.user.id,
               actor_id: userId,
+              notificationType: 'like',
               title: 'Новый лайк ❤️',
               body: `Кто-то лайкнул вашу карточку «${card.title}»`,
               url: `/card/${card.id}`,

@@ -846,6 +846,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
               body: JSON.stringify({
                 userId: cardData.user_id,
                 actor_id: currentUserId,
+                notificationType: 'comment',
                 title: 'Новый комментарий 💬',
                 body: `${currentUserProfile?.username ?? 'Кто-то'} прокомментировал вашу карточку «${cardData.title}»`,
                 url: `/card/${roadmapId}`,
@@ -905,6 +906,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
           body: JSON.stringify({
             userId: parentComment.user_id,
             actor_id: currentUserId,
+            notificationType: 'comment',
             title: 'Новый ответ на комментарий 💬',
             body: `${currentUserProfile?.username ?? 'Кто-то'} ответил на ваш комментарий`,
             url: `/card/${roadmapId}#comments`,
@@ -942,6 +944,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             body: JSON.stringify({
               userId: current.user_id,
               actor_id: currentUserId,
+              notificationType: 'comment_like',
               title: 'Новый лайк 👍',
               body: `${currentUserProfile?.username ?? 'Кто-то'} лайкнул ваш комментарий`,
               url: `/card/${roadmapId}#comments`,
@@ -999,6 +1002,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         body: JSON.stringify({
           userId: p.id,
           actor_id: currentUserId,
+          notificationType: 'mention',
           title: `${actorName} упомянул вас 🔔`,
           body: cardTitle
             ? `В комментарии к «${cardTitle}»`
