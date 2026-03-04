@@ -753,6 +753,8 @@ export default function SettingsPage() {
                             .update({ push_notif_prefs: notifPrefs })
                             .eq('id', profile.id);
                         }
+                        // Сообщаем NotificationBell об изменении настроек без перезагрузки
+                        window.dispatchEvent(new CustomEvent('notif-prefs-updated', { detail: notifPrefs }));
                         setNotifSaved(true);
                         setTimeout(() => setNotifSaved(false), 2000);
                       }}

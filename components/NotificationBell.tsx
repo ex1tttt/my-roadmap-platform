@@ -159,6 +159,18 @@ export default function NotificationBell({ userId }: { userId: string }) {
   // Обновляем ref при каждом изменении (нужен в realtime-обработчике)
   useEffect(() => { notifPrefsRef.current = notifPrefs }, [notifPrefs])
 
+  // Слушаем событие от страницы настроек — обновляем префс без перезагрузки
+  useEffect(() => {
+    function onPrefsUpdated(e: Event) {
+      const prefs = (e as CustomEvent<Record<string, boolean>>).detail
+      if (prefs && typeof prefs === 'object') {
+        setNotifPrefs(prefs)
+      }
+    }
+    window.addEventListener('notif-prefs-updated', onPrefsUpdated)
+    return () => window.removeEventListener('notif-prefs-updated', onPrefsUpdated)
+  }, [])
+
   // Асинхронно подтягиваем из Supabase (push_notif_prefs) — обновляет localStorage-значения
   useEffect(() => {
     if (!userId) return
