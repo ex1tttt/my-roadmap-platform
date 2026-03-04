@@ -140,14 +140,26 @@ export default function NotificationBell({ userId }: { userId: string }) {
   const [allGroups, setAllGroups] = useState<GroupedNotification[]>([])
   const [open, setOpen]         = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
-  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean> | null>(null)
+  // Синхронная инициализация из localStorage — фильтр работает сразу
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem('notif_type_prefs')
+      if (saved) return JSON.parse(saved) as Record<string, boolean>
+    } catch {}
+    return {}
+  })
+  const notifPrefsRef = useRef(notifPrefs)
   const ref = useRef<HTMLDivElement>(null)
   const fetchRef = useRef<() => void>(() => {})
   const markAllReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => setMounted(true), [])
 
-  // Загружаем настройки типов уведомлений из Supabase
+  // Обновляем ref при каждом изменении (нужен в realtime-обработчике)
+  useEffect(() => { notifPrefsRef.current = notifPrefs }, [notifPrefs])
+
+  // Асинхронно подтягиваем из Supabase (push_notif_prefs) — обновляет localStorage-значения
   useEffect(() => {
     if (!userId) return
     supabase
@@ -158,12 +170,6 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .then(({ data }) => {
         if (data?.push_notif_prefs && typeof data.push_notif_prefs === 'object') {
           setNotifPrefs(data.push_notif_prefs as Record<string, boolean>)
-        } else {
-          try {
-            const saved = localStorage.getItem('notif_type_prefs')
-            if (saved) setNotifPrefs(JSON.parse(saved))
-            else setNotifPrefs({})
-          } catch { setNotifPrefs({}) }
         }
       })
   }, [userId])
@@ -207,10 +213,10 @@ export default function NotificationBell({ userId }: { userId: string }) {
   useEffect(() => { fetchRef.current = fetchNotifications }, [fetchNotifications])
 
   // Фильтруем группы реактивно при изменении настроек
-  const groups = useMemo(() => {
-    if (notifPrefs === null) return allGroups // ещё не загружены — показываем всё
-    return allGroups.filter((g) => notifPrefs[g.type] !== false)
-  }, [allGroups, notifPrefs])
+  const groups = useMemo(
+    () => allGroups.filter((g) => notifPrefs[g.type] !== false),
+    [allGroups, notifPrefs]
+  )
 
   // Обновляем hasUnread при изменении фильтра
   useEffect(() => {
@@ -248,11 +254,11 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .eq('receiver_id', userId)
       .eq('is_read', false)
       .then(({ data }) => {
-        const prefs = notifPrefs ?? {}
+        const prefs = notifPrefsRef.current
         const unread = (data ?? []).filter((n: any) => prefs[n.type] !== false)
         setHasUnread(unread.length > 0)
       })
-  }, [userId, notifPrefs])
+  }, [userId])
 
   // Realtime
   useEffect(() => {
@@ -263,9 +269,11 @@ export default function NotificationBell({ userId }: { userId: string }) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `receiver_id=eq.${userId}` },
         () => {
-          setHasUnread(true)
+          // Проверяем тип уведомления прежде чем показывать точку
+          // через payload.new.type нельзя здесь проверить, поэтому просто перезагружаем и useMemo отфильтрует
           setOpen((isOpen) => {
             if (isOpen) fetchRef.current()
+            else fetchRef.current() // перезагружаем чтобы allGroups был актуален, hasUnread обновит useEffect
             return isOpen
           })
         }
