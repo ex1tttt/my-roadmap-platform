@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Bell, X, UserPlus, Heart, MessageSquare, Zap, Map as MapIcon, AtSign } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -137,10 +137,10 @@ function AvatarGroup({ actors }: { actors: Array<{ id: string; username: string;
 export default function NotificationBell({ userId }: { userId: string }) {
   const { t } = useTranslation()
   const [mounted, setMounted]   = useState(false)
-  const [groups, setGroups]     = useState<GroupedNotification[]>([])
+  const [allGroups, setAllGroups] = useState<GroupedNotification[]>([])
   const [open, setOpen]         = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
-  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({})
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean> | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const fetchRef = useRef<() => void>(() => {})
   const markAllReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -162,7 +162,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
           try {
             const saved = localStorage.getItem('notif_type_prefs')
             if (saved) setNotifPrefs(JSON.parse(saved))
-          } catch {}
+            else setNotifPrefs({})
+          } catch { setNotifPrefs({}) }
         }
       })
   }, [userId])
@@ -199,16 +200,22 @@ export default function NotificationBell({ userId }: { userId: string }) {
     }))
 
     const allGroups = groupNotifications(enriched)
-    // Фильтруем по настройкам пользователя
-    const filtered = Object.keys(notifPrefs).length > 0
-      ? allGroups.filter((g) => notifPrefs[g.type] !== false)
-      : allGroups
-    setGroups(filtered)
-    setHasUnread(filtered.some((g) => !g.is_read))
-  }, [userId, notifPrefs])
+    setAllGroups(allGroups)
+  }, [userId])
 
   // Держим актуальную ссылку для реалтайм-обработчика (избегаем stale closure)
   useEffect(() => { fetchRef.current = fetchNotifications }, [fetchNotifications])
+
+  // Фильтруем группы реактивно при изменении настроек
+  const groups = useMemo(() => {
+    if (notifPrefs === null) return allGroups // ещё не загружены — показываем всё
+    return allGroups.filter((g) => notifPrefs[g.type] !== false)
+  }, [allGroups, notifPrefs])
+
+  // Обновляем hasUnread при изменении фильтра
+  useEffect(() => {
+    setHasUnread(groups.some((g) => !g.is_read))
+  }, [groups])
 
   async function markAllRead() {
     await supabase
@@ -216,23 +223,19 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .update({ is_read: true })
       .eq('receiver_id', userId)
       .eq('is_read', false)
-    setGroups((prev) => prev.map((g) => ({ ...g, is_read: true })))
+    setAllGroups((prev) => prev.map((g) => ({ ...g, is_read: true })))
     setHasUnread(false)
   }
 
   async function clearAll() {
-    setGroups([])
+    setAllGroups([])
     setHasUnread(false)
     await supabase.from('notifications').delete().eq('receiver_id', userId)
   }
 
   async function deleteGroup(ids: string[]) {
     const idsSet = new Set(ids)
-    setGroups((prev) => {
-      const next = prev.filter((g) => !g.ids.every((id) => idsSet.has(id)) || g.ids.length !== ids.length)
-      setHasUnread(next.some((g) => !g.is_read))
-      return next
-    })
+    setAllGroups((prev) => prev.filter((g) => !g.ids.every((id) => idsSet.has(id)) || g.ids.length !== ids.length))
     await supabase.from('notifications').delete().in('id', ids)
   }
 
@@ -245,7 +248,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
       .eq('receiver_id', userId)
       .eq('is_read', false)
       .then(({ data }) => {
-        const unread = (data ?? []).filter((n: any) => notifPrefs[n.type] !== false)
+        const prefs = notifPrefs ?? {}
+        const unread = (data ?? []).filter((n: any) => prefs[n.type] !== false)
         setHasUnread(unread.length > 0)
       })
   }, [userId, notifPrefs])
