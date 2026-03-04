@@ -68,9 +68,24 @@ export default function FollowButton({
         .eq('follower_id', currentUserId)
         .eq('following_id', profileId)
     } else {
-      await supabase
+      const { error: followError } = await supabase
         .from('follows')
         .insert({ follower_id: currentUserId, following_id: profileId })
+
+      if (!followError) {
+        // Push-уведомление владельцу профиля о новом подписчике
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: profileId,
+            actor_id: currentUserId,
+            title: '👤 Новый подписчик',
+            body: 'На вас подписался новый пользователь',
+            url: `/profile/${currentUserId}`,
+          }),
+        }).catch(() => {})
+      }
     }
 
     setLoading(false)

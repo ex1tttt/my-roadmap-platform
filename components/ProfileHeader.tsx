@@ -117,7 +117,21 @@ export default function ProfileHeader({
 
       // Уведомление создаётся DB-триггером handle_new_follow автоматически
       // Значки «Общительный» / «Инфлюенсер» для получателя подписки
-      if (!res.error) checkAndAwardBadges(profile.id, 'follow_received').catch(() => {})
+      if (!res.error) {
+        checkAndAwardBadges(profile.id, 'follow_received').catch(() => {})
+        // Push-уведомление владельцу профиля о новом подписчике
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: profile.id,
+            actor_id: currentUserId,
+            title: '👤 Новый подписчик',
+            body: 'На вас подписался новый пользователь',
+            url: `/profile/${currentUserId}`,
+          }),
+        }).catch(() => {})
+      }
     }
 
     // При ошибке откатываем оптимистичное обновление

@@ -61,9 +61,24 @@ function MiniFollowButton({
         .eq("follower_id", currentUserId)
         .eq("following_id", author.id);
     } else {
-      await supabase
+      const { error: followError } = await supabase
         .from("follows")
         .insert({ follower_id: currentUserId, following_id: author.id });
+
+      if (!followError) {
+        // Push-уведомление о новом подписчике
+        fetch("/api/send-push", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: author.id,
+            actor_id: currentUserId,
+            title: "👤 Новый подписчик",
+            body: "На вас подписался новый пользователь",
+            url: `/profile/${currentUserId}`,
+          }),
+        }).catch(() => {});
+      }
     }
     onChange(author.id, !following);
     setLoading(false);
