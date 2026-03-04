@@ -827,9 +827,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       textareaRef.current?.focus()
       // Проверяем достижение «Критик»
       await checkAndAwardBadges(currentUserId, 'comment')
-      // Уведомления упомянутым @-пользователям
-      notifyMentions(trimmed, roadmapId, data.id).catch(e => console.error('[notifyMentions]', e))
+      // Уведомления упомянутым @-пользователям (возвращает ID упомянутых)
+      const mentionedIds = await notifyMentions(trimmed, roadmapId, data.id).catch(e => { console.error('[notifyMentions]', e); return [] as string[] })
       // Push-уведомление автору карточки (fire-and-forget)
+      // Не отправляем, если автор уже получил push об упоминании
       supabase
         .from('cards')
         .select('user_id, title')
@@ -837,7 +838,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         .maybeSingle()
         .then(({ data: cardData }) => {
           // Уведомление создаётся DB-триггером handle_new_comment автоматически
-          if (cardData && cardData.user_id !== currentUserId) {
+          if (cardData && cardData.user_id !== currentUserId && !(mentionedIds ?? []).includes(cardData.user_id)) {
             // Push
             fetch('/api/send-push', {
               method: 'POST',
@@ -896,6 +897,20 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       setExpandedIds((prev) => new Set([...prev, parentId]))
       // Уведомления упомянутым @-пользователям
       notifyMentions(trimmed, roadmapId, data.id).catch(e => console.error('[notifyMentions]', e))
+      // Push-уведомление автору родительского комментария
+      if (parentComment && parentComment.user_id !== currentUserId) {
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: parentComment.user_id,
+            actor_id: currentUserId,
+            title: 'Новый ответ на комментарий 💬',
+            body: `${currentUserProfile?.username ?? 'Кто-то'} ответил на ваш комментарий`,
+            url: `/card/${roadmapId}#comments`,
+          }),
+        }).catch(() => {})
+      }
     }
     setReplySending(false)
   }
@@ -918,6 +933,21 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             ? supabase.from('comment_dislikes').delete().eq('comment_id', commentId).eq('user_id', currentUserId)
             : Promise.resolve(),
         ])
+
+        // Push-уведомление автору комментария (не себе)
+        if (current.user_id !== currentUserId) {
+          fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: current.user_id,
+              actor_id: currentUserId,
+              title: 'Новый лайк 👍',
+              body: `${currentUserProfile?.username ?? 'Кто-то'} лайкнул ваш комментарий`,
+              url: `/card/${roadmapId}#comments`,
+            }),
+          }).catch(() => {})
+        }
       }
     } else {
       if (current.isDisliked) {
@@ -933,16 +963,16 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     }
   }
 
-  async function notifyMentions(text: string, cardId: string, _commentId: string) {
+  async function notifyMentions(text: string, cardId: string, _commentId: string): Promise<string[]> {
     const usernames = [...text.matchAll(/@(\w+)/g)].map(m => m[1])
-    if (!usernames.length || !currentUserId) return
+    if (!usernames.length || !currentUserId) return []
 
     const { data: profiles, error: profilesErr } = await supabase
       .from('profiles').select('id, username').in('username', usernames)
-    if (profilesErr) { console.error('[notifyMentions] profiles lookup failed:', profilesErr); return }
+    if (profilesErr) { console.error('[notifyMentions] profiles lookup failed:', profilesErr); return [] }
 
     const toNotify = (profiles ?? []).filter((p: { id: string; username: string }) => p.id !== currentUserId)
-    if (!toNotify.length) return
+    if (!toNotify.length) return []
 
     // Получаем название карточки для push-уведомления
     const { data: cardData } = await supabase
@@ -959,7 +989,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         card_id: cardId,
       }))
     )
-    if (insertErr) { console.error('[notifyMentions] insert failed:', insertErr); return }
+    if (insertErr) { console.error('[notifyMentions] insert failed:', insertErr); return [] }
 
     // Push-уведомление каждому упомянутому (fire-and-forget)
     for (const p of toNotify as { id: string; username: string }[]) {
@@ -977,6 +1007,9 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
         }),
       }).catch(() => {})
     }
+
+    // Возвращаем ID упомянутых пользователей
+    return toNotify.map((p: { id: string; username: string }) => p.id)
   }
 
   async function handleDelete(commentId: string) {
