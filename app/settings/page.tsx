@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { Home, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User } from "lucide-react";
+import { Home, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User, ChevronRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
@@ -502,6 +502,7 @@ export default function SettingsPage() {
 
   // Активная секция сайдбара
   const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'blocked' | 'security'>('profile');
+  const [mobileShowContent, setMobileShowContent] = useState(false);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -529,10 +530,10 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <div className="flex gap-6">
+        <div className="block sm:flex sm:gap-6">
 
           {/* ── Сайдбар ── */}
-          <aside className="w-52 shrink-0">
+          <aside className={`${ mobileShowContent ? 'hidden sm:block' : 'block' } w-full sm:w-52 sm:shrink-0`}>
             {/* На главную над сайдбаром */}
             <Link
               href="/"
@@ -542,26 +543,35 @@ export default function SettingsPage() {
               {mounted ? t('nav.backToHome') : 'На главную'}
             </Link>
 
-            <nav className="sticky top-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 py-2 overflow-hidden">
+            <nav className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 py-2 overflow-hidden sm:sticky sm:top-8">
               {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setActiveSection(id)}
-                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors text-left ${
+                  onClick={() => { setActiveSection(id); setMobileShowContent(true); }}
+                  className={`flex w-full items-center gap-3 px-4 py-3 sm:py-2.5 text-sm font-medium transition-colors text-left ${
                     activeSection === id
                       ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {label}
+                  <span className="flex-1">{label}</span>
+                  <ChevronRight className="h-4 w-4 text-slate-400 sm:hidden" />
                 </button>
               ))}
             </nav>
           </aside>
 
           {/* ── Контент ── */}
-          <main className="flex-1 min-w-0 space-y-6">
+          <main className={`${ mobileShowContent ? 'block' : 'hidden sm:block' } flex-1 min-w-0 space-y-6`}>
+            {/* Кнопка «Назад» — только на мобильном */}
+            <button
+              onClick={() => setMobileShowContent(false)}
+              className="flex sm:hidden items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-2 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {mounted ? t('common.back') : 'Назад'}
+            </button>
 
             {/* ─── ПРОФИЛЬ ─── */}
             {activeSection === 'profile' && (

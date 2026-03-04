@@ -124,7 +124,7 @@ function AvatarGroup({ actors }: { actors: Array<{ id: string; username: string;
       {overflow > 0 && (
         <span
           className="inline-flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 ring-2 ring-white dark:ring-slate-900"
-          style={{ width: 24, height: 24, marginLeft: -6, zIndex: 0 }}
+          style={{ width: 20, height: 20, marginLeft: -5, zIndex: 0 }}
         >
           +{overflow}
         </span>
@@ -357,9 +357,9 @@ export default function NotificationBell({ userId }: { userId: string }) {
 
       {/* Дропдаун */}
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900 shadow-lg dark:shadow-none">
+        <div className="fixed left-2 right-2 top-14 z-50 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900 shadow-lg dark:shadow-none sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-72">
           {/* Шапка */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 px-4 py-2.5">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 px-3 py-2">
             <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               {t('notifications.title')}
             </span>
@@ -374,14 +374,14 @@ export default function NotificationBell({ userId }: { userId: string }) {
             <p className="px-4 py-6 text-center text-sm text-slate-500">{t('notifications.empty')}</p>
           ) : (
             <>
-              <ul className="max-h-96 divide-y divide-slate-100 dark:divide-white/5 overflow-y-auto">
+              <ul className="max-h-[55vh] sm:max-h-80 divide-y divide-slate-100 dark:divide-white/5 overflow-y-auto">
                 {groups.map((g) => (
                   <li key={g.key} className="group relative">
                     {/* Кнопка удаления группы */}
                     <button
                       onClick={() => deleteGroup(g.ids)}
                       title={t('notifications.deleteLabel')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-6 w-6 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10 flex h-5 w-5 items-center justify-center rounded text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -389,12 +389,12 @@ export default function NotificationBell({ userId }: { userId: string }) {
                     <Link
                       href={getGroupHref(g)}
                       onClick={() => setOpen(false)}
-                      className={`flex items-start gap-2.5 px-4 py-3 pr-8 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${
+                      className={`flex items-start gap-2 px-3 py-2 pr-7 text-xs transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${
                         !g.is_read ? 'bg-blue-500/5' : ''
                       }`}
                     >
                       {/* Иконка типа */}
-                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5">
                         {getGroupIcon(g.type)}
                       </span>
 
@@ -416,7 +416,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
               </ul>
 
               {/* Ссылка на полную страницу */}
-              <div className="border-t border-slate-100 dark:border-white/5 px-4 py-2">
+              <div className="border-t border-slate-100 dark:border-white/5 px-3 py-1.5">
                 <Link
                   href="/notifications"
                   onClick={() => setOpen(false)}
