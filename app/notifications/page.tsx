@@ -194,10 +194,6 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     setMounted(true)
-    try {
-      const saved = localStorage.getItem('notif_type_prefs')
-      if (saved) setNotifPrefs(JSON.parse(saved))
-    } catch {}
   }, [])
 
   // Загрузка и агрегация
@@ -209,6 +205,21 @@ export default function NotificationsPage() {
     if (!uid) {
       router.replace('/login')
       return
+    }
+
+    // Загружаем настройки типов уведомлений из Supabase
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('push_notif_prefs')
+      .eq('id', uid)
+      .maybeSingle()
+    if (profileData?.push_notif_prefs && typeof profileData.push_notif_prefs === 'object') {
+      setNotifPrefs(profileData.push_notif_prefs as Record<string, boolean>)
+    } else {
+      try {
+        const saved = localStorage.getItem('notif_type_prefs')
+        if (saved) setNotifPrefs(JSON.parse(saved))
+      } catch {}
     }
 
     const { data: rows, error } = await supabase

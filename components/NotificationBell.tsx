@@ -140,11 +140,32 @@ export default function NotificationBell({ userId }: { userId: string }) {
   const [groups, setGroups]     = useState<GroupedNotification[]>([])
   const [open, setOpen]         = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({})
   const ref = useRef<HTMLDivElement>(null)
   const fetchRef = useRef<() => void>(() => {})
   const markAllReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => setMounted(true), [])
+
+  // Загружаем настройки типов уведомлений из Supabase
+  useEffect(() => {
+    if (!userId) return
+    supabase
+      .from('profiles')
+      .select('push_notif_prefs')
+      .eq('id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.push_notif_prefs && typeof data.push_notif_prefs === 'object') {
+          setNotifPrefs(data.push_notif_prefs as Record<string, boolean>)
+        } else {
+          try {
+            const saved = localStorage.getItem('notif_type_prefs')
+            if (saved) setNotifPrefs(JSON.parse(saved))
+          } catch {}
+        }
+      })
+  }, [userId])
 
   const fetchNotifications = useCallback(async () => {
     const { data } = await supabase
@@ -177,9 +198,14 @@ export default function NotificationBell({ userId }: { userId: string }) {
       card_title: cardMap.get(n.card_id)   ?? null,
     }))
 
-    setGroups(groupNotifications(enriched))
-    setHasUnread(data.some((n: any) => !n.is_read))
-  }, [userId])
+    const allGroups = groupNotifications(enriched)
+    // Фильтруем по настройкам пользователя
+    const filtered = Object.keys(notifPrefs).length > 0
+      ? allGroups.filter((g) => notifPrefs[g.type] !== false)
+      : allGroups
+    setGroups(filtered)
+    setHasUnread(filtered.some((g) => !g.is_read))
+  }, [userId, notifPrefs])
 
   // Держим актуальную ссылку для реалтайм-обработчика (избегаем stale closure)
   useEffect(() => { fetchRef.current = fetchNotifications }, [fetchNotifications])
@@ -215,11 +241,14 @@ export default function NotificationBell({ userId }: { userId: string }) {
     if (!userId) return
     supabase
       .from('notifications')
-      .select('id', { count: 'exact', head: true })
+      .select('id, type', { count: 'exact' })
       .eq('receiver_id', userId)
       .eq('is_read', false)
-      .then(({ count }) => setHasUnread((count ?? 0) > 0))
-  }, [userId])
+      .then(({ data }) => {
+        const unread = (data ?? []).filter((n: any) => notifPrefs[n.type] !== false)
+        setHasUnread(unread.length > 0)
+      })
+  }, [userId, notifPrefs])
 
   // Realtime
   useEffect(() => {
