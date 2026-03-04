@@ -45,6 +45,7 @@ export default function ProfileHeader({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [followersCount, setFollowersCount] = useState(initialFollowersCount)
   const [followingCountState, setFollowingCountState] = useState(followingCount)
+  const [isBlocked, setIsBlocked] = useState(initialIsBlocked)
   const [loading, setLoading] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [notifyNewCards, setNotifyNewCards] = useState(initialNotifyEnabled)
@@ -170,45 +171,58 @@ export default function ProfileHeader({
 
           {!isOwner && currentUserId ? (
             <div className="flex items-center gap-2">
-              {/* Колокольчик — только если подписан */}
-              {isFollowing && (
-                <button
-                  onClick={handleNotify}
-                  disabled={notifyLoading}
-                  title={notifyNewCards ? 'Отключить уведомления о новых карточках' : 'Включить уведомления о новых карточках'}
-                  className={`flex items-center justify-center rounded-lg border p-1.5 transition-all disabled:opacity-50 ${
-                    notifyNewCards
-                      ? 'border-yellow-500/40 bg-yellow-950/40 hover:bg-yellow-900/40'
-                      : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-slate-300 dark:hover:border-white/20'
-                  }`}
-                >
-                  <Bell
-                    className={`h-4 w-4 transition-colors ${
-                      notifyNewCards ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'
+              {/* Колокольчик и кнопка подписки — только если не заблокирован */}
+              {!isBlocked && (
+                <>
+                  {/* Колокольчик — только если подписан */}
+                  {isFollowing && (
+                    <button
+                      onClick={handleNotify}
+                      disabled={notifyLoading}
+                      title={notifyNewCards ? 'Отключить уведомления о новых карточках' : 'Включить уведомления о новых карточках'}
+                      className={`flex items-center justify-center rounded-lg border p-1.5 transition-all disabled:opacity-50 ${
+                        notifyNewCards
+                          ? 'border-yellow-500/40 bg-yellow-950/40 hover:bg-yellow-900/40'
+                          : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-slate-300 dark:hover:border-white/20'
+                      }`}
+                    >
+                      <Bell
+                        className={`h-4 w-4 transition-colors ${
+                          notifyNewCards ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'
+                        }`}
+                      />
+                    </button>
+                  )}
+                  <button
+                    onClick={handleFollow}
+                    disabled={loading}
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                    className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isFollowing
+                        ? hovered
+                          ? 'border border-red-500/40 bg-red-950/40 text-red-400'
+                          : 'border border-slate-700 bg-slate-800 text-slate-300'
+                        : 'border border-blue-500/40 bg-blue-600 text-white hover:bg-blue-500'
                     }`}
-                  />
-                </button>
+                  >
+                    {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
+                  </button>
+                </>
               )}
-              <button
-                onClick={handleFollow}
-                disabled={loading}
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-                className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                  isFollowing
-                    ? hovered
-                      ? 'border border-red-500/40 bg-red-950/40 text-red-400'
-                      : 'border border-slate-700 bg-slate-800 text-slate-300'
-                    : 'border border-blue-500/40 bg-blue-600 text-white hover:bg-blue-500'
-                }`}
-              >
-                {isFollowing ? (hovered ? t('follow.unsubscribe') : t('follow.subscribed')) : t('follow.subscribe')}
-              </button>
               {/* Кнопка блокировки */}
               <BlockButton
                 targetUserId={profile.id}
                 currentUserId={currentUserId}
                 initialIsBlocked={initialIsBlocked}
+                onBlock={() => {
+                  setIsBlocked(true)
+                  if (isFollowing) {
+                    setIsFollowing(false)
+                    setFollowersCount((n) => Math.max(0, n - 1))
+                  }
+                }}
+                onUnblock={() => setIsBlocked(false)}
               />
             </div>
           ) : null}

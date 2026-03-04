@@ -69,6 +69,7 @@ export default function BlockButton({
       setIsBlocked(false)
       toast.success(t('block.unblocked'))
       onUnblock?.()
+      router.refresh()
     } catch (err: any) {
       toast.error(t('common.error') + ': ' + (err?.message ?? ''))
     } finally {
