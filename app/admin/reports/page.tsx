@@ -105,20 +105,20 @@ export default function AdminReportsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-5xl px-6 py-8">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
         {/* Шапка */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
           <Link href="/" className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
             <ArrowLeft size={16} /> {t('adminReports.backHome')}
           </Link>
           <div className="flex items-center gap-2">
-            <Flag className="text-red-500" size={22} />
-            <h1 className="text-xl font-bold">{t('adminReports.title')}</h1>
+            <Flag className="text-red-500" size={20} />
+            <h1 className="text-lg sm:text-xl font-bold">{t('adminReports.title')}</h1>
           </div>
         </div>
 
         {/* Табы статусов */}
-        <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           {(['pending', 'reviewed', 'resolved'] as const).map((s) => {
             const color = STATUS_COLORS[s]
             return (
@@ -169,10 +169,10 @@ export default function AdminReportsPage() {
               return (
                 <div
                   key={report.id}
-                  className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-5"
+                  className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 sm:p-5"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
                       {/* Карточка */}
                       <div className="mb-1 flex items-center gap-2">
                         <span className="text-xs text-slate-500">{t('adminReports.card')}:</span>
@@ -222,7 +222,7 @@ export default function AdminReportsPage() {
                     </div>
 
                     {/* Действия */}
-                    <div className="flex shrink-0 flex-col gap-2">
+                    <div className="flex shrink-0 flex-row flex-wrap gap-2 sm:flex-col">
                       {report.status === 'pending' && (
                         <>
                           <button
