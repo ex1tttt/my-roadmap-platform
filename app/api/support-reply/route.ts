@@ -47,3 +47,57 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
+
+// PATCH — редактирование сообщения (только admin)
+export async function PATCH(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!ADMIN_IDS.includes(user.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { id, content } = await req.json()
+    if (!id || typeof content !== 'string') return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    const trimmed = content.trim()
+    if (!trimmed) return NextResponse.json({ error: 'Empty content' }, { status: 400 })
+
+    const { error } = await supabaseAdmin
+      .from('support_messages')
+      .update({ content: trimmed })
+      .eq('id', id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}
+
+// DELETE — удаление одного сообщения (только admin)
+export async function DELETE(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!ADMIN_IDS.includes(user.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { id } = await req.json()
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+    const { error } = await supabaseAdmin
+      .from('support_messages')
+      .delete()
+      .eq('id', id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}

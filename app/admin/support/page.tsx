@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { Headphones, Send, Loader2, ArrowLeft, MessageCircle, Trash2, ImageIcon } from 'lucide-react'
+import { Headphones, Send, Loader2, ArrowLeft, MessageCircle, Trash2, ImageIcon, Pencil, Check, X, CornerUpLeft } from 'lucide-react'
 import Link from 'next/link'
 import UserAvatar from '@/components/UserAvatar'
 import { useTranslation } from 'react-i18next'
@@ -48,8 +48,15 @@ export default function AdminSupportPage() {
   const [token, setToken] = useState<string | null>(null)
   const [adminId, setAdminId] = useState<string | null>(null)
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+  const [deleteMsgId, setDeleteMsgId] = useState<string | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; msg: Message } | null>(null)
+  const [replyTo, setReplyTo] = useState<Message | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Проверка прав администратора
   useEffect(() => {
@@ -150,23 +157,105 @@ export default function AdminSupportPage() {
           setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'support_messages', filter: `session_id=eq.${activeSession}` },
+        (payload) => {
+          const msg = payload.new as Message
+          setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, content: msg.content } : m))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'support_messages', filter: `session_id=eq.${activeSession}` },
+        (payload) => {
+          setMessages((prev) => prev.filter((m) => m.id !== (payload.old as any).id))
+        }
+      )
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [activeSession])
 
+  // Закрываем контекстное меню при клике вне его
+  useEffect(() => {
+    if (!contextMenu) return
+    const close = () => setContextMenu(null)
+    document.addEventListener('click', close)
+    window.addEventListener('scroll', close, true)
+    return () => {
+      document.removeEventListener('click', close)
+      window.removeEventListener('scroll', close, true)
+    }
+  }, [contextMenu])
+
   async function handleReply() {
     if (!reply.trim() || !activeSession || sending || !token) return
     setSending(true)
+    let content = reply.trim()
+    if (replyTo) {
+      const name = replyTo.is_from_support ? t('support.fromSupport') : (replyTo.username ?? t('support.guest'))
+      const quote = replyTo.image_url ? '📷' : replyTo.content.slice(0, 150)
+      content = `> ${name}: ${quote}\n\n${content}`
+      setReplyTo(null)
+    }
     await fetch('/api/support-reply', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ session_id: activeSession, content: reply.trim() }),
+      body: JSON.stringify({ session_id: activeSession, content }),
     })
     setReply('')
     setSending(false)
+  }
+
+  function handleContextMenu(e: React.MouseEvent<HTMLDivElement>, msg: Message) {
+    e.preventDefault()
+    e.stopPropagation()
+    const x = Math.min(e.clientX, window.innerWidth - 188)
+    const y = Math.min(e.clientY, window.innerHeight - 160)
+    setContextMenu({ x, y, msg })
+  }
+
+  function handleTouchStart(e: React.TouchEvent<HTMLDivElement>, msg: Message) {
+    const touch = e.touches[0]
+    const x = Math.min(touch.clientX, window.innerWidth - 188)
+    const y = Math.min(touch.clientY, window.innerHeight - 160)
+    longPressTimer.current = setTimeout(() => {
+      setContextMenu({ x, y, msg })
+    }, 500)
+  }
+
+  function handleTouchEnd() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  async function handleSaveEdit(id: string) {
+    const trimmed = editContent.trim()
+    if (!trimmed || !token) return
+    setEditingMsgId(null)
+    setEditContent('')
+    await fetch('/api/support-reply', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ id, content: trimmed }),
+    })
+  }
+
+  async function handleDeleteMsg() {
+    if (!deleteMsgId || !token) return
+    const id = deleteMsgId
+    setDeleteMsgId(null)
+    setMessages((prev) => prev.filter((m) => m.id !== id))
+    await fetch('/api/support-reply', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ id }),
+    })
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -378,34 +467,120 @@ export default function AdminSupportPage() {
 
                 {/* Сообщения */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-950/30">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`flex items-end gap-2 ${msg.is_from_support ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                        msg.is_from_support
-                          ? 'rounded-br-sm bg-blue-600 text-white'
-                          : 'rounded-tl-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10'
-                      }`}>
-                        {!msg.is_from_support && (
-                          <p className="mb-0.5 text-[10px] text-slate-400 font-semibold">{msg.username ?? t('support.guest')}</p>
-                        )}
-                        {msg.image_url ? (
-                          <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                            <img src={msg.image_url} alt="изображение" className="rounded-lg max-w-full max-h-48 object-contain mt-0.5" />
-                          </a>
-                        ) : (
-                          <p className="leading-relaxed whitespace-pre-wrap wrap-break-word">{msg.content}</p>
-                        )}
-                        <p className={`mt-1 text-[10px] ${msg.is_from_support ? 'text-blue-200' : 'text-slate-400'}`}>
-                          {formatTime(msg.created_at)}
-                        </p>
+                  {messages.map((msg) => {
+                    const isReply = !msg.image_url && msg.content?.startsWith('> ')
+                    const quoteLine = isReply ? msg.content.split('\n\n')[0].replace(/^> /, '') : null
+                    const mainText = isReply ? msg.content.split('\n\n').slice(1).join('\n\n') : msg.content
+                    return (
+                      <div key={msg.id} className={`flex items-end gap-1.5 ${msg.is_from_support ? 'justify-end' : 'justify-start'}`}>
+                        <div
+                          onContextMenu={(e) => handleContextMenu(e as React.MouseEvent<HTMLDivElement>, msg)}
+                          onTouchStart={(e) => handleTouchStart(e as React.TouchEvent<HTMLDivElement>, msg)}
+                          onTouchEnd={handleTouchEnd}
+                          onTouchMove={handleTouchEnd}
+                          className={`max-w-[75%] cursor-default select-none rounded-2xl px-3 py-2 text-sm active:scale-[0.98] transition-transform ${
+                            msg.is_from_support
+                              ? 'rounded-br-sm bg-blue-600 text-white'
+                              : 'rounded-tl-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10'
+                          }`}
+                        >
+                          {!msg.is_from_support && (
+                            <p className="mb-0.5 text-[10px] text-slate-400 font-semibold">{msg.username ?? t('support.guest')}</p>
+                          )}
+                          {editingMsgId === msg.id ? (
+                            <div className="flex flex-col gap-2 min-w-45">
+                              <textarea
+                                autoFocus
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(msg.id) }
+                                  if (e.key === 'Escape') { setEditingMsgId(null); setEditContent('') }
+                                }}
+                                rows={2}
+                                className={`w-full resize-none rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 ${
+                                  msg.is_from_support
+                                    ? 'bg-blue-700 text-white placeholder-blue-300 focus:ring-white/30'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-slate-400/40'
+                                }`}
+                              />
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => { setEditingMsgId(null); setEditContent('') }}
+                                  className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                                    msg.is_from_support
+                                      ? 'hover:bg-white/10 text-blue-200 hover:text-white'
+                                      : 'hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                  }`}
+                                  title={t('support.cancel')}
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleSaveEdit(msg.id)}
+                                  disabled={!editContent.trim()}
+                                  className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors disabled:opacity-40 ${
+                                    msg.is_from_support
+                                      ? 'bg-white/20 hover:bg-white/30 text-white'
+                                      : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-500'
+                                  }`}
+                                  title={t('support.save')}
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : msg.image_url ? (
+                            <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                              <img src={msg.image_url} alt="изображение" className="rounded-lg max-w-full max-h-48 object-contain mt-0.5" />
+                            </a>
+                          ) : (
+                            <>
+                              {quoteLine && (
+                                <div className={`mb-1.5 rounded-lg border-l-2 px-2 py-1 text-[11px] ${
+                                  msg.is_from_support
+                                    ? 'border-white/40 bg-white/10'
+                                    : 'border-blue-400/60 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
+                                }`}>
+                                  {quoteLine}
+                                </div>
+                              )}
+                              <p className="leading-relaxed whitespace-pre-wrap wrap-break-word">{mainText}</p>
+                            </>
+                          )}
+                          <p className={`mt-1 text-[10px] ${msg.is_from_support ? 'text-blue-200' : 'text-slate-400'}`}>
+                            {formatTime(msg.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                   <div ref={bottomRef} />
                 </div>
 
                 {/* Ввод ответа */}
-                <div className="flex items-end gap-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+                <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  {/* Превью ответа */}
+                  {replyTo && (
+                    <div className="flex items-start gap-2 border-b border-slate-100 dark:border-slate-800 px-3 py-2 bg-slate-50 dark:bg-slate-800/50">
+                      <CornerUpLeft className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-blue-500">
+                          {replyTo.is_from_support ? t('support.fromSupport') : (replyTo.username ?? t('support.guest'))}
+                        </p>
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                          {replyTo.image_url ? '📷 Изображение' : replyTo.content.slice(0, 100)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setReplyTo(null)}
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-600 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-end gap-2 p-3">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -423,6 +598,7 @@ export default function AdminSupportPage() {
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                   </button>
                   <textarea
+                    ref={textareaRef}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
@@ -438,12 +614,100 @@ export default function AdminSupportPage() {
                   >
                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </button>
+                  </div>
                 </div>
               </>
             )}
           </main>
         </div>
       </div>
+
+      {/* ── Контекстное меню сообщения ── */}
+      {contextMenu && (
+        <div
+          className="fixed z-[200]"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="min-w-44 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 shadow-2xl overflow-hidden py-1">
+            {/* Ответить */}
+            <button
+              onClick={() => {
+                setReplyTo(contextMenu.msg)
+                setContextMenu(null)
+                setTimeout(() => textareaRef.current?.focus(), 50)
+              }}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <CornerUpLeft className="h-4 w-4 text-slate-400" />
+              {t('support.reply')}
+            </button>
+            {/* Изменить — любое текстовое сообщение (не изображение) */}
+            {!contextMenu.msg.image_url && (
+              <button
+                onClick={() => {
+                  setEditingMsgId(contextMenu.msg.id)
+                  setEditContent(contextMenu.msg.content)
+                  setContextMenu(null)
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+              >
+                <Pencil className="h-4 w-4 text-slate-400" />
+                {t('support.editMessage')}
+              </button>
+            )}
+            <div className="my-1 h-px bg-slate-100 dark:bg-white/5" />
+            {/* Удалить */}
+            <button
+              onClick={() => {
+                setDeleteMsgId(contextMenu.msg.id)
+                setContextMenu(null)
+              }}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t('support.deleteMessage')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Модальное окно подтверждения удаления сообщения ── */}
+      {deleteMsgId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setDeleteMsgId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/10">
+              <Trash2 className="h-6 w-6 text-red-500" />
+            </div>
+            <h3 className="text-center text-base font-semibold text-slate-900 dark:text-slate-100">
+              {t('support.deleteMessage')}
+            </h3>
+            <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+              {t('support.deleteMsgConfirm')}
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setDeleteMsgId(null)}
+                className="flex-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-white/10"
+              >
+                {t('support.cancel')}
+              </button>
+              <button
+                onClick={handleDeleteMsg}
+                className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-600"
+              >
+                {t('support.deleteMessage')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Модальное окно подтверждения удаления ── */}
       {deleteTargetId && (
