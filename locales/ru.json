@@ -563,5 +563,47 @@
     "dialogs_few": "диалога",
     "dialogs_many": "диалогов",
     "cancel": "Отмена"
+  },
+  "report": {
+    "label": "Пожаловаться",
+    "title": "Жалоба на карточку",
+    "subtitle": "Опишите, что не так с этой карточкой",
+    "reasonLabel": "Причина жалобы",
+    "descriptionLabel": "Дополнительное описание (необязательно)",
+    "descriptionPlaceholder": "Опишите ситуацию подробнее...",
+    "submit": "Отправить жалобу",
+    "submitting": "Отправка...",
+    "success": "Жалоба отправлена. Спасибо!",
+    "error": "Не удалось отправить жалобу",
+    "alreadyReported": "Вы уже жаловались на эту карточку",
+    "reported": "Жалоба отправлена",
+    "reasons": {
+      "spam": "Спам",
+      "inappropriate": "Неприемлемый контент",
+      "misinformation": "Дезинформация",
+      "copyright": "Нарушение авторских прав",
+      "other": "Другое"
+    }
+  },
+  "adminReports": {
+    "title": "Жалобы на карточки",
+    "backHome": "На главную",
+    "tabs": {
+      "pending": "На рассмотрении",
+      "reviewed": "Просмотрено",
+      "resolved": "Решено"
+    },
+    "card": "Карточка",
+    "cardDeleted": "Карточка удалена",
+    "from": "От",
+    "unknown": "Неизвестно",
+    "noReports": "Жалоб нет",
+    "loadError": "Ошибка загрузки",
+    "migrationHint": "Убедитесь, что выполнена SQL-миграция migration_card_reports.sql в Supabase.",
+    "actions": {
+      "reviewed": "Просмотрено",
+      "resolved": "Решено",
+      "closed": "Закрыто"
+    }
   }
 }

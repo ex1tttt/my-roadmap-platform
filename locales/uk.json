@@ -564,5 +564,47 @@
     "dialogs_few": "діалоги",
     "dialogs_many": "діалогів",
     "cancel": "Скасувати"
+  },
+  "report": {
+    "label": "Поскаржитися",
+    "title": "Скарга на карточку",
+    "subtitle": "Опишіть, що не так з цією карточкою",
+    "reasonLabel": "Причина скарги",
+    "descriptionLabel": "Додатковий опис (необов'язково)",
+    "descriptionPlaceholder": "Опишіть ситуацію детальніше...",
+    "submit": "Надіслати скаргу",
+    "submitting": "Надсилання...",
+    "success": "Скаргу надіслано. Дякуємо!",
+    "error": "Не вдалося надіслати скаргу",
+    "alreadyReported": "Ви вже скаржились на цю карточку",
+    "reported": "Скарга надіслана",
+    "reasons": {
+      "spam": "Спам",
+      "inappropriate": "Неприйнятний вміст",
+      "misinformation": "Дезінформація",
+      "copyright": "Порушення авторських прав",
+      "other": "Інше"
+    }
+  },
+  "adminReports": {
+    "title": "Скарги на картки",
+    "backHome": "На головну",
+    "tabs": {
+      "pending": "На розгляді",
+      "reviewed": "Переглянуто",
+      "resolved": "Вирішено"
+    },
+    "card": "Картка",
+    "cardDeleted": "Картку видалено",
+    "from": "Від",
+    "unknown": "Невідомо",
+    "noReports": "Скарг немає",
+    "loadError": "Помилка завантаження",
+    "migrationHint": "Переконайтесь, що виконана SQL-міграція migration_card_reports.sql у Supabase.",
+    "actions": {
+      "reviewed": "Переглянуто",
+      "resolved": "Вирішено",
+      "closed": "Закрито"
+    }
   }
 }

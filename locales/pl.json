@@ -562,5 +562,47 @@
     "dialogs_few": "dialogi",
     "dialogs_many": "dialogów",
     "cancel": "Anuluj"
+  },
+  "report": {
+    "label": "Zgłoś",
+    "title": "Zgłoś kartę",
+    "subtitle": "Opisz, co jest nie tak z tą kartą",
+    "reasonLabel": "Powód zgłoszenia",
+    "descriptionLabel": "Dodatkowy opis (opcjonalnie)",
+    "descriptionPlaceholder": "Opisz sytuację bardziej szczegółowo...",
+    "submit": "Wyślij zgłoszenie",
+    "submitting": "Wysyłanie...",
+    "success": "Zgłoszenie wysłane. Dziękujemy!",
+    "error": "Nie udało się wysłać zgłoszenia",
+    "alreadyReported": "Już zgłosiłeś tę kartę",
+    "reported": "Zgłoszono",
+    "reasons": {
+      "spam": "Spam",
+      "inappropriate": "Nieodpowiednia treść",
+      "misinformation": "Dezinformacja",
+      "copyright": "Naruszenie praw autorskich",
+      "other": "Inne"
+    }
+  },
+  "adminReports": {
+    "title": "Zgłoszenia kart",
+    "backHome": "Na stronę główną",
+    "tabs": {
+      "pending": "Oczekujące",
+      "reviewed": "Przejrzane",
+      "resolved": "Rozwiązane"
+    },
+    "card": "Karta",
+    "cardDeleted": "Karta usunięta",
+    "from": "Od",
+    "unknown": "Nieznany",
+    "noReports": "Brak zgłoszeń",
+    "loadError": "Błąd ładowania",
+    "migrationHint": "Upewnij się, że migracja SQL migration_card_reports.sql została wykonana w Supabase.",
+    "actions": {
+      "reviewed": "Przejrzane",
+      "resolved": "Rozwiązane",
+      "closed": "Zamknięte"
+    }
   }
 }

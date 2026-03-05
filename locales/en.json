@@ -557,5 +557,47 @@
     "dialogs_few": "tickets",
     "dialogs_many": "tickets",
     "cancel": "Cancel"
+  },
+  "report": {
+    "label": "Report",
+    "title": "Report Card",
+    "subtitle": "Describe what is wrong with this card",
+    "reasonLabel": "Reason",
+    "descriptionLabel": "Additional details (optional)",
+    "descriptionPlaceholder": "Describe the issue in more detail...",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "success": "Report submitted. Thank you!",
+    "error": "Failed to submit report",
+    "alreadyReported": "You have already reported this card",
+    "reported": "Reported",
+    "reasons": {
+      "spam": "Spam",
+      "inappropriate": "Inappropriate content",
+      "misinformation": "Misinformation",
+      "copyright": "Copyright violation",
+      "other": "Other"
+    }
+  },
+  "adminReports": {
+    "title": "Card Reports",
+    "backHome": "Back to home",
+    "tabs": {
+      "pending": "Pending",
+      "reviewed": "Reviewed",
+      "resolved": "Resolved"
+    },
+    "card": "Card",
+    "cardDeleted": "Card deleted",
+    "from": "From",
+    "unknown": "Unknown",
+    "noReports": "No reports",
+    "loadError": "Load error",
+    "migrationHint": "Make sure the SQL migration migration_card_reports.sql has been run in Supabase.",
+    "actions": {
+      "reviewed": "Mark Reviewed",
+      "resolved": "Mark Resolved",
+      "closed": "Closed"
+    }
   }
 }

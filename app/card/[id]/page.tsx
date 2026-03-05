@@ -15,6 +15,7 @@ import ViewHistoryRecorder from "./ViewHistoryRecorder";
 import BackButton from "./BackButton";
 import CardEditButton from "./CardEditButton";
 import T from "@/components/T";
+import ReportCardButton from "@/components/ReportCardButton";
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -256,6 +257,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               )}
               {isOwner && (
                 <DeleteButton cardId={id} />
+              )}
+              {!isOwner && currentUser && (
+                <ClientOnly fallback={<div className="h-7 w-16" />}>
+                  <ReportCardButton cardId={id} />
+                </ClientOnly>
               )}
             </div>
           </div>

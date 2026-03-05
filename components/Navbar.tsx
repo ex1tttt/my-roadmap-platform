@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy, Headphones } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy, Headphones, Flag } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
@@ -248,6 +248,14 @@ export default function Navbar() {
                         >
                           <Headphones className="w-4 h-4" />
                           {t('support.adminTitle')}
+                        </Link>
+                        <Link
+                          href="/admin/reports"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        >
+                          <Flag className="w-4 h-4" />
+                          Жалобы на карточки
                         </Link>
                       </>
                     )}

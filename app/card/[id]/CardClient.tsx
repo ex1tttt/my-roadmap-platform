@@ -15,6 +15,7 @@ import ScrollToHash from "@/components/ScrollToHash";
 import ShareButton from "@/components/ShareButton";
 import StepsProgress from "@/components/StepsProgress";
 import ClientOnly from "@/components/ClientOnly";
+import ReportCardButton from "@/components/ReportCardButton";
 
 // --- Вспомогательные функции из твоего старого кода ---
 function normalizeUrl(url: string): string {
@@ -117,9 +118,10 @@ export default function CardClient({ id }: { id: string }) {
       <div className="max-w-5xl mx-auto px-6 py-6">
         <div className="flex justify-between items-center mb-8">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-500"><ArrowLeft size={16}/> Назад</Link>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <ShareButton cardId={id} title={card.title} />
             {isOwner && <Link href={`/card/${id}/edit`} className="p-2 border border-white/10 rounded-lg"><Pencil size={16}/></Link>}
+            {!isOwner && currentUser && <ReportCardButton cardId={id} />}
           </div>
         </div>
 
