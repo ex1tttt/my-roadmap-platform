@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell, X, UserPlus, Heart, MessageSquare, Zap, Map as MapIcon, AtSign, Headphones } from 'lucide-react'
+import { Bell, X, UserPlus, Heart, MessageSquare, Zap, Map as MapIcon, AtSign, Headphones, Flag } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 import { useTranslation } from 'react-i18next'
@@ -76,6 +76,7 @@ function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): s
     case 'mention':      return `${first}${others} ${rest > 0 ? t('notifications.mentionedMany', { defaultValue: 'упомянули вас в комментарии к' }) : t('notifications.mentionedOne', { defaultValue: 'упомянул вас в комментарии к' })} ${card}`
     case 'new_card':     return `${first} ${t('notifications.publishedCard', { defaultValue: 'опубликовал новую дорожную карту' })} ${card}`
     case 'support_message': return first !== t('notifications.someone') ? `${first} ${t('notifications.wroteToSupport', { defaultValue: 'написал в поддержку' })}` : t('notifications.guestWroteToSupport', { defaultValue: 'Гость написал в поддержку' })
+    case 'card_report':  return first !== t('notifications.someone') ? `${first} ${t('notifications.reportedCard', { defaultValue: 'пожаловался на карточку' })} ${card}` : `${t('notifications.reportedCard', { defaultValue: 'Жалоба на карточку' })} ${card}`
     default:             return `${first} ${t('notifications.didAction', { defaultValue: 'совершил действие' })}`
   }
 }
@@ -83,6 +84,7 @@ function buildText(g: GroupedNotification, t: (k: string, o?: any) => string): s
 function getGroupHref(g: GroupedNotification): string {
   if (g.type === 'follow' && g.actors[0]) return `/profile/${g.actors[0].id}`
   if (g.type === 'support_message') return '/admin/support'
+  if (g.type === 'card_report') return '/admin/reports'
   if (g.card_id) return `/card/${g.card_id}${(g.type === 'comment' || g.type === 'mention') ? '#comments' : ''}`
   return '#'
 }
@@ -96,6 +98,7 @@ function getGroupIcon(type: string) {
     case 'mention':      return <AtSign      className="h-3.5 w-3.5 text-sky-400" />
     case 'new_card':     return <MapIcon      className="h-3.5 w-3.5 text-violet-400" />
     case 'support_message': return <Headphones className="h-3.5 w-3.5 text-blue-400" />
+    case 'card_report':  return <Flag       className="h-3.5 w-3.5 text-red-400" />
     default:             return <Zap         className="h-3.5 w-3.5 text-slate-400" />
   }
 }

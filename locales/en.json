@@ -233,7 +233,8 @@
     "someone": "Someone",
     "seeAll": "All notifications",
     "wroteToSupport": "wrote to support",
-    "guestWroteToSupport": "Guest wrote to support"
+    "guestWroteToSupport": "A guest wrote to support",
+    "reportedCard": "reported a card"
   },
   "notification": {
     "follow": "{{name}} started following you",

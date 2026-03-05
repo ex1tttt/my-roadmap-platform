@@ -77,6 +77,58 @@ export async function POST(req: NextRequest) {
       throw error
     }
 
+    // Уведомляем всех админов (кроме самого репортера, если он вдруг admin)
+    const ADMIN_NOTIFY_IDS = [
+      'a48b5f93-2e98-48c8-98f1-860ca962f651',
+      'b63af445-e18d-4e5b-a0e1-ba747f2b4948',
+    ]
+    const notifyIds = ADMIN_NOTIFY_IDS.filter((id) => id !== user.id)
+
+    if (notifyIds.length > 0) {
+      // Получаем username репортера для текста уведомления
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .maybeSingle()
+      const username = profile?.username ?? null
+
+      // Получаем название карточки
+      const { data: cardInfo } = await supabaseAdmin
+        .from('cards')
+        .select('title')
+        .eq('id', card_id)
+        .maybeSingle()
+      const cardTitle = cardInfo?.title ?? null
+
+      // Вставляем in-app уведомления для каждого admin
+      const notifications = notifyIds.map((adminId) => ({
+        type: 'card_report',
+        receiver_id: adminId,
+        actor_id: user.id,
+        card_id: card_id,
+        is_read: false,
+      }))
+      await supabaseAdmin.from('notifications').insert(notifications)
+
+      // Отправляем push-уведомления (fire-and-forget)
+      const origin = req.nextUrl.origin
+      fetch(`${origin}/api/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userIds: notifyIds,
+          actor_id: user.id,
+          notificationType: 'card_report',
+          title: '🚩 Новая жалоба на карточку',
+          body: username
+            ? `${username} пожаловался на «${cardTitle ?? 'карточку'}»`
+            : `Жалоба на «${cardTitle ?? 'карточку'}»`,
+          url: '/admin/reports',
+        }),
+      }).catch(() => {})
+    }
+
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

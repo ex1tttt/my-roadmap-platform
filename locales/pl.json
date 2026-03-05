@@ -239,7 +239,8 @@
     "mentionedOne": "wspomniał o tobie w komentarzu do",
     "mentionedMany": "wspomnieli o tobie w komentarzu do",
     "wroteToSupport": "napisał do wsparcia",
-    "guestWroteToSupport": "Gość napisał do wsparcia"
+    "guestWroteToSupport": "Gość napisał do wsparcia",
+    "reportedCard": "zgłosił kartę"
   },
   "notification": {
     "follow": "{{name}} zaczął cię obserwować",

@@ -239,7 +239,8 @@
     "mentionedOne": "згадав вас у коментарі до",
     "mentionedMany": "згадали вас у коментарі до",
     "wroteToSupport": "написав в підтримку",
-    "guestWroteToSupport": "Гість написав в підтримку"
+    "guestWroteToSupport": "Гість написав в підтримку",
+    "reportedCard": "поскаржився на картку"
   },
   "notification": {
     "follow": "{{name}} підписався на вас",
