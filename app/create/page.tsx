@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { categories } from "@/constants/categories";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -166,7 +167,7 @@ function SortableStepCreate({ s, idx, updateStep, removeStep, removeStepImage, h
 
 export default function CreatePage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const mounted = useHasMounted();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -414,23 +415,23 @@ export default function CreatePage() {
             <div className="mt-4">
               <div className="mb-2 text-sm font-medium text-gray-700 dark:text-slate-200">{t('create.category')}</div>
               <div className="flex flex-wrap gap-2">
-                {[
-                  'Frontend', 'Backend', 'Mobile Development', 'Data Science',
-                  'Design', 'DevOps', 'Marketing', 'GameDev', 'Cybersecurity', 'Soft Skills',
-                ].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                      category === cat
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                {categories.map((cat) => {
+                  const lang = (i18n.language?.split("-")[0] ?? "en") as 'en' | 'ru' | 'pl' | 'uk';
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategory(cat.id)}
+                      className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                        category === cat.id
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800'
+                      }`}
+                    >
+                      {cat.translations[lang] || cat.translations['en']}
+                    </button>
+                  );
+                })}
               </div>
               {!category && (
                 <p className="mt-1.5 text-xs text-slate-500">{t('create.selectCategory')}</p>

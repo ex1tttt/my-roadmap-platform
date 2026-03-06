@@ -10,6 +10,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
+import { categories } from "@/constants/categories";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
 type Step = { id: string; title: string; content: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
@@ -167,7 +168,7 @@ export default function EditPage() {
   const rawId = params?.id;
   const cardId = Array.isArray(rawId) ? rawId[0] : (rawId ?? "");
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const hasMounted = useHasMounted();
 
   const [loading, setLoading] = useState(true);
@@ -431,23 +432,23 @@ export default function EditPage() {
             <div className="mt-4">
               <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.category') : 'Category'}</div>
               <div className="flex flex-wrap gap-2">
-                {[
-                  'Frontend', 'Backend', 'Mobile Development', 'Data Science',
-                  'Design', 'DevOps', 'Marketing', 'GameDev', 'Cybersecurity', 'Soft Skills',
-                ].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                      category === cat
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                {categories.map((cat) => {
+                  const lang = (i18n.language?.split("-")[0] ?? "en") as 'en' | 'ru' | 'pl' | 'uk';
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategory(cat.id)}
+                      className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                        category === cat.id
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {cat.translations[lang] || cat.translations['en']}
+                    </button>
+                  );
+                })}
               </div>
               {!category && (
                 <p className="mt-1.5 text-xs text-slate-500">{hasMounted ? t('edit.selectCategory') : ''}</p>
