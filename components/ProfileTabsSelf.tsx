@@ -5,6 +5,7 @@ import Card from "@/components/Card";
 import Link from "next/link";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { checkAndRevokeBadges } from "@/lib/badges";
 
 export default function ProfileTabsSelf({
   myCards,
@@ -99,6 +100,7 @@ export default function ProfileTabsSelf({
   };
 
   const confirmBulkDelete = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from('cards').delete().in('id', selectedCardIds);
     if (!error) {
       if (typeof setMyCards === 'function') {
@@ -111,6 +113,10 @@ export default function ProfileTabsSelf({
       setIsSelectionMode(false);
       setIsDeleteModalOpen(false);
       toast.success(t('profileTabs.deleteMultipleDone'));
+      if (user) {
+        await new Promise(res => setTimeout(res, 300));
+        await checkAndRevokeBadges(user.id);
+      }
     } else {
       toast.error(t('delete.error'));
     }
@@ -130,10 +136,15 @@ export default function ProfileTabsSelf({
           <button
             className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
             onClick={async () => {
+              const { data: { user } } = await supabase.auth.getUser();
               const { error } = await supabase.from('cards').delete().eq('id', cardId);
               if (!error) {
                 setMyCards((prev: any[]) => prev.filter((c) => c.id !== cardId));
                 toast.success(t('profileTabs.cardDeleted'), { id: tId });
+                if (user) {
+                  await new Promise(res => setTimeout(res, 300));
+                  await checkAndRevokeBadges(user.id);
+                }
               } else {
                 toast.error(t('delete.error'), { id: tId });
               }

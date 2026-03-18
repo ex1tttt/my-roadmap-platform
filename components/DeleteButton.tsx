@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { checkAndRevokeBadges } from '@/lib/badges';
 import { Trash2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useHasMounted } from '@/hooks/useHasMounted';
@@ -34,8 +35,14 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
               toast.dismiss(tId);
               setDeleting(true);
               try {
+                const { data: { user } } = await supabase.auth.getUser();
                 const { error } = await supabase.from("cards").delete().eq("id", cardId);
                 if (error) throw error;
+                if (user) {
+                  // Ждём 300 мс, чтобы Supabase успел обновить данные
+                  await new Promise(res => setTimeout(res, 300));
+                  await checkAndRevokeBadges(user.id);
+                }
                 toast.success('Карточка успешно удалена');
                 router.push("/");
                 router.refresh();

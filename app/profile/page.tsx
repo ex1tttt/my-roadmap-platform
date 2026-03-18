@@ -11,6 +11,7 @@ import ProfileTabsSelf from '@/components/ProfileTabsSelf'
 import { useTranslation } from 'react-i18next'
 import { useHasMounted } from '@/hooks/useHasMounted'
 import { toast } from 'sonner'
+import { checkAndRevokeBadges } from '@/lib/badges'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
 type Profile = { id: string; username: string; avatar?: string; bio?: string | null }
@@ -265,12 +266,17 @@ export default function ProfilePage() {
   }
 
   async function handleDelete(cardId: string) {
+    const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.from('cards').delete().eq('id', cardId)
     if (error) {
       toast.error('Ошибка при удалении: ' + error.message)
       return
     }
     setMyCards((prev) => prev.filter((c) => c.id !== cardId))
+    if (user) {
+      await new Promise(res => setTimeout(res, 300))
+      await checkAndRevokeBadges(user.id)
+    }
   }
 
   const displayed = tab === 'my' ? myCards : sharedCards

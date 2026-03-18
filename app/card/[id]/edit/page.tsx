@@ -308,6 +308,7 @@ export default function EditPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { alert(t('edit.errorNotAuth')); return; }
 
+
       // 1) Обновляем карточку
       // is_private меняет только владелец; коллабораторам эта колонка недоступна
       const cardPatch: Record<string, unknown> = { title, description, category };
@@ -321,6 +322,12 @@ export default function EditPage() {
         console.error("Card update error:", cardError);
         alert(t('common.error') + ': ' + cardError.message);
         return;
+      }
+
+      // Проверяем достижения за количество карточек
+      if (isOwner && user) {
+        const { checkAndAwardBadges } = await import('@/lib/badges');
+        await checkAndAwardBadges(user.id, 'first_card');
       }
 
       // 2) Синхронизируем шаги: удаляем старые → вставляем новые
