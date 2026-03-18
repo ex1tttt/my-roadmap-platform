@@ -282,7 +282,6 @@ export default function CreatePage() {
         .select("id");
 
       if (cardError) {
-        console.error('Full error:', cardError);
         setToast({ message: t('common.error') + ': ' + cardError.message, type: 'error' });
         setSaving(false);
         return;

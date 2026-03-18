@@ -47,7 +47,6 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
                 router.push("/");
                 router.refresh();
               } catch (err: any) {
-                console.error("Delete error:", err);
                 toast.error(t('delete.error') + ': ' + (err?.message ?? t('common.error')));
                 setDeleting(false);
               }

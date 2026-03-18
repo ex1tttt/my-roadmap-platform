@@ -10,6 +10,7 @@ export function ThemeAwareToaster() {
       theme={resolvedTheme as 'light' | 'dark' | 'system'}
       position="top-right"
       richColors
+      gap={20}
     />
   )
 }

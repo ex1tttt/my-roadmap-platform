@@ -24,9 +24,7 @@ async function awardIfNew(userId: string, badgeId: string): Promise<boolean> {
     .insert({ user_id: userId, badge_id: badgeId, awarded_at: new Date().toISOString() })
 
   if (error) {
-    if (error.code === '23505' || error.status === 409) return false;
-    // Только для других ошибок выводим в консоль
-    console.error('[badges] insert error:', error)
+    if (error.code === '23505') return false;
     return false
   }
   return true
@@ -41,7 +39,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
 
-    if (error) { console.error('[badges] first_card count error:', error); return }
+    if (error) { return }
     const n = count ?? 0
 
     if (n >= 1 && await awardIfNew(userId, 'pioneer'))  toast.success('🏆 Значок «Первопроходец» получен!')
@@ -58,7 +56,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id')
       .eq('user_id', userId)
 
-    if (cardsErr) { console.error('[badges] like cards error:', cardsErr); return }
+    if (cardsErr) { return }
 
     const cardIds = (userCards ?? []).map((c: { id: string }) => c.id)
     if (cardIds.length === 0) return
@@ -68,7 +66,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id', { count: 'exact', head: true })
       .in('card_id', cardIds)
 
-    if (likesErr) { console.error('[badges] like count error:', likesErr); return }
+    if (likesErr) { return }
     const n = count ?? 0
 
     if (n >= 100 && await awardIfNew(userId, 'sensei'))  toast.success('🏆 Значок «Сенсей» получен!')
@@ -82,7 +80,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
 
-    if (error) { console.error('[badges] comment count error:', error); return }
+    if (error) { return }
     const n = count ?? 0
 
     if (n >= 50  && await awardIfNew(userId, 'critic'))    toast.success('🏆 Значок «Критик» получен!')
@@ -96,7 +94,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id', { count: 'exact', head: true })
       .eq('following_id', userId)
 
-    if (error) { console.error('[badges] follow_received count error:', error); return }
+    if (error) { return }
     const n = count ?? 0
 
     if (n >= 10 && await awardIfNew(userId, 'social'))      toast.success('🏆 Значок «Общительный» получен!')
@@ -110,7 +108,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
 
-    if (error) { console.error('[badges] fan count error:', error); return }
+    if (error) { return }
     const n = count ?? 0
 
     if (n >= 50 && await awardIfNew(userId, 'fan')) toast.success('🏆 Значок «Фанат» получен!')
@@ -123,7 +121,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
 
-    if (error) { console.error('[badges] collector count error:', error); return }
+    if (error) { return }
     const n = count ?? 0
 
     if (n >= 20 && await awardIfNew(userId, 'collector')) toast.success('🏆 Значок «Коллекционер» получен!')
@@ -221,7 +219,6 @@ export async function recalculateAllBadges(userId: string): Promise<void> {
     .eq('user_id', userId)
 
   if (deleteError) {
-    console.error('[badges] recalculate: delete error:', deleteError)
     return
   }
 
