@@ -1,3 +1,9 @@
+
+export const metadata = {
+  title: "История | Roadmap Platform",
+  description: "История ваших действий и просмотренных дорожных карт.",
+};
+
 "use client";
 
 import { useEffect, useState } from "react";

@@ -1,3 +1,9 @@
+
+export const metadata = {
+  title: "Регистрация | Roadmap Platform",
+  description: "Создайте аккаунт на платформе Roadmap Platform и начните свой путь развития!",
+};
+
 "use client";
 
 import React, { useState } from "react";

@@ -1,3 +1,9 @@
+
+export const metadata = {
+  title: "Избранное | Roadmap Platform",
+  description: "Ваши избранные дорожные карты на платформе Roadmap Platform.",
+};
+
 "use client";
 
 import { useEffect, useState } from "react";

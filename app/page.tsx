@@ -1,3 +1,9 @@
+
+export const metadata = {
+  title: "Roadmap Platform — Платформа для роста и обучения",
+  description: "Современная платформа для развития, обучения и достижения новых высот. Стройте свои дорожные карты, отслеживайте прогресс и достигайте целей вместе с нами!",
+};
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";

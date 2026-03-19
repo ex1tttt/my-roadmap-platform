@@ -1,3 +1,9 @@
+
+export const metadata = {
+  title: "Профиль | Roadmap Platform",
+  description: "Ваш профиль и дорожные карты на платформе Roadmap Platform.",
+};
+
 'use client'
 
 import { useEffect, useRef, useState } from 'react'

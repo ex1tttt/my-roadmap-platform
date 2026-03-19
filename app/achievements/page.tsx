@@ -1,3 +1,9 @@
+
+export const metadata = {
+  title: "Достижения | Roadmap Platform",
+  description: "Ваши достижения и награды на платформе Roadmap Platform.",
+};
+
 'use client'
 
 import { useEffect, useState } from 'react'
