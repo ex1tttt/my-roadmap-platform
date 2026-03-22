@@ -289,7 +289,7 @@ export default function Card({
           )}
 
           {/* Share */}
-          <ShareButton cardId={card.id} />
+          <ShareButton cardId={card.id} title={card.title} description={card.description} />
 
           {/* Download */}
           <button
