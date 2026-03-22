@@ -91,13 +91,13 @@ export async function generateMetadata(
       .from("cards")
       .select("title,description,image_url")
       .eq("id", id)
-      .single();
+      .limit(1);
     
     if (error) {
       console.error(`[Metadata] Query error for card ${id}:`, error.code, error.message);
-    } else if (rows) {
-      data = rows as { title: string; description: string; image_url: string };
-      console.log(`[Metadata] ✅ Successfully found card ${id}: "${rows.title}"`);
+    } else if (rows && rows.length > 0) {
+      data = rows[0] as { title: string; description: string; image_url: string };
+      console.log(`[Metadata] ✅ Successfully found card ${id}: "${rows[0].title}"`);
     } else {
       console.warn(`[Metadata] Card ${id} not found or not public`);
     }
