@@ -73,7 +73,7 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  let data: { title: string; description: string; image_url: string } | null = null;
+  let data: { title: string; description: string } | null = null;
   
   console.log(`[Metadata] 🔍 Fetching metadata for card: ${id}`);
   
@@ -86,7 +86,7 @@ export async function generateMetadata(
     if (serviceKey) {
       console.log(`[Metadata] 🔑 Using Service Role Key`);
       const res = await fetch(
-        `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
+        `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description&limit=1`,
         {
           headers: {
             apikey: serviceKey,
@@ -108,7 +108,7 @@ export async function generateMetadata(
     if (!data) {
       console.log(`[Metadata] 🔐 Using Anon Key with RLS`);
       const res = await fetch(
-        `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
+        `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description&limit=1`,
         {
           headers: {
             apikey: anonKey,
@@ -147,7 +147,7 @@ export async function generateMetadata(
     ? "Современная платформа для развития, обучения и достижения новых высот." 
     : data.description;
   const description = desc.slice(0, 160);
-  const image = data.image_url || DEFAULT_OG_IMAGE;
+  const image = DEFAULT_OG_IMAGE;
   
   console.log(`[Metadata] ✨ Generated OG tags: "${title}" | "${description.slice(0, 40)}..."`);
   
