@@ -78,25 +78,26 @@ export async function generateMetadata(
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   let data: { title: string; description: string; image_url: string } | null = null;
   try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
-      {
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-          Accept: "application/json",
-        },
-        cache: "no-store",
-      }
-    );
+    const url = `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
     if (res.ok) {
       const rows = await res.json();
       data = rows?.[0] ?? null;
+    } else {
+      console.error(`[Metadata] Supabase fetch failed: ${res.status} ${res.statusText} for card ${id}`);
     }
-  } catch {
-    // ignore
+  } catch (error) {
+    console.error(`[Metadata] Error fetching card ${id}:`, error);
   }
   if (!data) {
+    console.warn(`[Metadata] No data found for card ${id}, using fallback`);
     return { title: "Roadmap | Дорожная карта не найдена" };
   }
   const title = data.title ?? "Без названия";
