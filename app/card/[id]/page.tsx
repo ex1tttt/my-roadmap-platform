@@ -73,41 +73,33 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  // Используем Service Role Key если есть, иначе Anon Key
-  const apiKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   let data: { title: string; description: string; image_url: string } | null = null;
   
   try {
-    // Запрашиваем только публичные карты если используем Anon key
-    // Service Role Key игнорирует RLS полностью
-    const isServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const filters = isServiceRole ? `id=eq.${id}` : `id=eq.${id}&is_private=eq.false`;
-    const url = `${supabaseUrl}/rest/v1/cards?${filters}&select=title,description,image_url&limit=1`;
+    // Используем Service Role Key с Supabase SDK для обхода RLS
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     
-    const res = await fetch(url, {
-      headers: {
-        apikey: apiKey,
-        Authorization: `Bearer ${apiKey}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    });
+    const { data: rows, error } = await supabase
+      .from("cards")
+      .select("title,description,image_url")
+      .eq("id", id)
+      .limit(1)
+      .single();
     
-    if (res.ok) {
-      const rows = await res.json();
-      data = rows?.[0] ?? null;
-      if (data) {
-        console.log(`[Metadata] Successfully fetched card ${id}`);
-      } else {
-        console.warn(`[Metadata] Card ${id} not found in database`);
-      }
+    if (error) {
+      console.error(`[Metadata] Supabase error for card ${id}:`, error.message);
+    } else if (rows) {
+      data = rows as { title: string; description: string; image_url: string };
+      console.log(`[Metadata] Successfully fetched card ${id}:`, rows.title);
     } else {
-      const errorText = await res.text();
-      console.error(`[Metadata] Supabase fetch failed: ${res.status} ${res.statusText} for card ${id}`, errorText);
+      console.warn(`[Metadata] Card ${id} returned null`);
     }
   } catch (error) {
-    console.error(`[Metadata] Error fetching card ${id}:`, error);
+    console.error(`[Metadata] Error fetching card ${id}:`, error instanceof Error ? error.message : String(error));
   }
   
   if (!data) {
