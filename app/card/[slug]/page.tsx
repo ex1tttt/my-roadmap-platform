@@ -318,7 +318,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-6 py-4">
           <div className="mb-3 flex items-center justify-between gap-4">
-            <BackButton />
+            <BackButton isOwner={isOwner} />
             <div className="flex items-center gap-2">
               <ClientOnly fallback={<div className="h-7 w-24" />}>
                 <ShareButton
