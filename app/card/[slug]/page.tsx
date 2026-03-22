@@ -84,7 +84,7 @@ export async function generateMetadata(
     
     // Определяем, это UUID или slug
     const isOldFormat = isUUID(slug);
-    const queryParam = isOldFormat ? `id=eq.${slug}` : `slug=eq.${slug}`;
+    let queryParam = isOldFormat ? `id=eq.${slug}` : `slug=eq.${slug}`;
     
     // Пробуем REST API с Service Role Key если есть
     if (serviceKey) {
@@ -105,6 +105,26 @@ export async function generateMetadata(
           data = rows[0];
           if (data) {
             console.log(`[Metadata] ✅ Found via Service Role: "${data.title}"`);
+          }
+        }
+      } else if (res.status === 400 && !isOldFormat) {
+        // Если запрос по slug вернул 400 (возможно, колонка не существует), пробуем по ID
+        console.log(`[Metadata] ⚠️ Slug query failed, trying ID as fallback`);
+        const fallbackRes = await fetch(
+          `${supabaseUrl}/rest/v1/cards?id=eq.${slug}&select=title,description&limit=1`,
+          {
+            headers: {
+              apikey: serviceKey,
+              Authorization: `Bearer ${serviceKey}`,
+              Accept: "application/json",
+            },
+          }
+        );
+        if (fallbackRes.ok) {
+          const rows = await fallbackRes.json();
+          if (rows && rows.length > 0 && rows[0]) {
+            data = rows[0] as { title: string; description: string };
+            console.log(`[Metadata] ✅ Found via ID fallback: "${data.title ?? 'unknown'}"`);
           }
         }
       }
@@ -133,7 +153,27 @@ export async function generateMetadata(
         } else {
           console.warn(`[Metadata] ⚠️ Anon Key returned empty result for ${slug}`);
         }
-      } else {
+      } else if (res.status === 400 && !isOldFormat) {
+        // Если запрос по slug вернул 400, пробуем по ID
+        console.log(`[Metadata] ⚠️ Slug query failed, trying ID as fallback`);
+        const fallbackRes = await fetch(
+          `${supabaseUrl}/rest/v1/cards?id=eq.${slug}&select=title,description&limit=1`,
+          {
+            headers: {
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`,
+              Accept: "application/json",
+            },
+          }
+        );
+        if (fallbackRes.ok) {
+          const rows = await fallbackRes.json();
+          if (rows && rows.length > 0 && rows[0]) {
+            data = rows[0] as { title: string; description: string };
+            console.log(`[Metadata] ✅ Found via ID fallback: "${data.title ?? 'unknown'}"`);
+          }
+        }
+      } else if (!res.ok) {
         const errorText = await res.text();
         console.error(`[Metadata] ❌ Anon Key request failed: ${res.status} - ${errorText.slice(0, 100)}`);
       }
@@ -194,18 +234,39 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   
   // Определяем, это UUID или slug
   const isOldFormat = isUUID(slug);
-  const query = isOldFormat 
-    ? supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("id", slug) 
-    : supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("slug", slug);
+  let data: any = null;
+  let error: any = null;
+  let currentUser: any = null;
   
-  // Получаем пользователя и карточку параллельно
-  const [
-    { data, error },
-    { data: { user: currentUser } }
-  ] = await Promise.all([
-    query.maybeSingle(),
-    supabaseAuth.auth.getUser(),
-  ]);
+  try {
+    // Получаем пользователя и карточку параллельно
+    const [cardResult, userResult] = await Promise.all([
+      isOldFormat 
+        ? supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("id", slug).maybeSingle()
+        : supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("slug", slug).maybeSingle(),
+      supabaseAuth.auth.getUser(),
+    ]);
+    
+    data = cardResult.data;
+    error = cardResult.error;
+    currentUser = userResult.data?.user;
+    
+    // Если запрос по slug вернул ошибку (возможно, колонка slug не существует), пробуем по ID
+    if (error && !isOldFormat) {
+      console.warn(`[Card] Slug query failed, trying by ID as fallback: ${slug}`, error);
+      const fallbackResult = await supabaseAuth
+        .from("cards")
+        .select("*, steps(*), resources(*), profiles:user_id(*)")
+        .eq("id", slug)
+        .maybeSingle();
+      
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
+  } catch (err) {
+    console.error("Error loading card:", err);
+    error = err;
+  }
 
   // Проверка ошибок
   if (error) {
@@ -215,8 +276,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         <main className="mx-auto max-w-4xl">
           <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-950/40 p-6 space-y-1">
             <p className="font-semibold text-red-600 dark:text-red-400">Ошибка при загрузке карточки</p>
-            <p className="text-sm text-red-300">{error.message}</p>
-            {error.details && <p className="text-xs text-red-500">{error.details}</p>}
+            <p className="text-sm text-red-300">{error?.message || "Unknown error"}</p>
+            {error?.details && <p className="text-xs text-red-500">{error.details}</p>}
           </div>
         </main>
       </div>
