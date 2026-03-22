@@ -99,7 +99,9 @@ export async function generateMetadata(
         const rows = await res.json();
         if (rows && rows.length > 0) {
           data = rows[0];
-          console.log(`[Metadata] ✅ Found via Service Role: "${data.title}"`);
+          if (data) {
+            console.log(`[Metadata] ✅ Found via Service Role: "${data.title}"`);
+          }
         }
       }
     }
@@ -121,7 +123,9 @@ export async function generateMetadata(
         const rows = await res.json();
         if (rows && rows.length > 0) {
           data = rows[0];
-          console.log(`[Metadata] ✅ Found via Anon Key: "${data.title}"`);
+          if (data) {
+            console.log(`[Metadata] ✅ Found via Anon Key: "${data.title}"`);
+          }
         } else {
           console.warn(`[Metadata] ⚠️ Anon Key returned empty result for ${id}`);
         }
