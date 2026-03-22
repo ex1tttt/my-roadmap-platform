@@ -1,9 +1,4 @@
 
-export const metadata = {
-  title: "Настройки | Roadmap Platform",
-  description: "Настройки вашего аккаунта и уведомлений на платформе Roadmap Platform.",
-};
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";

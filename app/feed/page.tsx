@@ -1,9 +1,4 @@
 
-export const metadata = {
-  title: "Лента | Roadmap Platform",
-  description: "Актуальные дорожные карты и обновления от пользователей платформы.",
-};
-
 "use client";
 
 import { useEffect, useState } from "react";
