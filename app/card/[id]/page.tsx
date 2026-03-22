@@ -75,38 +75,67 @@ export async function generateMetadata(
   const { id } = await params;
   let data: { title: string; description: string; image_url: string } | null = null;
   
-  console.log(`[Metadata] Fetching metadata for card: ${id}`);
+  console.log(`[Metadata] 🔍 Fetching metadata for card: ${id}`);
   
   try {
-    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
-    // Используем Anon Key (RLS политика cards_public_select разрешит доступ к публичным карте)
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Пробуем REST API с Service Role Key если есть
+    if (serviceKey) {
+      console.log(`[Metadata] 🔑 Using Service Role Key`);
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
+        {
+          headers: {
+            apikey: serviceKey,
+            Authorization: `Bearer ${serviceKey}`,
+            Accept: "application/json",
+          },
+        }
+      );
+      if (res.ok) {
+        const rows = await res.json();
+        if (rows && rows.length > 0) {
+          data = rows[0];
+          console.log(`[Metadata] ✅ Found via Service Role: "${data.title}"`);
+        }
+      }
+    }
     
-    // RLS автоматически отфильтрует только публичные карты через cards_public_select политику
-    const { data: rows, error } = await supabase
-      .from("cards")
-      .select("title,description,image_url")
-      .eq("id", id)
-      .limit(1);
-    
-    if (error) {
-      console.error(`[Metadata] Query error for card ${id}:`, error.code, error.message);
-    } else if (rows && rows.length > 0) {
-      data = rows[0] as { title: string; description: string; image_url: string };
-      console.log(`[Metadata] ✅ Successfully found card ${id}: "${rows[0].title}"`);
-    } else {
-      console.warn(`[Metadata] Card ${id} not found or not public`);
+    // Если не нашли с Service Role, попробуем Anon Key
+    if (!data) {
+      console.log(`[Metadata] 🔐 Using Anon Key with RLS`);
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
+        {
+          headers: {
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+            Accept: "application/json",
+          },
+        }
+      );
+      if (res.ok) {
+        const rows = await res.json();
+        if (rows && rows.length > 0) {
+          data = rows[0];
+          console.log(`[Metadata] ✅ Found via Anon Key: "${data.title}"`);
+        } else {
+          console.warn(`[Metadata] ⚠️ Anon Key returned empty result for ${id}`);
+        }
+      } else {
+        const errorText = await res.text();
+        console.error(`[Metadata] ❌ Anon Key request failed: ${res.status} - ${errorText.slice(0, 100)}`);
+      }
     }
   } catch (error) {
-    console.error(`[Metadata] Exception for card ${id}:`, error instanceof Error ? error.message : String(error));
+    console.error(`[Metadata] 💥 Exception for card ${id}:`, error instanceof Error ? error.message : String(error));
   }
   
   if (!data || !data.title) {
-    console.warn(`[Metadata] Using fallback title for card ${id}`);
+    console.warn(`[Metadata] 🚫 No data found for card ${id} - using fallback`);
     return { 
       title: "Roadmap | Дорожная карта не найдена",
       description: "Современная платформа для развития, обучения и достижения новых высот."
@@ -114,14 +143,13 @@ export async function generateMetadata(
   }
   
   const title = data.title ?? "Без названия";
-  // Обработка EMPTY и пустых описаний
   const desc = (data.description === "EMPTY" || !data.description) 
     ? "Современная платформа для развития, обучения и достижения новых высот." 
     : data.description;
   const description = desc.slice(0, 160);
   const image = data.image_url || DEFAULT_OG_IMAGE;
   
-  console.log(`[Metadata] Generated OG tags for card ${id}:`, { title, description: description.slice(0, 50) + "..." });
+  console.log(`[Metadata] ✨ Generated OG tags: "${title}" | "${description.slice(0, 40)}..."`);
   
   return {
     title: `${title} | Roadmap Platform`,
