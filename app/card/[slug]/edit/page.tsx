@@ -188,17 +188,28 @@ export default function EditPage() {
 
   // đŚđ░đ│ĐÇĐâđĚđ║đ░ đ┤đ░đŻđŻĐőĐů đŞ đ┐ĐÇđżđ▓đÁĐÇđ║đ░ đ┐ĐÇđ░đ▓
   useEffect(() => {
-    if (!cardId) return;
+    if (!slug) return;
 
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.replace("/login"); return; }
 
-      const { data: card, error } = await supabase
-        .from("cards")
-        .select("*, steps(*), resources(*)")
-        .eq("id", cardId)
-        .maybeSingle();
+      // Определяем, это UUID или slug
+      const isOldFormat = isUUID(slug);
+      
+      // Пробуем найти карточку
+      let cardQuery = isOldFormat
+        ? supabase.from("cards").select("*, steps(*), resources(*)").eq("id", slug).maybeSingle()
+        : supabase.from("cards").select("*, steps(*), resources(*)").eq("slug", slug).maybeSingle();
+      
+      let { data: card, error } = await cardQuery;
+
+      // Если не найдено по slug, пробуем по ID как fallback
+      if (error && !isOldFormat) {
+        const fallback = await supabase.from("cards").select("*, steps(*), resources(*)").eq("id", slug).maybeSingle();
+        card = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) { console.error("Fetch error:", error); setLoading(false); return; }
       if (!card) { setLoading(false); return; }
