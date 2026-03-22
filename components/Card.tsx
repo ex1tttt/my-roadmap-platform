@@ -257,6 +257,7 @@ export default function Card({
           <Link
             href={`/card/${card.id}#comments`}
             onClick={(e) => e.stopPropagation()}
+            title={t('comments.title') || 'Комментарии'}
             className={`flex items-center gap-1 text-xs transition-colors hover:text-blue-400 ${ initialCommentsCount > 0 ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600' }`}
           >
             <MessageSquare className="h-3.5 w-3.5" />
@@ -269,7 +270,7 @@ export default function Card({
           <button
             onClick={handleFavorite}
             disabled={!userId || favLoading}
-            title={userId ? (isFavorite ? t('cards.unfavorite') : t('cards.favorite')) : t('auth.login')}
+            title={userId ? (isFavorite ? t('card.removeFromFavorites') : t('card.addToFavorites')) : t('auth.login')}
             className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
               isFavorite ? 'text-yellow-400' : 'text-slate-400 dark:text-slate-500 hover:text-yellow-400'
             }`}
@@ -292,9 +293,9 @@ export default function Card({
 
           {/* Download */}
           <button
-            title={t('cards.download')}
+            title={t('card.download')}
             className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-blue-400 transition-colors"
-            onClick={(e) => { e.stopPropagation(); /* download logic */ }}
+            onClick={(e) => { e.stopPropagation(); handleDownload(e); }}
           >
             <Download className="h-3.5 w-3.5" />
           </button>

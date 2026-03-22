@@ -60,7 +60,7 @@ export default function ShareButton({ cardId, title = "Roadmap", description, la
       className={`relative flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       <Share2 className="h-3.5 w-3.5" />
-      {label && <span>{copied ? (mounted ? t('share.copied') : 'Copied!') : (mounted ? t('card.share') : label)}</span>}
+      {label && <span>{copied ? (mounted ? t('share.copied') : 'Copied!') : (mounted ? t('share.label') : label)}</span>}
       {!label && copied && (
         <span className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-700 px-2 py-0.5 text-[10px] text-slate-200 shadow">
           {mounted ? t('share.linkCopied') : 'Link copied!'}
