@@ -147,8 +147,9 @@ export async function generateMetadata(
   }
   
   const title = data.title ?? "Без названия";
+  // Если description пустая, используем название карты как описание
   const desc = (data.description === "EMPTY" || !data.description) 
-    ? "Современная платформа для развития, обучения и достижения новых высот." 
+    ? title
     : data.description;
   const description = desc.slice(0, 160);
   const image = DEFAULT_OG_IMAGE;
