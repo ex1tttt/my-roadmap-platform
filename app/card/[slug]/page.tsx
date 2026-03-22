@@ -220,6 +220,8 @@ export async function generateMetadata(
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  console.log(`[Card Page] Loading card with slug/id: ${slug}`);
+  
   const cookieStore = await cookies();
   const supabaseAuth = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -234,12 +236,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   
   // Определяем, это UUID или slug
   const isOldFormat = isUUID(slug);
+  console.log(`[Card Page] Is old UUID format: ${isOldFormat}`);
+  
   let data: any = null;
   let error: any = null;
   let currentUser: any = null;
   
   try {
     // Получаем пользователя и карточку параллельно
+    console.log(`[Card Page] Fetching card data...`);
     const [cardResult, userResult] = await Promise.all([
       isOldFormat 
         ? supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("id", slug).maybeSingle()
@@ -250,6 +255,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     data = cardResult.data;
     error = cardResult.error;
     currentUser = userResult.data?.user;
+    
+    console.log(`[Card Page] Card query completed. Data exists: ${!!data}, Error: ${error ? error.message : 'none'}`);
     
     // Если запрос по slug вернул ошибку (возможно, колонка slug не существует), пробуем по ID
     if (error && !isOldFormat) {
@@ -262,15 +269,16 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       
       data = fallbackResult.data;
       error = fallbackResult.error;
+      console.log(`[Card Page] Fallback query completed. Data exists: ${!!data}, Error: ${error ? error.message : 'none'}`);
     }
   } catch (err) {
-    console.error("Error loading card:", err);
+    console.error("[Card Page] Exception caught:", err);
     error = err;
   }
 
   // Проверка ошибок
   if (error) {
-    console.error("Full fetch error:", error);
+    console.error("[Card Page] Returning error page:", error);
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
         <main className="mx-auto max-w-4xl">
@@ -287,26 +295,34 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   // Проверяем коллаборацию и блокировку параллельно
   let collaboratorRole: "viewer" | "editor" | null = null;
   let isBlockedByAuthor = false;
+  
   if (data && currentUser) {
-    const [collabResult, blockResult] = await Promise.all([
-      currentUser.email
-        ? supabaseAuth
-            .from('card_collaborators')
-            .select('role')
-            .eq('card_id', data.id)
-            .eq('user_email', currentUser.email)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabaseAuth
-        .from('user_blocks')
-        .select('id')
-        .eq('blocked_user_id', currentUser.id)
-        .eq('blocking_user_id', data.user_id)
-        .maybeSingle(),
-    ]);
-    
-    collaboratorRole = collabResult.data?.role ?? null;
-    isBlockedByAuthor = !!blockResult.data;
+    try {
+      console.log(`[Card Page] Checking collaborations for user ${currentUser.email}`);
+      const [collabResult, blockResult] = await Promise.all([
+        currentUser.email
+          ? supabaseAuth
+              .from('card_collaborators')
+              .select('role')
+              .eq('card_id', data.id)
+              .eq('user_email', currentUser.email)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabaseAuth
+          .from('user_blocks')
+          .select('id')
+          .eq('blocked_user_id', currentUser.id)
+          .eq('blocking_user_id', data.user_id)
+          .maybeSingle(),
+      ]);
+      
+      collaboratorRole = collabResult.data?.role ?? null;
+      isBlockedByAuthor = !!blockResult.data;
+      console.log(`[Card Page] Collab role: ${collaboratorRole}, Blocked: ${isBlockedByAuthor}`);
+    } catch (err) {
+      console.error(`[Card Page] Error checking collaborations:`, err);
+      // продолжаем даже если ошибка - это не критично
+    }
   }
 
   const canEdit = data && (data.user_id === currentUser?.id || collaboratorRole === "editor");
