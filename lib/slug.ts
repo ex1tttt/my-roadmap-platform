@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Генерирует URL-friendly slug из строки
  * @param str - Исходная строка
