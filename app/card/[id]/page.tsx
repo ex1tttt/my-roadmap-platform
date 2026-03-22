@@ -76,27 +76,68 @@ export async function generateMetadata(
   let data: { title: string; description: string; image_url: string } | null = null;
   
   try {
-    // Используем Service Role Key с Supabase SDK для обхода RLS
     const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
+    
+    // Пробуем Service Role Key сначала (если есть)
+    let supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     
-    const { data: rows, error } = await supabase
+    // Запрос с Service Role Key игнорирует RLS
+    let { data: rows, error } = await supabase
       .from("cards")
       .select("title,description,image_url")
       .eq("id", id)
       .limit(1)
       .single();
     
+    // Если ошибка и у нас был Service Role, пробуем Anon Key с is_private фильтром
+    if (error && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn(`[Metadata] Service Role failed, trying Anon Key for card ${id}`);
+      supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      
+      const { data: anonRows, error: anonError } = await supabase
+        .from("cards")
+        .select("title,description,image_url")
+        .eq("id", id)
+        .eq("is_private", false) // Только публичные карты
+        .limit(1)
+        .single();
+      
+      if (!anonError && anonRows) {
+        rows = anonRows;
+        error = null;
+      } else {
+        error = anonError;
+      }
+    }
+    
     if (error) {
-      console.error(`[Metadata] Supabase error for card ${id}:`, error.message);
+      // Пробуем fallback запрос через REST API как последняя опция
+      console.warn(`[Metadata] SDK query failed for card ${id}, trying REST API`);
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/cards?id=eq.${id}&select=title,description,image_url&limit=1`,
+        {
+          headers: {
+            apikey: serviceKey,
+            Authorization: `Bearer ${serviceKey}`,
+            Accept: "application/json",
+          },
+        }
+      );
+      
+      if (res.ok) {
+        const restRows = await res.json();
+        data = restRows?.[0] ?? null;
+      }
     } else if (rows) {
       data = rows as { title: string; description: string; image_url: string };
       console.log(`[Metadata] Successfully fetched card ${id}:`, rows.title);
-    } else {
-      console.warn(`[Metadata] Card ${id} returned null`);
     }
   } catch (error) {
     console.error(`[Metadata] Error fetching card ${id}:`, error instanceof Error ? error.message : String(error));
@@ -108,7 +149,9 @@ export async function generateMetadata(
   }
   
   const title = data.title ?? "Без названия";
-  const description = (data.description ?? "").slice(0, 160) || "Дорожная карта развития навыков";
+  // Если description = "EMPTY", используем пустую строку
+  const desc = data.description === "EMPTY" || !data.description ? "Дорожная карта развития навыков" : data.description;
+  const description = desc.slice(0, 160);
   const image = data.image_url || DEFAULT_OG_IMAGE;
   return {
     title: `${title} | Roadmap Platform`,
