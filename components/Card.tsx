@@ -15,6 +15,7 @@ type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
   id: string;
   title: string;
+  slug?: string;
   category?: string;
   description?: string;
   user: Profile;
@@ -171,11 +172,13 @@ export default function Card({
 
   if (!mounted) return null;
 
+  const cardLink = card.slug || card.id;
+
   return (
     <article
       ref={cardRef}
       className="group relative w-full min-h-[200px] flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-3 backdrop-blur-md transition-all hover:border-slate-300 dark:hover:border-white/20 dark:hover:bg-slate-900/70 cursor-pointer overflow-hidden"
-      onClick={() => router.push(`/card/${card.id}`)}
+      onClick={() => router.push(`/card/${cardLink}`)}
     >
       {/* Верхний блок: заголовок, автор, описание */}
       <div className="flex flex-col">
@@ -255,7 +258,7 @@ export default function Card({
           </button>
 
           <Link
-            href={`/card/${card.id}#comments`}
+            href={`/card/${cardLink}#comments`}
             onClick={(e) => e.stopPropagation()}
             title={t('comments.title') || 'Комментарии'}
             className={`flex items-center gap-1 text-xs transition-colors hover:text-blue-400 ${ initialCommentsCount > 0 ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600' }`}
@@ -289,7 +292,7 @@ export default function Card({
           )}
 
           {/* Share */}
-          <ShareButton cardId={card.id} title={card.title} description={card.description} />
+          <ShareButton cardId={card.id} slug={card.slug} title={card.title} description={card.description} />
 
           {/* Download */}
           <button

@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
 interface ShareButtonProps {
-  cardId: string | undefined;
+  cardId?: string | undefined;
+  slug?: string | undefined;
   title?: string;
   description?: string;
   label?: string;
@@ -14,7 +15,7 @@ interface ShareButtonProps {
   className?: string;
 }
 
-export default function ShareButton({ cardId, title = "Roadmap", description, label, className = "" }: ShareButtonProps) {
+export default function ShareButton({ cardId, slug, title = "Roadmap", description, label, className = "" }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation();
   const mounted = useHasMounted();
@@ -23,12 +24,15 @@ export default function ShareButton({ cardId, title = "Roadmap", description, la
     e.preventDefault();
     e.stopPropagation();
 
-    if (!cardId) {
-      console.error('ShareButton: cardId is missing, cannot build share URL');
+    // Приоритет: slug > cardId
+    const urlPart = slug || cardId;
+    
+    if (!urlPart) {
+      console.error('ShareButton: neither slug nor cardId provided');
       return;
     }
 
-    const url = `${window.location.origin}/card/${cardId}`;
+    const url = `${window.location.origin}/card/${urlPart}`;
 
     if (navigator.share) {
       try {
@@ -55,8 +59,8 @@ export default function ShareButton({ cardId, title = "Roadmap", description, la
   return (
     <button
       onClick={handleShare}
-      disabled={!cardId}
-      title={cardId ? (mounted ? t('share.label') : 'Share') : 'Card ID missing'}
+      disabled={!slug && !cardId}
+      title={(slug || cardId) ? (mounted ? t('share.label') : 'Share') : 'Card ID missing'}
       className={`relative flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       <Share2 className="h-3.5 w-3.5" />
