@@ -58,3 +58,8 @@ body {
     margin-right: 8px;
   }
 }
+
+/* ─── Скрытие reCAPTCHA баннера ─── */
+.grecaptcha-badge {
+  display: none !important;
+}
