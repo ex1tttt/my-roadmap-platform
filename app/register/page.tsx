@@ -3,12 +3,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { getToken } = useRecaptcha();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -27,17 +28,28 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
 
-      const userId = data?.user?.id;
-      if (userId) {
-        // create profile row
-        const { error: profileError } = await supabase.from("profiles").insert({ id: userId, username });
-        if (profileError) console.error("Profile insert error", profileError);
+      // Получаем reCAPTCHA токен
+      const recaptchaToken = await getToken("register");
+      if (!recaptchaToken) {
+        setError("Не удалось инициализировать проверку безопасности");
+        return;
       }
 
-      // Redirect after sign up (may require email confirmation depending on Supabase settings)
+      // Отправляем запрос на API endpoint
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, username, recaptchaToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Ошибка регистрации");
+      }
+
+      // Успешная регистрация
       router.push("/");
     } catch (err: any) {
       console.error(err);

@@ -3,12 +3,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { getToken } = useRecaptcha();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,10 +20,27 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      // router.refresh() заставляет Next.js перечитать куки сессии на сервере,
-      // после чего middleware увидит актуальную сессию
+      // Получаем reCAPTCHA токен
+      const recaptchaToken = await getToken("login");
+      if (!recaptchaToken) {
+        setError("Не удалось инициализировать проверку безопасности");
+        return;
+      }
+
+      // Отправляем запрос на API endpoint
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, recaptchaToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Ошибка входа");
+      }
+
+      // Успешный вход
       router.refresh();
       router.push("/");
     } catch (err: any) {
