@@ -408,8 +408,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           </ClientOnly>
         </section>
         <aside className="mt-12 lg:mt-0">
-          <div className="sticky top-20 space-y-4">
-            <div className="relative z-10 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
+          <div className="space-y-4">
+            <div className="fixed right-3 top-20 w-[calc(100%-24px)] max-w-xs sm:right-6 sm:w-80 z-50 lg:static lg:w-auto lg:max-w-none lg:relative rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 <T k="card.rate" />
               </h2>
