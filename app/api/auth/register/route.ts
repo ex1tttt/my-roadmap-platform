@@ -20,8 +20,18 @@ export async function POST(req: NextRequest) {
     console.log('[REGISTER] reCAPTCHA result:', captchaResult);
     
     // Пропускаем reCAPTCHA валидацию на localhost для разработки
-    const isLocalhost = req.headers.get('host')?.includes('localhost') || req.headers.get('host')?.includes('127.0.0.1');
-    console.log('[REGISTER] isLocalhost:', isLocalhost);
+    const host = req.headers.get('host') || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+    console.log('[REGISTER] Host:', host, 'isLocalhost:', isLocalhost);
+
+    // Проверяем наличие SECRET_KEY в продакшене
+    if (!isLocalhost && !process.env.RECAPTCHA_SECRET_KEY) {
+      console.error('[REGISTER] RECAPTCHA_SECRET_KEY не установлен на сервере');
+      return NextResponse.json(
+        { error: "reCAPTCHA не настроена на сервере. Свяжитесь с администратором. (Error: Missing RECAPTCHA_SECRET_KEY)" },
+        { status: 503 }
+      );
+    }
     
     if (!isLocalhost && (!captchaResult.success || !isValidScore(captchaResult.score))) {
       console.warn(

@@ -6,8 +6,11 @@ export async function verifyRecaptchaToken(token: string): Promise<{
   score: number
   action: string
 }> {
-  if (!process.env.RECAPTCHA_SECRET_KEY) {
-    console.error('RECAPTCHA_SECRET_KEY не установлен')
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY
+  
+  if (!secretKey) {
+    console.error('[reCAPTCHA] RECAPTCHA_SECRET_KEY не установлен на сервере')
+    // На продакшене без SECRET_KEY не можем проверить - возвращаем ошибку
     return { success: false, score: 0, action: '' }
   }
 
@@ -29,7 +32,7 @@ export async function verifyRecaptchaToken(token: string): Promise<{
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
+      body: `secret=${secretKey}&response=${token}`,
     })
 
     const data = await response.json()
