@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
 
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
+      console.warn('[LOGIN] reCAPTCHA токен не предоставлен');
       return NextResponse.json(
         { error: "reCAPTCHA токен не предоставлен" },
         { status: 400 }
@@ -16,14 +17,24 @@ export async function POST(req: NextRequest) {
     }
 
     const captchaResult = await verifyRecaptchaToken(recaptchaToken);
-    if (!captchaResult.success || !isValidScore(captchaResult.score)) {
+    console.log('[LOGIN] reCAPTCHA result:', captchaResult);
+    
+    // Пропускаем reCAPTCHA валидацию на localhost для разработки
+    const isLocalhost = req.headers.get('host')?.includes('localhost') || req.headers.get('host')?.includes('127.0.0.1');
+    console.log('[LOGIN] isLocalhost:', isLocalhost);
+    
+    if (!isLocalhost && (!captchaResult.success || !isValidScore(captchaResult.score))) {
       console.warn(
-        `Failed reCAPTCHA validation for login: score=${captchaResult.score}, action=${captchaResult.action}`
+        `[LOGIN] Failed reCAPTCHA validation: success=${captchaResult.success}, score=${captchaResult.score}, action=${captchaResult.action}`
       );
       return NextResponse.json(
         { error: "Не удалось пройти проверку безопасности. Пожалуйста, повторите попытку." },
         { status: 403 }
       );
+    }
+    
+    if (isLocalhost) {
+      console.log('[LOGIN] Skipping reCAPTCHA validation on localhost');
     }
 
     // Создаём Supabase клиент
@@ -50,9 +61,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
+      console.error('[LOGIN] Supabase auth error:', error);
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
+    console.log('[LOGIN] Successful login for:', email);
     return NextResponse.json(
       { success: true, user: data.user },
       {
@@ -65,7 +78,7 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error("Login API error:", error);
+    console.error("[LOGIN] API error:", error);
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера" },
       { status: 500 }

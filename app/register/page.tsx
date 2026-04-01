@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from 'react-i18next';
 import { useRecaptcha } from "@/hooks/useRecaptcha";
+import { supabase } from "@/lib/supabase";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,13 +30,18 @@ export default function RegisterPage() {
         return;
       }
 
+      console.log('[CLIENT] handleRegister started');
+      
       // Получаем reCAPTCHA токен
       const recaptchaToken = await getToken("register");
+      console.log('[CLIENT] recaptchaToken:', recaptchaToken ? 'obtained' : 'null');
+      
       if (!recaptchaToken) {
         setError("Не удалось инициализировать проверку безопасности");
         return;
       }
 
+      console.log('[CLIENT] Sending register request...');
       // Отправляем запрос на API endpoint
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -44,15 +50,23 @@ export default function RegisterPage() {
       });
 
       const data = await response.json();
+      console.log('[CLIENT] Register response:', { status: response.status, ok: response.ok });
 
       if (!response.ok) {
         throw new Error(data.error || "Ошибка регистрации");
       }
 
-      // Успешная регистрация
-      router.push("/");
+      // Успешная регистрация - обновляем сессию на клиенте
+      console.log('[CLIENT] Register successful, refreshing session...');
+      
+      // Ждем обновления сессии на сервере (куки обновлены через proxy)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('[CLIENT] Redirecting to home with full reload...');
+      // Используем полный редирект с обновлением страницы (не Next.js router)
+      window.location.href = "/";
     } catch (err: any) {
-      console.error(err);
+      console.error('[CLIENT] Register error:', err);
       setError(err.message || "Ошибка регистрации");
     } finally {
       setLoading(false);

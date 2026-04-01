@@ -11,7 +11,19 @@ export async function verifyRecaptchaToken(token: string): Promise<{
     return { success: false, score: 0, action: '' }
   }
 
+  // В режиме разработки (localhost) пропускаем валидацию для удобства
+  if (process.env.NODE_ENV === 'development' && token === 'development-skip') {
+    console.log('[reCAPTCHA] Skipping verification in development mode')
+    return { success: true, score: 0.9, action: 'submit' }
+  }
+
   try {
+    console.log('[reCAPTCHA] Verifying token...', {
+      tokenLength: token.length,
+      tokenStart: token.substring(0, 10) + '...',
+      siteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.substring(0, 10) + '...'
+    })
+
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
       headers: {
@@ -21,6 +33,17 @@ export async function verifyRecaptchaToken(token: string): Promise<{
     })
 
     const data = await response.json()
+
+    // Логирование для отладки
+    console.log('reCAPTCHA verification result:', {
+      success: data.success,
+      score: data.score,
+      action: data.action,
+      challengeTs: data.challenge_ts,
+      hostname: data.hostname,
+      errorCodes: data['error-codes'],
+      fullResponse: JSON.stringify(data)
+    })
 
     // Возвращаем результат проверки
     return {
@@ -40,5 +63,7 @@ export async function verifyRecaptchaToken(token: string): Promise<{
  * @param threshold Минимальный допустимый score (по умолчанию 0.5)
  */
 export function isValidScore(score: number, threshold = 0.5): boolean {
-  return score >= threshold
+  const isValid = score >= threshold
+  console.log(`reCAPTCHA score validation: score=${score}, threshold=${threshold}, valid=${isValid}`)
+  return isValid
 }

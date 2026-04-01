@@ -27,11 +27,20 @@ export async function proxy(req: NextRequest) {
     }
   )
 
+  // Обновляем сессию если она устарела (refresh token)
   const { data: { session } } = await supabase.auth.getSession()
+  
+  const pathname = req.nextUrl.pathname
+  const hasSession = session?.user?.id ? 'yes' : 'no'
+  // Логирование для отладки (можно отключить в production)
+  if (process.env.NODE_ENV === 'development' && (pathname === '/' || pathname.startsWith('/create') || pathname.startsWith('/profile'))) {
+    console.log(`[PROXY] ${pathname}: session=${hasSession}`)
+  }
 
   // Защита роута /create — пускаем, если сессия есть
   if (req.nextUrl.pathname.startsWith('/create')) {
     if (!session) {
+      console.log('[PROXY] Redirecting to login - no session')
       return NextResponse.redirect(new URL('/login', req.url))
     }
   }
@@ -39,6 +48,15 @@ export async function proxy(req: NextRequest) {
   return res
 }
 
+// Применяем proxy ко всем маршрутам для корректного управления токенами
 export const config = {
-  matcher: ['/create/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg).*)',
+  ],
 }

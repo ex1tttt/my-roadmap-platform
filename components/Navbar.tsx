@@ -32,38 +32,52 @@ export default function Navbar() {
   // Загружаем username и language из таблицы profiles
   async function loadUsername(userId: string) {
     setUsernameLoading(true)
-    const { data } = await supabase
-      .from('profiles')
-      .select('username, language')
-      .eq('id', userId)
-      .single()
-    setUsername(data?.username ?? '')
-    // Применяем язык из БД, если он задан
-    const lang = (data?.language ?? '') as SupportedLanguage
-    if (lang && lang !== i18n.language) {
-      await i18n.changeLanguage(lang)
-      saveLanguage(lang)
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username, language')
+        .eq('id', userId)
+        .single()
+      
+      console.log('[NAVBAR] Profile loaded:', { username: data?.username, language: data?.language })
+      
+      setUsername(data?.username ?? '')
+      // Применяем язык из БД, если он задан
+      const lang = (data?.language ?? '') as SupportedLanguage
+      if (lang && lang !== i18n.language) {
+        await i18n.changeLanguage(lang)
+        saveLanguage(lang)
+      }
+    } catch (error) {
+      console.error('[NAVBAR] Error loading profile:', error)
+      setUsername('')
+    } finally {
+      setUsernameLoading(false)
     }
-    setUsernameLoading(false)
   }
 
   useEffect(() => {
     // Получаем текущую сессию при монтировании
+    console.log('[NAVBAR] Loading session on mount...')
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[NAVBAR] Initial session:', session?.user?.id ? 'logged in' : 'not logged in')
       setSession(session)
       if (session?.user) {
         loadUsername(session.user.id)
         // Обновляем время последнего онлайна
-        supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', session.user.id)
+        supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', session.user.id).then()
       }
     })
 
     // Подписываемся на изменения состояния авторизации
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[NAVBAR] Auth state changed:', { event, userId: session?.user?.id })
       setSession(session)
       if (session?.user) {
+        console.log('[NAVBAR] User logged in:', session.user.id)
         loadUsername(session.user.id)
       } else {
+        console.log('[NAVBAR] User logged out')
         setUsername('')
       }
     })
