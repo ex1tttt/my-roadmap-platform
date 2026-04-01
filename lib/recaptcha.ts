@@ -38,15 +38,24 @@ export async function verifyRecaptchaToken(token: string): Promise<{
     const data = await response.json()
 
     // Логирование для отладки
-    console.log('reCAPTCHA verification result:', {
+    console.log('[reCAPTCHA] verification result:', {
       success: data.success,
       score: data.score,
       action: data.action,
-      challengeTs: data.challenge_ts,
+      challenge_ts: data.challenge_ts,
       hostname: data.hostname,
       errorCodes: data['error-codes'],
-      fullResponse: JSON.stringify(data)
+      httpStatus: response.status
     })
+
+    // Если Google вернул ошибку - логируем подробно
+    if (!data.success || data['error-codes']?.length > 0) {
+      console.warn('[reCAPTCHA] Verification failed:', {
+        success: data.success,
+        errors: data['error-codes'],
+        fullResponse: JSON.stringify(data)
+      })
+    }
 
     // Возвращаем результат проверки
     return {

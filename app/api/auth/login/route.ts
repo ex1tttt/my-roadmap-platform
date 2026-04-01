@@ -6,18 +6,26 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const { email, password, recaptchaToken } = await req.json();
+    
+    console.log('[LOGIN] Request received:', { email, hasToken: !!recaptchaToken });
 
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
-      console.warn('[LOGIN] reCAPTCHA токен не предоставлен');
+      console.warn('[LOGIN] reCAPTCHA token not provided');
       return NextResponse.json(
-        { error: "reCAPTCHA токен не предоставлен" },
+        { error: "reCAPTCHA token not provided" },
         { status: 400 }
       );
     }
+    
+    console.log('[LOGIN] Token length:', recaptchaToken.length);
 
     const captchaResult = await verifyRecaptchaToken(recaptchaToken);
-    console.log('[LOGIN] reCAPTCHA result:', captchaResult);
+    console.log('[LOGIN] reCAPTCHA result:', {
+      success: captchaResult.success,
+      score: captchaResult.score,
+      action: captchaResult.action
+    });
     
     // Пропускаем reCAPTCHA валидацию на localhost для разработки
     const host = req.headers.get('host') || '';
@@ -26,25 +34,37 @@ export async function POST(req: NextRequest) {
     
     // Проверяем наличие SECRET_KEY в продакшене
     if (!isLocalhost && !process.env.RECAPTCHA_SECRET_KEY) {
-      console.error('[LOGIN] RECAPTCHA_SECRET_KEY не установлен на сервере');
+      console.error('[LOGIN] RECAPTCHA_SECRET_KEY is not set on server');
       return NextResponse.json(
-        { error: "reCAPTCHA не настроена на сервере. Свяжитесь с администратором. (Error: Missing RECAPTCHA_SECRET_KEY)" },
+        { error: "reCAPTCHA not configured on server. Please contact admin." },
         { status: 503 }
       );
     }
     
-    if (!isLocalhost && (!captchaResult.success || !isValidScore(captchaResult.score))) {
-      console.warn(
-        `[LOGIN] Failed reCAPTCHA validation: success=${captchaResult.success}, score=${captchaResult.score}, action=${captchaResult.action}`
-      );
-      return NextResponse.json(
-        { error: "Не удалось пройти проверку безопасности. Пожалуйста, повторите попытку." },
-        { status: 403 }
-      );
+    // Проверяем результат валидации
+    if (!isLocalhost) {
+      console.log('[LOGIN] Checking reCAPTCHA validation...');
+      
+      if (!captchaResult.success) {
+        console.warn('[LOGIN] reCAPTCHA success=false');
+        return NextResponse.json(
+          { error: "reCAPTCHA validation failed. Score: " + captchaResult.score },
+          { status: 403 }
+        );
+      }
+      
+      console.log('[LOGIN] Checking score threshold...', { score: captchaResult.score });
+      if (!isValidScore(captchaResult.score)) {
+        console.warn('[LOGIN] reCAPTCHA score too low:', captchaResult.score);
+        return NextResponse.json(
+          { error: "Your activity looks suspicious. Try again later. (Score: " + captchaResult.score.toFixed(2) + ")" },
+          { status: 403 }
+        );
+      }
     }
     
     if (isLocalhost) {
-      console.log('[LOGIN] Skipping reCAPTCHA validation on localhost');
+      console.log('[LOGIN] Bypassing reCAPTCHA on localhost');
     }
 
     // Создаём Supabase клиент
