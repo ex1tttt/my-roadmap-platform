@@ -50,6 +50,7 @@ export default function SupportChat() {
     const sid = getOrCreateSessionId()
     setSessionId(sid)
 
+     
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
       const { data } = await supabase
@@ -113,7 +114,7 @@ export default function SupportChat() {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'support_messages', filter: `session_id=eq.${sessionId}` },
         (payload) => {
-          setMessages((prev) => prev.filter((m) => m.id !== (payload.old as any).id))
+          setMessages((prev) => prev.filter((m) => m.id !== (payload.old as { id: string }).id))
         }
       )
       .subscribe()
@@ -434,7 +435,7 @@ export default function SupportChat() {
               placeholder={t('support.placeholder')}
               rows={1}
               className="flex-1 resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-blue-500/60 focus:outline-none focus:ring-2 focus:ring-blue-500/20 max-h-24"
-              style={{ fieldSizing: 'content' } as any}
+              style={{ fieldSizing: 'content' } as React.CSSProperties}
             />
             <button
               onClick={handleSend}

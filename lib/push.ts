@@ -112,9 +112,10 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
         setTimeout(() => reject(new Error('TimeoutError')), 10_000)
       )
       subscription = await Promise.race([subscribePromise, timeoutPromise])
-    } catch (subErr: any) {
+    } catch (subErr: Error | unknown) {
+      const err = subErr instanceof Error ? subErr : new Error(String(subErr))
       // Расшифровываем типичные причины
-      if (subErr?.message === 'TimeoutError') {
+      if (err?.message === 'TimeoutError') {
         return {
           ok: false,
           error:
@@ -123,7 +124,7 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
             'Попробуйте с VPN или Firefox.',
         }
       }
-      if (subErr?.name === 'AbortError') {
+      if (err?.name === 'AbortError') {
         return {
           ok: false,
           error:
@@ -133,10 +134,10 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
             'затем попробуйте снова.',
         }
       }
-      if (subErr?.name === 'NotAllowedError') {
+      if (err?.name === 'NotAllowedError') {
         return { ok: false, error: 'Разрешение на уведомления было отозвано.' }
       }
-      throw subErr
+      throw err
     }
 
     // 7. Сохраняем подписку в Supabase
@@ -162,9 +163,10 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
     if (error) throw error
 
     return { ok: true }
-  } catch (err: any) {
-    console.error('[push] subscribeUser error:', err)
-    return { ok: false, error: err?.message ?? 'Неизвестная ошибка при подписке.' }
+  } catch (err: Error | unknown) {
+    const error = err instanceof Error ? err : new Error(String(err))
+    console.error('[push] subscribeUser error:', error)
+    return { ok: false, error: error?.message ?? 'Неизвестная ошибка при подписке.' }
   } finally {
     _subscribing = false
   }
@@ -191,9 +193,10 @@ export async function unsubscribeUser(userId: string): Promise<{ ok: boolean; er
     }
 
     return { ok: true }
-  } catch (err: any) {
-    console.error('[push] unsubscribeUser error:', err)
-    return { ok: false, error: err?.message ?? 'Ошибка при отписке.' }
+  } catch (err: Error | unknown) {
+    const error = err instanceof Error ? err : new Error(String(err))
+    console.error('[push] unsubscribeUser error:', error)
+    return { ok: false, error: error?.message ?? 'Ошибка при отписке.' }
   }
 }
 

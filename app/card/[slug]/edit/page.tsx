@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CollaboratorManager from "@/components/CollaboratorManager";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -171,6 +171,7 @@ export default function EditPage() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const hasMounted = useHasMounted();
+  const lastSaveTimeRef = useRef<number>(0);
 
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
@@ -198,7 +199,7 @@ export default function EditPage() {
       const isOldFormat = isUUID(slug);
       
       // Пробуем найти карточку
-      let cardQuery = isOldFormat
+      const cardQuery = isOldFormat
         ? supabase.from("cards").select("*, steps(*), resources(*)").eq("id", slug).maybeSingle()
         : supabase.from("cards").select("*, steps(*), resources(*)").eq("slug", slug).maybeSingle();
       
@@ -319,6 +320,14 @@ export default function EditPage() {
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
+    
+    // Debounce: предотвращаем множественные одновременные сохранения (минимум 1 сек между попытками)
+    const now = Date.now();
+    if (now - lastSaveTimeRef.current < 1000) {
+      return;
+    }
+    lastSaveTimeRef.current = now;
+    
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();

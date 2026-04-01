@@ -16,16 +16,16 @@ export default function AchievementsPage() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
+      if (!user) { setLoading(false); setMounted(true); return }
       const { data } = await supabase
         .from('user_badges')
         .select('badge_id')
         .eq('user_id', user.id)
       setEarnedIds(new Set((data ?? []).map((b: { badge_id: string }) => b.badge_id)))
       setLoading(false)
+      setMounted(true)
     }
     load()
   }, [])

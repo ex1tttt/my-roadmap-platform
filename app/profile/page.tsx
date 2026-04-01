@@ -47,6 +47,7 @@ export default function ProfilePage() {
   const [followingCount, setFollowingCount] = useState(0)
   const [modalMode, setModalMode] = useState<'followers' | 'following' | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const CARDS_PER_PAGE = 50 // Ограничиваем количество карточек на первую загрузку
 
   // Закрываем меню при клике вне его
   useEffect(() => {
@@ -102,15 +103,18 @@ export default function ProfilePage() {
         return
       }
 
+      // Ограничиваем количество карточек для первой загрузки (максимум 50)
+      const limitedCardIds = allCardIds.slice(0, CARDS_PER_PAGE)
+
       // Загружаем шаги, профили и социальные данные параллельно
       const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
-        supabase.from('steps').select('*').in('card_id', allCardIds).order('order', { ascending: true }),
+        supabase.from('steps').select('*').in('card_id', limitedCardIds).order('order', { ascending: true }),
         supabase.from('profiles').select('*').in('id', allUserIds),
-        supabase.from('likes').select('card_id').in('card_id', allCardIds),
-        supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', allCardIds),
-        supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', allCardIds),
-        supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', allCardIds),
-        supabase.from('comments').select('roadmap_id').in('roadmap_id', allCardIds),
+        supabase.from('likes').select('card_id').in('card_id', limitedCardIds),
+        supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', limitedCardIds),
+        supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', limitedCardIds),
+        supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', limitedCardIds),
+        supabase.from('comments').select('roadmap_id').in('roadmap_id', limitedCardIds),
       ])
 
       const profilesMap: Map<string, Profile> = new Map()
@@ -172,13 +176,15 @@ export default function ProfilePage() {
         const { data: collabRows = [] } = await supabase
           .from('card_collaborators')
           .select('card_id')
-          .eq('user_email', userEmail);
+          .eq('user_email', userEmail)
         const cardIds = (collabRows ?? []).map((row: any) => row.card_id);
-        if (cardIds.length > 0) {
+        // Ограничиваем shared карточки на первую загрузку (максимум 50)
+        const limitedSharedCardIds = cardIds.slice(0, CARDS_PER_PAGE)
+        if (limitedSharedCardIds.length > 0) {
           const { data: shared = [] } = await supabase
             .from('cards')
             .select('*')
-            .in('id', cardIds);
+            .in('id', limitedSharedCardIds);
           const sharedCards = shared ?? [];
 
           // Загружаем профили владельцев, шаги и социальные данные для shared карточек
@@ -187,12 +193,12 @@ export default function ProfilePage() {
             sharedOwnerIds.length > 0
               ? supabase.from('profiles').select('*').in('id', sharedOwnerIds)
               : Promise.resolve({ data: [] }),
-            supabase.from('steps').select('*').in('card_id', cardIds).order('order', { ascending: true }),
-            supabase.from('likes').select('card_id').in('card_id', cardIds),
-            supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', cardIds),
-            supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', cardIds),
-            supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', cardIds),
-            supabase.from('comments').select('roadmap_id').in('roadmap_id', cardIds),
+            supabase.from('steps').select('*').in('card_id', limitedSharedCardIds).order('order', { ascending: true }),
+            supabase.from('likes').select('card_id').in('card_id', limitedSharedCardIds),
+            supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', limitedSharedCardIds),
+            supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', limitedSharedCardIds),
+            supabase.from('ratings').select('roadmap_id, rate').in('roadmap_id', limitedSharedCardIds),
+            supabase.from('comments').select('roadmap_id').in('roadmap_id', limitedSharedCardIds),
           ]);
 
           // Добавляем профили в profilesMap

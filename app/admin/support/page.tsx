@@ -58,21 +58,6 @@ export default function AdminSupportPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Проверка прав администратора
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session || !ADMIN_IDS.includes(session.user.id)) {
-        setAuthorized(false)
-        router.replace('/')
-        return
-      }
-      setAuthorized(true)
-      setToken(session.access_token)
-      setAdminId(session.user.id)
-      loadSessions()
-    })
-  }, [])
-
   async function loadSessions() {
     const { data } = await supabase
       .from('support_messages')
@@ -127,6 +112,21 @@ export default function AdminSupportPage() {
     }
     setSessions(list)
   }
+
+  // Проверка прав администратора
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session || !ADMIN_IDS.includes(session.user.id)) {
+        setAuthorized(false)
+        router.replace('/')
+        return
+      }
+      setAuthorized(true)
+      setToken(session.access_token)
+      setAdminId(session.user.id)
+      loadSessions()
+    })
+  }, [])
 
   async function loadMessages(sessionId: string) {
     const { data } = await supabase

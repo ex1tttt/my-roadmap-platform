@@ -10,6 +10,17 @@ import UserAvatar from './UserAvatar';
 import { useTranslation } from 'react-i18next';
 import { checkAndAwardBadges } from '@/lib/badges';
 
+interface HtmlToImageOptions {
+  cacheBust?: boolean;
+  backgroundColor?: string;
+  pixelRatio?: number;
+  logging?: boolean;
+  filter?: (node: Node) => boolean;
+  includeQueryParams?: boolean;
+  skipFonts?: boolean;
+  fontEmbedCSS?: string;
+}
+
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
@@ -118,9 +129,8 @@ export default function Card({
     if (!el) return;
     if (typeof window === 'undefined') return;
     try {
-      // @ts-ignore — html-to-image не имеет поля exports, bundler-резолюция может не находить модуль
       const { toPng } = await import('html-to-image');
-      const dataUrl = await toPng(el, {
+      const options: HtmlToImageOptions = {
         cacheBust: true,
         backgroundColor: '#0f172a', // slate-900 — тёмный фон вместо прозрачного
         pixelRatio: 2,             // retina-качество
@@ -129,7 +139,8 @@ export default function Card({
         includeQueryParams: true,  // сохраняем query-параметры в URL ресурсов
         skipFonts: true,           // не встраиваем шрифты — избегаем ошибок путей на Windows
         fontEmbedCSS: '',          // пустой CSS шрифтов — отключаем Tailwind-font-lookup
-      } as Parameters<typeof toPng>[1]);
+      };
+      const dataUrl = await toPng(el, options);
       const link = document.createElement('a');
       link.href = dataUrl;
       link.download = `${card.title.replace(/\s+/g, '-').toLowerCase()}.png`;

@@ -12,12 +12,6 @@ const ADMIN_IDS = [
   'b63af445-e18d-4e5b-a0e1-ba747f2b4948',
 ]
 
-const STATUS_ICONS = {
-  pending: Clock,
-  reviewed: CheckCircle,
-  resolved: XCircle,
-}
-
 const STATUS_COLORS = {
   pending: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30',
   reviewed: 'text-blue-400 bg-blue-400/10 border-blue-400/30',
@@ -56,7 +50,7 @@ export default function AdminReportsPage() {
       setAuthorized(true)
       loadReports('pending')
     })
-  }, [])
+  }, [router])
 
   async function loadReports(status: 'pending' | 'reviewed' | 'resolved') {
     setLoading(true)
@@ -71,8 +65,9 @@ export default function AdminReportsPage() {
       } else {
         setReports(json.data ?? [])
       }
-    } catch (e: any) {
-      setFetchError(e.message)
+    } catch (e: Error | unknown) {
+      const error = e instanceof Error ? e : new Error(String(e))
+      setFetchError(error.message)
     } finally {
       setLoading(false)
     }

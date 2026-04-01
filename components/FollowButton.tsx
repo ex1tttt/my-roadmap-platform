@@ -95,13 +95,20 @@ export default function FollowButton({
   async function handleBell() {
     if (!currentUserId || bellLoading || !isFollowing) return
     setBellLoading(true)
-    const next = !notifyNewCards
+    const prev = notifyNewCards
+    const next = !prev
     setNotifyNewCards(next)
-    await supabase
+    
+    const { error } = await supabase
       .from('follows')
       .update({ notify_new_cards: next })
       .eq('follower_id', currentUserId)
       .eq('following_id', profileId)
+    
+    if (error) {
+      // Откатываем состояние при ошибке
+      setNotifyNewCards(prev)
+    }
     setBellLoading(false)
   }
 

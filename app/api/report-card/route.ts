@@ -184,7 +184,7 @@ export async function GET(req: NextRequest) {
 
   // Отдельно подгружаем профили репортеров
   const reporterIds = [...new Set((reports ?? []).map((r: any) => r.reporter_id).filter(Boolean))]
-  let profilesMap: Record<string, { id: string; username: string; avatar: string | null }> = {}
+  const profilesMap: Record<string, { id: string; username: string; avatar: string | null }> = {}
   if (reporterIds.length > 0) {
     const { data: profiles } = await supabaseAdmin
       .from('profiles')
