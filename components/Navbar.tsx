@@ -39,8 +39,6 @@ export default function Navbar() {
         .eq('id', userId)
         .single()
       
-      console.log('[NAVBAR] Profile loaded:', { username: data?.username, language: data?.language })
-      
       setUsername(data?.username ?? '')
       // Применяем язык из БД, если он задан
       const lang = (data?.language ?? '') as SupportedLanguage
@@ -58,9 +56,7 @@ export default function Navbar() {
 
   useEffect(() => {
     // Получаем текущую сессию при монтировании
-    console.log('[NAVBAR] Loading session on mount...')
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[NAVBAR] Initial session:', session?.user?.id ? 'logged in' : 'not logged in')
       setSession(session)
       if (session?.user) {
         loadUsername(session.user.id)
@@ -71,13 +67,10 @@ export default function Navbar() {
 
     // Подписываемся на изменения состояния авторизации
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[NAVBAR] Auth state changed:', { event, userId: session?.user?.id })
       setSession(session)
       if (session?.user) {
-        console.log('[NAVBAR] User logged in:', session.user.id)
         loadUsername(session.user.id)
       } else {
-        console.log('[NAVBAR] User logged out')
         setUsername('')
       }
     })

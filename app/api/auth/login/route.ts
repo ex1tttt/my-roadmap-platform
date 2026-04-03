@@ -6,31 +6,20 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const { email, password, recaptchaToken } = await req.json();
-    
-    console.log('[LOGIN] Request received:', { email, hasToken: !!recaptchaToken });
 
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
-      console.warn('[LOGIN] reCAPTCHA token not provided');
       return NextResponse.json(
         { error: "reCAPTCHA token not provided" },
         { status: 400 }
       );
     }
-    
-    console.log('[LOGIN] Token length:', recaptchaToken.length);
 
     const captchaResult = await verifyRecaptchaToken(recaptchaToken);
-    console.log('[LOGIN] reCAPTCHA result:', {
-      success: captchaResult.success,
-      score: captchaResult.score,
-      action: captchaResult.action
-    });
     
     // Пропускаем reCAPTCHA валидацию на localhost для разработки
     const host = req.headers.get('host') || '';
     const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-    console.log('[LOGIN] Host:', host, 'isLocalhost:', isLocalhost);
     
     // Проверяем наличие SECRET_KEY в продакшене
     if (!isLocalhost && !process.env.RECAPTCHA_SECRET_KEY) {
@@ -43,11 +32,7 @@ export async function POST(req: NextRequest) {
     
     // На Vercel пропускаем строгую проверку score (временное решение)
     // Google возвращает score=0 для Vercel дата-центра
-    if (isLocalhost) {
-      console.log('[LOGIN] Bypassing reCAPTCHA on localhost');
-    } else {
-      console.log('[LOGIN] Production - reCAPTCHA verified (score: ' + captchaResult.score + ')');
-    }
+    // No additional logging needed here
 
     // Создаём Supabase клиент
     const cookieStore = await cookies();

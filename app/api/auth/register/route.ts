@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
 
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
-      console.warn('[REGISTER] reCAPTCHA токен не предоставлен');
       return NextResponse.json(
         { error: "reCAPTCHA токен не предоставлен" },
         { status: 400 }
@@ -17,12 +16,10 @@ export async function POST(req: NextRequest) {
     }
 
     const captchaResult = await verifyRecaptchaToken(recaptchaToken);
-    console.log('[REGISTER] reCAPTCHA result:', captchaResult);
     
     // Пропускаем reCAPTCHA валидацию на localhost для разработки
     const host = req.headers.get('host') || '';
     const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-    console.log('[REGISTER] Host:', host, 'isLocalhost:', isLocalhost);
 
     // Проверяем наличие SECRET_KEY в продакшене
     if (!isLocalhost && !process.env.RECAPTCHA_SECRET_KEY) {
@@ -35,15 +32,7 @@ export async function POST(req: NextRequest) {
     
     // На Vercel пропускаем строгую проверку score (временное решение)
     // Google возвращает score=0 для Vercel дата-центра
-    if (isLocalhost) {
-      console.log('[REGISTER] Bypassing reCAPTCHA on localhost');
-    } else {
-      console.log('[REGISTER] Production - reCAPTCHA verified (score: ' + captchaResult.score + ')');
-    }
-    
-    if (isLocalhost) {
-      console.log('[REGISTER] Skipping reCAPTCHA validation on localhost');
-    }
+    // No additional logging needed
 
     // Валидация username
     const USERNAME_RE = /^[a-zA-Z0-9_]{1,32}$/;
