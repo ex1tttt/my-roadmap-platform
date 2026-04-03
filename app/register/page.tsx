@@ -74,7 +74,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#020617] py-12 px-4 sm:px-6">
       <main className="mx-auto max-w-md">
         <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">{t('auth.register')}</h1>
         <form onSubmit={handleRegister} className="space-y-4 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">

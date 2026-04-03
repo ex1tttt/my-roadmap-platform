@@ -387,7 +387,7 @@ export default function CreatePage() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
-      <main className="mx-auto max-w-4xl">
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-12">
         <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">{t('create.title')}</h1>
 
         <form onSubmit={handlePublish} className="space-y-6">

@@ -174,7 +174,7 @@ export default function Navbar() {
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl py-1 z-50">
+                  <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl py-1 z-50\">
                     {/* Профиль */}
                     <Link
                       href="/profile"

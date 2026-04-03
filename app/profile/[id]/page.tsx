@@ -200,7 +200,7 @@ export default async function PublicProfilePage({
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] py-10 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-10 px-4 sm:px-6">
       <main className="mx-auto max-w-5xl">
         {/* Назад */}
         <Link

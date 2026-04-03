@@ -435,7 +435,7 @@ export default function EditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6 text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6 text-slate-900 dark:text-slate-100">
       <main className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center gap-3">
           <Link

@@ -143,7 +143,7 @@ export default function CardClient({ id }: { id: string }) {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100 pb-20">
-      <div className="max-w-5xl mx-auto px-6 py-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex justify-between items-center mb-8">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-500"><ArrowLeft size={16}/> Назад</Link>
           <div className="flex gap-2 items-center">
@@ -153,7 +153,7 @@ export default function CardClient({ id }: { id: string }) {
           </div>
         </div>
 
-        <h1 className="text-4xl font-extrabold mb-10">{card.title}</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-10">{card.title}</h1>
 
         <div className="grid lg:grid-cols-[1fr_300px] gap-12">
           <section>

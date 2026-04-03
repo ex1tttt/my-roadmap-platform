@@ -161,7 +161,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
       <main className="mx-auto max-w-6xl">
         {/* Заголовок */}
         <header className="mb-8 flex items-center justify-between flex-wrap gap-4">
@@ -202,7 +202,7 @@ export default function HistoryPage() {
 
         {/* Пустое состояние */}
         {cards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-20 text-center backdrop-blur-md">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 sm:px-6 py-20 text-center backdrop-blur-md">
             <Clock className="mb-4 h-12 w-12 text-slate-600" />
             <h2 className="text-lg font-medium text-slate-700 dark:text-slate-200">
               {t('history.emptyTitle')}

@@ -227,7 +227,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   if (error) {
     console.error("Full fetch error:", error);
     return (
-      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
         <main className="mx-auto max-w-4xl">
           <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-950/40 p-6 space-y-1">
             <p className="font-semibold text-red-600 dark:text-red-400">đ×ĐłđŞđ▒đ║đ░ đ┐ĐÇđŞ đĚđ░đ│ĐÇĐâđĚđ║đÁ đ║đ░ĐÇĐéđżĐçđ║đŞ</p>
@@ -267,7 +267,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const isOwner = !!currentUser && data && currentUser.id === data.user_id;
   if (data && !isOwner && isBlockedByAuthor) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
         <main className="mx-auto max-w-4xl">
           <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-10 text-center text-slate-500 dark:text-slate-400">
             <p className="text-lg font-medium">\u0414\u043e\u0441\u0442\u0443\u043f \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d</p>
@@ -280,7 +280,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   if (!data || (data.is_private && (!currentUser || (currentUser.id !== data.user_id && !isCollaborator)))) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+      <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
         <main className="mx-auto max-w-4xl">
           <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-10 text-center text-slate-500 dark:text-slate-400">
             đÜđ░ĐÇĐéđżĐçđ║đ░ Đü Đéđ░đ║đŞđ╝ ID đŻđÁ đŻđ░đ╣đ┤đÁđŻđ░.
@@ -316,7 +316,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] text-slate-900 dark:text-slate-100">
       <div className="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur-sm">
-        <div className="mx-auto max-w-5xl px-6 py-4">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4">
           <div className="mb-3 flex items-center justify-between gap-4">
             <BackButton isOwner={isOwner} />
             <div className="flex items-center gap-2">
@@ -389,7 +389,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           )}
         </div>
       </div>
-      <div className="mx-auto max-w-5xl gap-8 px-6 py-12 lg:grid lg:grid-cols-[1fr_280px]">
+      <div className="mx-auto max-w-5xl gap-8 px-4 sm:px-6 py-12 lg:grid lg:grid-cols-[1fr_280px]">
         <section>
           <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
             <BookOpen className="h-5 w-5 text-blue-400" />
@@ -445,7 +445,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       </div>
       <ScrollToHash />
       <ViewHistoryRecorder cardId={data.id} />
-      <div id="comments" className="mx-auto max-w-5xl px-6 pb-16">
+      <div id="comments" className="mx-auto max-w-5xl px-4 sm:px-6 pb-16">
         <div className="border-t border-slate-200 dark:border-slate-700/60 pt-10">
           <CommentSection roadmapId={data.id} />
         </div>

@@ -52,7 +52,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-linear-to-br ${accent} to-transparent bg-white dark:bg-slate-900/50 px-6 py-5`}
+      className={`flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-linear-to-br ${accent} to-transparent bg-white dark:bg-slate-900/50 px-4 sm:px-6 py-5`}
     >
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5">
         {icon}
@@ -188,7 +188,7 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
       <main className="mx-auto max-w-4xl">
 
         {/* Назад */}

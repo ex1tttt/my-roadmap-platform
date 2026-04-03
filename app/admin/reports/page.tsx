@@ -138,7 +138,7 @@ export default function AdminReportsPage() {
             <Loader2 className="animate-spin text-blue-500" size={32} />
           </div>
         ) : fetchError ? (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-8 text-center text-red-400">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 sm:px-6 py-8 text-center text-red-400">
             <p className="font-semibold mb-1">{t('adminReports.loadError')}</p>
             <p className="text-sm text-red-500">{fetchError}</p>
             <p className="mt-3 text-xs text-slate-400">{t('adminReports.migrationHint')}</p>

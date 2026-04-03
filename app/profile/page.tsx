@@ -299,7 +299,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-6">
+    <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
       <main className="mx-auto max-w-7xl">
         {/* Шапка профиля */}
         <section className="mb-10 flex items-center justify-between gap-5">
