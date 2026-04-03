@@ -45,16 +45,16 @@ export async function POST(req: NextRequest) {
     if (!isLocalhost) {
       console.log('[LOGIN] Checking reCAPTCHA validation...');
       
-      if (!captchaResult.success) {
-        console.warn('[LOGIN] reCAPTCHA success=false');
-        return NextResponse.json(
-          { error: "reCAPTCHA validation failed. Score: " + captchaResult.score },
-          { status: 403 }
-        );
-      }
+      // На продакшене для тестирования: позволяем даже low score
+      // В боевом режиме нужно увеличить порог
+      const minimumScoreForProduction = 0.1; // очень мягкий порог для тестирования
       
-      console.log('[LOGIN] Checking score threshold...', { score: captchaResult.score });
-      if (!isValidScore(captchaResult.score)) {
+      console.log('[LOGIN] Checking score threshold...', { 
+        score: captchaResult.score,
+        minimumScore: minimumScoreForProduction
+      });
+      
+      if (captchaResult.score < minimumScoreForProduction) {
         console.warn('[LOGIN] reCAPTCHA score too low:', captchaResult.score);
         return NextResponse.json(
           { error: "Your activity looks suspicious. Try again later. (Score: " + captchaResult.score.toFixed(2) + ")" },

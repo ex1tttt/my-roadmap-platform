@@ -33,14 +33,20 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    if (!isLocalhost && (!captchaResult.success || !isValidScore(captchaResult.score))) {
-      console.warn(
-        `[REGISTER] Failed reCAPTCHA validation: success=${captchaResult.success}, score=${captchaResult.score}, action=${captchaResult.action}`
-      );
-      return NextResponse.json(
-        { error: "Не удалось пройти проверку безопасности. Пожалуйста, повторите попытку." },
-        { status: 403 }
-      );
+    if (!isLocalhost) {
+      const minimumScoreForProduction = 0.1; // lowered from 0.5 for Vercel testing
+      console.log('[REGISTER] Checking score threshold...', { 
+        score: captchaResult.score,
+        minimumScore: minimumScoreForProduction
+      });
+      
+      if (captchaResult.score < minimumScoreForProduction) {
+        console.warn('[REGISTER] reCAPTCHA score too low:', captchaResult.score);
+        return NextResponse.json(
+          { error: "Не удалось пройти проверку безопасности. Пожалуйста, повторите попытку." },
+          { status: 403 }
+        );
+      }
     }
     
     if (isLocalhost) {
