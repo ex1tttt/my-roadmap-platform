@@ -5,6 +5,7 @@ import { categories } from "@/constants/categories";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Lock, Globe, GripVertical } from "lucide-react";
@@ -168,6 +169,7 @@ function SortableStepCreate({ s, idx, updateStep, removeStep, removeStepImage, h
 export default function CreatePage() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const { getToken: getRecaptchaToken } = useRecaptcha();
   const mounted = useHasMounted();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -259,6 +261,14 @@ export default function CreatePage() {
     setSaving(true);
 
     try {
+      // Получаем рекаптчу токен перед созданием
+      const recaptchaToken = await getRecaptchaToken('create');
+      if (!recaptchaToken) {
+        setToast({ message: 'Не удалось инициализировать проверку безопасности', type: 'error' });
+        setSaving(false);
+        return;
+      }
+
       // Получаем свежий ID залогиненного пользователя прямо перед сохранением,
       // чтобы не зависеть от потенциально устаревшего состояния
       const { data: { user } } = await supabase.auth.getUser();
@@ -267,27 +277,44 @@ export default function CreatePage() {
         setSaving(false);
         return;
       }
-      // 1) create card
-      const { data: cardData, error: cardError } = await supabase
-        .from("cards")
-        .insert([
-          {
-            user_id: user.id,
-            title,
-            category,
-            description,
-            is_private: isPrivate,
-          },
-        ])
-        .select("id");
 
-      if (cardError) {
-        setToast({ message: t('common.error') + ': ' + cardError.message, type: 'error' });
-        setSaving(false);
-        return;
+      // Подготавливаем данные для отправки на API
+      const stepsPayload = steps.map((s, idx) => ({
+        id: s.id,
+        order: idx + 1,
+        title: s.title,
+        content: s.content,
+        link: s.link ?? null,
+        media_urls: s.media_urls ?? [],
+        duration_minutes: s.duration_minutes ?? null,
+      }));
+
+      const resourcesPayload = resources
+        .filter((r) => r.url.trim() !== "")
+        .map((r) => ({ label: r.label, url: r.url }));
+
+      // Отправляем на API endpoint
+      const response = await fetch('/api/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          category,
+          description,
+          is_private: isPrivate,
+          steps: stepsPayload,
+          resources: resourcesPayload,
+          recaptchaToken,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create card');
       }
-      const cardId = cardData?.[0]?.id;
-      if (!cardId) throw new Error("Card ID not returned");
+
+      const cardData = await response.json();
+      const cardId = cardData.id;
 
       // Проверяем достижение «Первопроходец»
       await checkAndAwardBadges(user.id, 'first_card');
@@ -336,37 +363,6 @@ export default function CreatePage() {
         }
       }
 
-      // 2) insert steps
-      const stepsPayload = steps.map((s, idx) => ({
-        card_id: cardId,
-        "order": idx + 1,
-        title: s.title,
-        content: s.content,
-        link: s.link ?? null,
-        media_url: (s.media_urls && s.media_urls.length > 0) ? s.media_urls[0] : null,
-        media_urls: s.media_urls ?? [],
-        duration_minutes: s.duration_minutes ?? null,
-      }));
-
-      if (stepsPayload.length > 0) {
-        const { error: stepsError } = await supabase.from("steps").insert(stepsPayload);
-        if (stepsError) {
-          console.error('Full error:', stepsError);
-          setToast({ message: t('common.error') + ': ' + stepsError.message, type: 'error' });
-          setSaving(false);
-          return;
-        }
-      }
-
-      // 3) insert resources (пропускаем строки с пустым url)
-      const resourcesPayload = resources
-        .filter((r) => r.url.trim() !== "")
-        .map((r) => ({ card_id: cardId, label: r.label, url: r.url }));
-      if (resourcesPayload.length > 0) {
-        const { error: resError } = await supabase.from("resources").insert(resourcesPayload);
-        if (resError) throw resError;
-      }
-
       // Reset form on success
       setTitle("");
       setDescription("");
@@ -377,6 +373,7 @@ export default function CreatePage() {
       setToast({ message: t('createPrivacy.successPublished'), type: "success" });
       setTimeout(() => router.push('/'), 1500);
     } catch (err: any) {
+      console.error('[CREATE] Error:', err);
       setToast({ message: t('common.error') + ': ' + (err?.message ?? err), type: 'error' });
     } finally {
       setSaving(false);

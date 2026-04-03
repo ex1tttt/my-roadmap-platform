@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { verifyRecaptchaToken, isValidScore } from '@/lib/recaptcha'
 
 const VALID_REASONS = ['spam', 'inappropriate', 'misinformation', 'copyright', 'other'] as const
 
@@ -13,7 +14,27 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { card_id, reason, description } = await req.json()
+    const { card_id, reason, description, recaptchaToken } = await req.json()
+
+    // Проверка reCAPTCHA токена
+    if (!recaptchaToken) {
+      return NextResponse.json(
+        { error: 'reCAPTCHA token not provided' },
+        { status: 400 }
+      )
+    }
+
+    const captchaResult = await verifyRecaptchaToken(recaptchaToken)
+    if (!captchaResult.success || !isValidScore(captchaResult.score)) {
+      console.warn('[REPORT-CARD] reCAPTCHA validation failed:', { 
+        success: captchaResult.success, 
+        score: captchaResult.score 
+      })
+      return NextResponse.json(
+        { error: 'Failed security check' },
+        { status: 403 }
+      )
+    }
 
     // Валидация входных данных
     if (!card_id || typeof card_id !== 'string') {

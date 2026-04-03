@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { MessageCircle, X, Send, Headphones, Loader2, ChevronDown, ImageIcon, CornerUpLeft, Pencil, Trash2, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
 import { useTranslation } from 'react-i18next'
 
 type Message = {
@@ -26,6 +27,7 @@ function getOrCreateSessionId(): string {
 
 export default function SupportChat() {
   const { t } = useTranslation()
+  const { getToken: getRecaptchaToken } = useRecaptcha()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -150,23 +152,38 @@ export default function SupportChat() {
     let text = input.trim()
     if (replyTo) {
       const name = replyTo.is_from_support ? t('support.fromSupport') : (replyTo.username ?? t('support.guest'))
-      const quote = replyTo.image_url ? '\ud83d\udcf7' : replyTo.content.slice(0, 150)
+      const quote = replyTo.image_url ? '📷' : replyTo.content.slice(0, 150)
       text = `> ${name}: ${quote}\n\n${text}`
       setReplyTo(null)
     }
     setInput('')
 
-    await supabase.from('support_messages').insert({
-      session_id: sessionId,
-      user_id: currentUser?.id ?? null,
-      username: currentUser?.username ?? null,
-      content: text,
-      is_from_support: false,
-    })
+    try {
+      // Получаем рекаптчу токен
+      const recaptchaToken = await getRecaptchaToken('support')
+      if (!recaptchaToken) {
+        throw new Error('Failed to get security token')
+      }
 
-    // Уведомляем админов
-    fetch('/api/notify-support-admins', {
-      method: 'POST',
+      // Отправляем на API вместо прямого insert
+      const response = await fetch('/api/support-messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          content: text,
+          recaptchaToken,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send message')
+      }
+
+      // Уведомляем админов
+      fetch('/api/notify-support-admins', {
+        method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id: currentUser?.id ?? null,
@@ -174,8 +191,13 @@ export default function SupportChat() {
         session_id: sessionId,
       }),
     }).catch(() => {})
-
-    setSending(false)
+    } catch (err: any) {
+      console.error('[SUPPORT] Error:', err)
+      // Восстанавливаем текст при ошибке
+      setInput(text)
+    } finally {
+      setSending(false)
+    }
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -452,7 +474,7 @@ export default function SupportChat() {
       {/* ── Контекстное меню ── */}
       {contextMenu && (
         <div
-          className="fixed z-[300]"
+          className="fixed z-300"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -505,7 +527,7 @@ export default function SupportChat() {
       {/* ── Подтверждение удаления ── */}
       {deleteMsgId && (
         <div
-          className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-400 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           onClick={() => setDeleteMsgId(null)}
         >
           <div

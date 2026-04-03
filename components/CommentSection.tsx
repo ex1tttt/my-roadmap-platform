@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { Trash2, MessageSquare, Send, User, ThumbsUp, ThumbsDown, ChevronDown, Pin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import Avatar from '@/components/UserAvatar';
@@ -796,19 +797,35 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     setFlat((prev) => [optimisticComment, ...prev])
     setTotalCount((prev) => prev + 1)
 
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({ roadmap_id: String(roadmapId), user_id: currentUserId, content: trimmed })
-      .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar)')
-      .single()
+    try {
+      // Получаем reCAPTCHA токен
+      const { getToken } = useRecaptcha()
+      const recaptchaToken = await getToken('comment')
+      
+      if (!recaptchaToken) {
+        throw new Error('Failed to get security token')
+      }
 
-    if (error) {
-      // Откат оптимистичного обновления
-      setFlat((prev) => prev.filter((c) => c.id !== tempId))
-      setTotalCount((prev) => prev - 1)
-      setText(trimmed)
-    } else {
-      // Заменяем временный коммент реальным (с настоящим id и created_at)
+      // Отправляем на API вместо прямого insert
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roadmap_id: String(roadmapId),
+          content: trimmed,
+          recaptchaToken,
+          parent_id: null,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create comment')
+      }
+
+      const data = await response.json()
+
+      // Заменяем временный коммент реальным
       const newComment: AppComment = {
         id: data.id,
         content: data.content,
@@ -854,8 +871,16 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             }).catch(() => {})
           }
         })
+    } catch (err: any) {
+      // Откат оптимистичного обновления
+      setFlat((prev) => prev.filter((c) => c.id !== tempId))
+      setTotalCount((prev) => prev - 1)
+      setText(trimmed)
+      console.error('[COMMENT] Error:', err)
+      toast.error(err.message || 'Не удалось отправить комментарий')
+    } finally {
+      setSending(false)
     }
-    setSending(false)
   }
 
   async function handleReplySubmit(parentId: string) {
@@ -864,15 +889,35 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     setReplySending(true)
     // Запоминаем автора родителя до отправки
     const parentComment = flat.find((c) => c.id === parentId)
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({ roadmap_id: roadmapId, user_id: currentUserId, content: trimmed, parent_id: parentId })
-      .select('id, content, created_at, user_id, parent_id, profiles:user_id(username, avatar)')
-      .single()
-    if (error) {
-      console.error(error)
-      toast.error('Не удалось отправить ответ')
-    } else {
+    
+    try {
+      // Получаем reCAPTCHA токен
+      const { getToken } = useRecaptcha()
+      const recaptchaToken = await getToken('reply')
+      
+      if (!recaptchaToken) {
+        throw new Error('Failed to get security token')
+      }
+
+      // Отправляем на API
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roadmap_id: roadmapId,
+          content: trimmed,
+          recaptchaToken,
+          parent_id: parentId,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create reply')
+      }
+
+      const data = await response.json()
+
       const newReply: AppComment = {
         id: data.id,
         content: data.content,
@@ -913,8 +958,12 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
           }),
         }).catch(() => {})
       }
+    } catch (err: any) {
+      console.error('[REPLY] Error:', err)
+      toast.error(err.message || 'Не удалось отправить ответ')
+    } finally {
+      setReplySending(false)
     }
-    setReplySending(false)
   }
 
   async function handleReaction(commentId: string, type: 'like' | 'dislike') {

@@ -6,6 +6,7 @@ import { Flag, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
 
 const REASONS = ['spam', 'inappropriate', 'misinformation', 'copyright', 'other'] as const
 type Reason = typeof REASONS[number]
@@ -24,11 +25,13 @@ interface Props {
 
 export default function ReportCardButton({ cardId }: Props) {
   const { t } = useTranslation()
+  const { getToken: getRecaptchaToken } = useRecaptcha()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<Reason>('spam')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [alreadyReported, setAlreadyReported] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Проверяем при загрузке — не жаловался ли уже этот пользователь
   useEffect(() => {
@@ -48,6 +51,7 @@ export default function ReportCardButton({ cardId }: Props) {
     setOpen(false)
     setDescription('')
     setReason('spam')
+    setError(null)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -72,10 +76,18 @@ export default function ReportCardButton({ cardId }: Props) {
         }
       }
 
+      // Получаем reCAPTCHA токен
+      const recaptchaToken = await getRecaptchaToken('report')
+      if (!recaptchaToken) {
+        setError('Не удалось инициализировать проверку безопасности')
+        setSubmitting(false)
+        return
+      }
+
       const res = await fetch('/api/report-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ card_id: cardId, reason, description: description.trim() }),
+        body: JSON.stringify({ card_id: cardId, reason, description: description.trim(), recaptchaToken }),
       })
       const json = await res.json()
 
@@ -186,6 +198,13 @@ export default function ReportCardButton({ cardId }: Props) {
                 />
                 <p className="mt-1 text-right text-xs text-slate-400 dark:text-slate-500">{description.length}/500</p>
               </div>
+
+              {/* Ошибка */}
+              {error && (
+                <div className="mx-5 mt-3 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3.5 py-2.5 text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              )}
 
               {/* Кнопки */}
               <div className="flex gap-2 border-t border-slate-100 dark:border-white/10 px-5 py-3">
