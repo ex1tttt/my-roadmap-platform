@@ -8,16 +8,16 @@ export async function verifyRecaptchaToken(token: string): Promise<{
 }> {
   const secretKey = process.env.RECAPTCHA_SECRET_KEY
   
+  // В режиме разработки (localhost) пропускаем валидацию для удобства
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[reCAPTCHA] Development mode - accepting token without verification')
+    return { success: true, score: 0.9, action: 'submit' }
+  }
+
   if (!secretKey) {
     console.error('[reCAPTCHA] RECAPTCHA_SECRET_KEY не установлен на сервере')
     // На продакшене без SECRET_KEY не можем проверить - возвращаем ошибку
     return { success: false, score: 0, action: '' }
-  }
-
-  // В режиме разработки (localhost) пропускаем валидацию для удобства
-  if (process.env.NODE_ENV === 'development' && token === 'development-skip') {
-    console.log('[reCAPTCHA] Skipping verification in development mode')
-    return { success: true, score: 0.9, action: 'submit' }
   }
 
   try {
