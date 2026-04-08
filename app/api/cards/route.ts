@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { verifyRecaptchaToken, isValidScore } from '@/lib/recaptcha'
 
 // Service-role клиент
 const supabaseAdmin = createClient(
@@ -28,45 +27,9 @@ export async function POST(req: NextRequest) {
       title: title?.substring(0, 20),
       category,
       hasRecaptchaToken: !!recaptchaToken,
-      tokenLength: recaptchaToken?.length,
     })
 
-    // Проверка reCAPTCHA токена
-    if (!recaptchaToken) {
-      console.error('[CARDS] No reCAPTCHA token provided')
-      return NextResponse.json(
-        { error: 'reCAPTCHA token not provided' },
-        { status: 400 }
-      )
-    }
-
-    console.log('[CARDS] Verifying reCAPTCHA token...')
-    const captchaResult = await verifyRecaptchaToken(recaptchaToken)
-    console.log('[CARDS] reCAPTCHA result:', {
-      success: captchaResult.success,
-      score: captchaResult.score,
-      action: captchaResult.action,
-    })
-
-    const isValidScoreResult = isValidScore(captchaResult.score)
-    console.log('[CARDS] Score validation:', {
-      score: captchaResult.score,
-      isValid: isValidScoreResult,
-    })
-
-    if (!captchaResult.success || !isValidScoreResult) {
-      console.warn('[CARDS] reCAPTCHA validation FAILED:', {
-        success: captchaResult.success,
-        score: captchaResult.score,
-        isValidScore: isValidScoreResult,
-      })
-      return NextResponse.json(
-        { error: 'Failed security check' },
-        { status: 403 }
-      )
-    }
-
-    console.log('[CARDS] reCAPTCHA validation PASSED')
+    // reCAPTCHA для создания карточек отключена - требуется только проверка пользователя
 
     // Валидация входных данных
     if (!title || typeof title !== 'string') {
