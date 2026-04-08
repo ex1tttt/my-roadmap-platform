@@ -366,7 +366,9 @@
     "publishing": "Publishing...",
     "publish": "Publish",
     "publishSuccess": "Card published successfully",
-    "publishSuccessDesc": "Now it's available in the general list"
+    "publishSuccessDesc": "Now it's available in the general list",
+    "errorTitleRequired": "Card title cannot be empty",
+    "errorCategoryRequired": "Please select a category"
   },
   "edit": {
     "title": "Edit Roadmap",

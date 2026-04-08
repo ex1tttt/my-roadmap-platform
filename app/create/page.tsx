@@ -269,6 +269,19 @@ export default function CreatePage() {
         return;
       }
 
+      // Валидация на клиенте
+      if (!title.trim()) {
+        setToast({ message: t('create.errorTitleRequired'), type: 'error' });
+        setSaving(false);
+        return;
+      }
+
+      if (!category) {
+        setToast({ message: t('create.errorCategoryRequired'), type: 'error' });
+        setSaving(false);
+        return;
+      }
+
       // Получаем свежий ID залогиненного пользователя прямо перед сохранением,
       // чтобы не зависеть от потенциально устаревшего состояния
       const { data: { user } } = await supabase.auth.getUser();

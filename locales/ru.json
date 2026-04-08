@@ -371,7 +371,9 @@
     "publishing": "Сохранение...",
     "publish": "Опубликовать",
     "publishSuccess": "Карточка успешно опубликована",
-    "publishSuccessDesc": "Теперь она доступна в общем списке"
+    "publishSuccessDesc": "Теперь она доступна в общем списке",
+    "errorTitleRequired": "Заголовок карточки не может быть пустым",
+    "errorCategoryRequired": "Пожалуйста, выберите категорию"
   },
   "edit": {
     "title": "Редактировать карточку",

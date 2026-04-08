@@ -372,7 +372,9 @@
     "publishing": "Publikowanie...",
     "publish": "Opublikuj",
     "publishSuccess": "Karta opublikowana pomyślnie",
-    "publishSuccessDesc": "Teraz jest dostępna na ogólnej liście"
+    "publishSuccessDesc": "Teraz jest dostępna na ogólnej liście",
+    "errorTitleRequired": "Tytuł karty nie może być pusty",
+    "errorCategoryRequired": "Proszę wybrać kategorię"
   },
   "edit": {
     "title": "Edytuj kartę",
