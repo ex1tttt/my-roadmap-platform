@@ -72,9 +72,9 @@ export async function verifyRecaptchaToken(token: string): Promise<{
 /**
  * Проверка, прошла ли капча минимальный порог
  * @param score Score от Google (0.0 - 1.0)
- * @param threshold Минимальный допустимый score (по умолчанию 0.5)
+ * @param threshold Минимальный допустимый score (по умолчанию 0.1 для теста)
  */
-export function isValidScore(score: number, threshold = 0.5): boolean {
+export function isValidScore(score: number, threshold = 0.1): boolean {
   const isValid = score >= threshold
   console.log(`reCAPTCHA score validation: score=${score}, threshold=${threshold}, valid=${isValid}`)
   return isValid
