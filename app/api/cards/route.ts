@@ -12,6 +12,8 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('[CARDS] POST request received')
+    
     const { 
       title, 
       category, 
@@ -22,25 +24,49 @@ export async function POST(req: NextRequest) {
       recaptchaToken 
     } = await req.json()
 
+    console.log('[CARDS] Parsed request body:', {
+      title: title?.substring(0, 20),
+      category,
+      hasRecaptchaToken: !!recaptchaToken,
+      tokenLength: recaptchaToken?.length,
+    })
+
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
+      console.error('[CARDS] No reCAPTCHA token provided')
       return NextResponse.json(
         { error: 'reCAPTCHA token not provided' },
         { status: 400 }
       )
     }
 
+    console.log('[CARDS] Verifying reCAPTCHA token...')
     const captchaResult = await verifyRecaptchaToken(recaptchaToken)
-    if (!captchaResult.success || !isValidScore(captchaResult.score)) {
-      console.warn('[CARDS] reCAPTCHA validation failed:', {
+    console.log('[CARDS] reCAPTCHA result:', {
+      success: captchaResult.success,
+      score: captchaResult.score,
+      action: captchaResult.action,
+    })
+
+    const isValidScoreResult = isValidScore(captchaResult.score)
+    console.log('[CARDS] Score validation:', {
+      score: captchaResult.score,
+      isValid: isValidScoreResult,
+    })
+
+    if (!captchaResult.success || !isValidScoreResult) {
+      console.warn('[CARDS] reCAPTCHA validation FAILED:', {
         success: captchaResult.success,
         score: captchaResult.score,
+        isValidScore: isValidScoreResult,
       })
       return NextResponse.json(
         { error: 'Failed security check' },
         { status: 403 }
       )
     }
+
+    console.log('[CARDS] reCAPTCHA validation PASSED')
 
     // Валидация входных данных
     if (!title || typeof title !== 'string') {
@@ -65,10 +91,19 @@ export async function POST(req: NextRequest) {
 
     const { data: { user } } = await supabaseServer.auth.getUser()
     if (!user) {
+      console.error('[CARDS] User not authenticated')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('[CARDS] User authenticated:', { userId: user.id, email: user.email })
+
     // Создаём карточку
+    console.log('[CARDS] Inserting card to database...', {
+      title: title.slice(0, 20),
+      category,
+      user_id: user.id,
+    })
+
     const { data: cardData, error: cardError } = await supabaseAdmin
       .from('cards')
       .insert({
@@ -82,11 +117,17 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (cardError) {
-      console.error('[CARDS] Card insert error:', cardError)
+      console.error('[CARDS] ❌ Card insert FAILED:', {
+        code: cardError.code,
+        message: cardError.message,
+        details: cardError.details,
+        hint: cardError.hint,
+      })
       return NextResponse.json({ error: cardError.message }, { status: 500 })
     }
 
     const cardId = cardData.id
+    console.log('[CARDS] ✅ Card inserted successfully:', { cardId })
 
     // Вставляем шаги если они есть
     if (Array.isArray(steps) && steps.length > 0) {
