@@ -181,16 +181,26 @@ export default function SupportChat() {
         throw new Error(errorData.error || 'Failed to send message')
       }
 
+      // Парсим ответ и добавляем сообщение в стейт
+      const newMessage = await response.json()
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMessage.id)) return prev
+        return [...prev, newMessage]
+      })
+      
+      // Скролл вниз
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+
       // Уведомляем админов
       fetch('/api/notify-support-admins', {
         method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: currentUser?.id ?? null,
-        username: currentUser?.username ?? null,
-        session_id: sessionId,
-      }),
-    }).catch(() => {})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUser?.id ?? null,
+          username: currentUser?.username ?? null,
+          session_id: sessionId,
+        }),
+      }).catch(() => {})
     } catch (err: any) {
       console.error('[SUPPORT] Error:', err)
       // Восстанавливаем текст при ошибке
