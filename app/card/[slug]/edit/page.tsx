@@ -54,14 +54,14 @@ function SortableStepEdit({ s, idx, updateStep, removeStep, handleFileUpload, ha
           {...listeners}
           className="cursor-grab active:cursor-grabbing touch-none p-0.5 text-slate-300 hover:text-slate-500 dark:hover:text-slate-200 transition-colors"
           tabIndex={-1}
-          aria-label="đčđÁĐÇđÁĐéđ░ĐëđŞĐéĐî Đłđ░đ│"
+          aria-label="Drag to reorder step"
         >
           <GripVertical className="h-5 w-5" />
         </button>
         <span className="text-xs font-semibold text-slate-500">{hasMounted ? t('edit.stepLabel', { n: idx + 1 }) : `Step ${idx + 1}`}</span>
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {/* đŤđÁđ▓đ░ĐĆ đ║đżđ╗đżđŻđ║đ░: ĐéđÁđ║ĐüĐéđżđ▓ĐőđÁ đ┐đżđ╗ĐĆ */}
+        {/* Left column: text fields */}
         <div className="flex flex-col gap-3">
           <label className="block w-full">
             <div className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">{hasMounted ? t('edit.stepTitle') : 'Step title'}</div>
@@ -218,11 +218,11 @@ export default function EditPage() {
       // Сохраняем реальный ID карточки
       setCardId(card.id);
 
-      // đčĐÇđżđ▓đÁĐÇđ║đ░ đ┐ĐÇđ░đ▓
+      // Check permissions
       if (card.user_id === user.id) {
         setIsOwner(true);
       } else {
-        // đčĐÇđżđ▓đÁĐÇĐĆđÁđ╝, ĐĆđ▓đ╗ĐĆđÁĐéĐüĐĆ đ╗đŞ đ┐đżđ╗ĐîđĚđżđ▓đ░ĐéđÁđ╗Đî đ║đżđ╗đ╗đ░đ▒đżĐÇđ░ĐéđżĐÇđżđ╝
+        // Check if user is a collaborator with editor role
         if (!user.email) { setForbidden(true); setLoading(false); return; }
         const { data: collabRow } = await supabase
           .from('card_collaborators')
@@ -253,12 +253,14 @@ export default function EditPage() {
         }));
       setSteps(sortedSteps.length ? sortedSteps : [{ id: uid(), title: "", content: "", link: "", media_urls: [], duration_minutes: undefined }]);
 
-      const mappedResources = (card.resources ?? []).map((r: any) => ({
-        id: r.id ?? uid(),
-        label: r.label ?? "",
-        url: r.url ?? "",
-      }));
-      setResources(mappedResources);
+      const mappedResources = (card.resources ?? [])
+        .map((r: any) => ({
+          id: r.id ?? uid(),
+          label: r.label ?? "",
+          url: r.url ?? "",
+        }))
+        .filter((r) => r.label.trim() || r.url.trim()); // Фильтруем пустые ресурсы
+      setResources(mappedResources.length ? mappedResources : [])
 
       setLoading(false);
     };
@@ -266,7 +268,7 @@ export default function EditPage() {
     load();
   }, [slug, router]);
 
-  // đŚđ░đ│ĐÇĐâđĚđ║đ░ đ╝đÁđ┤đŞđ░Đäđ░đ╣đ╗đ░
+  // Upload media file
   async function handleFileUpload(file: File, stepId: string) {
     try {
       setUploadingStepId(stepId);
@@ -290,7 +292,7 @@ export default function EditPage() {
     }
   }
 
-  // đúđ┐ĐÇđ░đ▓đ╗đÁđŻđŞđÁ Đłđ░đ│đ░đ╝đŞ
+  // Manage steps
   const addStep = () => setSteps((s) => [...s, { id: uid(), title: "", content: "", link: "", media_urls: [] }]);
   const removeStep = (id: string) => setSteps((s) => s.filter((st) => st.id !== id));
 
@@ -312,7 +314,7 @@ export default function EditPage() {
   const updateStep = (id: string, patch: Partial<Step>) =>
     setSteps((s) => s.map((st) => (st.id === id ? { ...st, ...patch } : st)));
 
-  // đúđ┐ĐÇđ░đ▓đ╗đÁđŻđŞđÁ ĐÇđÁĐüĐâĐÇĐüđ░đ╝đŞ
+  // Manage resources
   const addResource = () => setResources((r) => [...r, { id: crypto.randomUUID(), label: "", url: "" }]);
   const removeResource = (id: string) => setResources((r) => r.filter((res) => res.id !== id));
   const updateResource = (id: string, patch: Partial<Resource>) =>
@@ -613,13 +615,13 @@ export default function EditPage() {
             </div>
           </section>
 
-          {/* đÜđŻđżđ┐đ║đŞ */}
+          {/* Buttons */}
           <div className="flex items-center justify-end gap-3">
             <Link
               href={`/card/${cardId}`}
               className="rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200"
             >
-              đ×Đéđ╝đÁđŻđ░
+              {hasMounted ? t('common.cancel') : 'Cancel'}
             </Link>
             <button
               type="submit"
