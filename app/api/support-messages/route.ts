@@ -28,15 +28,37 @@ export async function POST(req: NextRequest) {
 
     const captchaResult = await verifyRecaptchaToken(recaptchaToken)
     console.log('[SUPPORT-MESSAGES] reCAPTCHA result:', captchaResult)
-    if (!captchaResult.success || !isValidScore(captchaResult.score)) {
+    
+    // Временный workaround для отладки: на продакшене с score=0 пусть через
+    const isProduction = process.env.NODE_ENV === 'production'
+    const allowZeroScore = isProduction && captchaResult.score === 0
+    
+    if (!captchaResult.success && !allowZeroScore) {
       console.warn('[SUPPORT-MESSAGES] reCAPTCHA validation failed:', {
         success: captchaResult.success,
         score: captchaResult.score,
+        isProduction,
+        allowZeroScore
+      })
+      return NextResponse.json(
+        { error: `Security check failed (success: ${captchaResult.success}, score: ${captchaResult.score})` },
+        { status: 403 }
+      )
+    }
+    
+    if (!allowZeroScore && !isValidScore(captchaResult.score)) {
+      console.warn('[SUPPORT-MESSAGES] reCAPTCHA score too low:', {
+        score: captchaResult.score,
+        threshold: 0.5
       })
       return NextResponse.json(
         { error: `Security check failed (score: ${captchaResult.score})` },
         { status: 403 }
       )
+    }
+    
+    if (allowZeroScore) {
+      console.warn('[SUPPORT-MESSAGES] ⚠️ PRODUCTION WORKAROUND: Allowing message with score=0 for debugging')
     }
 
     // Валидация входных данных

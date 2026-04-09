@@ -54,6 +54,7 @@ export async function verifyRecaptchaToken(token: string): Promise<{
     if (!data.success || data['error-codes']?.length > 0) {
       console.warn('[reCAPTCHA] Verification failed:', {
         success: data.success,
+        score: data.score,
         errors: data['error-codes'],
         fullResponse: JSON.stringify(data)
       })
