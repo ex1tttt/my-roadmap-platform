@@ -259,7 +259,7 @@ export default function EditPage() {
           label: r.label ?? "",
           url: r.url ?? "",
         }))
-        .filter((r) => r.label.trim() || r.url.trim()); // Фильтруем пустые ресурсы
+        .filter((r: { label: string; url: string; id: string }) => r.label.trim() || r.url.trim()); // Фильтруем пустые ресурсы
       setResources(mappedResources.length ? mappedResources : [])
 
       setLoading(false);
