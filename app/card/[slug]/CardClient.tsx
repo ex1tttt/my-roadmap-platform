@@ -74,6 +74,7 @@ export default function CardClient({ id }: { id: string }) {
       ]);
 
       setCurrentUser(user);
+      const { data: cardData } = cardResponse;
 
       if (cardData) {
         setCard(cardData);
