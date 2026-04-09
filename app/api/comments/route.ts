@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
 
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
+      console.warn('[COMMENTS] Missing reCAPTCHA token')
       return NextResponse.json(
         { error: 'reCAPTCHA token not provided' },
         { status: 400 }
@@ -36,15 +37,18 @@ export async function POST(req: NextRequest) {
 
     // Валидация входных данных
     if (!roadmap_id || typeof roadmap_id !== 'string') {
+      console.warn('[COMMENTS] Missing roadmap_id')
       return NextResponse.json({ error: 'Missing roadmap_id' }, { status: 400 })
     }
     if (!content || typeof content !== 'string') {
+      console.warn('[COMMENTS] Missing content')
       return NextResponse.json({ error: 'Missing content' }, { status: 400 })
     }
 
     const trimmedContent = content.trim().slice(0, 5000) // Ограничение по длине
 
     if (!trimmedContent) {
+      console.warn('[COMMENTS] Content is empty after trimming')
       return NextResponse.json({ error: 'Content cannot be empty' }, { status: 400 })
     }
 
@@ -63,8 +67,11 @@ export async function POST(req: NextRequest) {
 
     const { data: { user } } = await supabaseServer.auth.getUser()
     if (!user) {
+      console.warn('[COMMENTS] User not authenticated')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('[COMMENTS] Creating comment for user:', user.id)
 
     // Вставляем комментарий
     const { data, error } = await supabaseAdmin

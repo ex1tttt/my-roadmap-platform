@@ -820,7 +820,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create comment')
+        console.error('[COMMENT] API Error:', { status: response.status, error: errorData })
+        throw new Error(errorData.error || `Failed to create comment (${response.status})`)
       }
 
       const data = await response.json()
@@ -912,7 +913,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create reply')
+        console.error('[REPLY] API Error:', { status: response.status, error: errorData })
+        throw new Error(errorData.error || `Failed to create reply (${response.status})`)
       }
 
       const data = await response.json()
