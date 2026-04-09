@@ -560,6 +560,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { t, i18n } = useTranslation()
   const [mounted, setMounted] = useState(false)
+  const { getToken } = useRecaptcha()
 
   useEffect(() => setMounted(true), [])
 
@@ -799,7 +800,6 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
     try {
       // Получаем reCAPTCHA токен
-      const { getToken } = useRecaptcha()
       const recaptchaToken = await getToken('comment')
       
       if (!recaptchaToken) {
@@ -892,7 +892,6 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     
     try {
       // Получаем reCAPTCHA токен
-      const { getToken } = useRecaptcha()
       const recaptchaToken = await getToken('reply')
       
       if (!recaptchaToken) {
