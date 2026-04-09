@@ -9,7 +9,18 @@ self.addEventListener('install', (event) => {
 
 // ── Активация ─────────────────────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    // Удаляем старые кэши если они есть
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_VERSION) {
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    }).then(() => self.clients.claim())
+  )
 })
 
 // ── Обработка Push-события ────────────────────────────────────────────────────
@@ -55,14 +66,30 @@ self.addEventListener('notificationclick', (event) => {
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Если вкладка с сайтом уже открыта — фокусируемся на ней
+        // Ищем окно с тем же origin
         for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.navigate(targetUrl)
-            return client.focus()
+          try {
+            if (client.url.includes(self.location.origin)) {
+              // Пытаемся переходить на URL
+              if ('navigate' in client) {
+                return client.navigate(targetUrl).then(() => client.focus())
+              } else {
+                // Fallback: если navigate не доступен, просто фокусируемся
+                return client.focus()
+              }
+            }
+          } catch (err) {
+            console.error('[SW] Error navigating client:', err)
           }
         }
-        // Иначе открываем новую вкладку
+        // Если нет открытого окна - открываем новое
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl)
+        }
+      })
+      .catch((err) => {
+        console.error('[SW] Error in notificationclick handler:', err)
+        // Даже если ошибка, пытаемся открыть окно
         if (self.clients.openWindow) {
           return self.clients.openWindow(targetUrl)
         }

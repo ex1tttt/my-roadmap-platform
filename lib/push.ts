@@ -74,6 +74,25 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
     console.log('[push] sw state:', registration.installing?.state ?? registration.waiting?.state ?? registration.active?.state)
     await waitForActivation(registration)
     console.log('[push] sw activated, getting pushManager subscription...')
+    
+    // Следим за обновлениями SW и обновляем его периодически
+    registration.addEventListener('updatefound', () => {
+      const newWorker = registration.installing
+      if (newWorker) {
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            console.log('[push] SW updated, attempting to update registration')
+            // Пробуем обновить регистрацию push-подписки
+            registration.update().catch(() => {})
+          }
+        })
+      }
+    })
+    
+    // Пытаемся обновить SW если прошло время
+    setInterval(() => {
+      registration.update().catch(() => {})
+    }, 60000) // каждые 60 секунд
 
     // 4. Получаем VAPID public key
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
