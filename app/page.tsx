@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { categories } from "@/constants/categories";
 import Card from "../components/Card";
 import Link from "next/link";
 import { Check, Search, SlidersHorizontal } from "lucide-react";
@@ -29,7 +30,7 @@ type CardType = {
 const PAGE_SIZE = 16;
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isClient = useHasMounted();
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,18 +47,13 @@ export default function Home() {
   const cardsRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  const catKeyMap: Record<string, string> = {
-    'Программирование': 'catProgramming',
-    'Готовка': 'catCooking',
-    'Учеба': 'catStudy',
-    'Маркетинг': 'catMarketing',
-    'Спорт': 'catSports',
-    'Игры': 'catGames',
-    'Музыка': 'catMusic',
+  // Функция для получения названия категории на текущем языке
+  const getCategoryLabel = (categoryId: string) => {
+    const cat = categories.find(c => c.id === categoryId);
+    if (!cat) return categoryId;
+    const lang = (i18n.language?.split("-")[0] ?? 'en') as 'en' | 'ru' | 'pl' | 'uk';
+    return cat.translations[lang] || cat.translations.en;
   };
-  const activeCategoryLabel = isClient && catKeyMap[activeCategory]
-    ? t(`home.${catKeyMap[activeCategory]}`)
-    : activeCategory;
 
   // Закрываем дропдаун при клике вне него
   useEffect(() => {
@@ -97,17 +93,23 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
+        // Базовый запрос карточек
         let query = supabase
           .from("cards")
-          .select("*", { count: 'exact' })
-          .order("created_at", { ascending: false })
-          .range((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE - 1);
+          .select("*", { count: 'exact' });
+        
         if (debouncedQuery) {
           query = query.ilike("title", `%${debouncedQuery}%`);
         }
         if (activeCategory) {
           query = query.eq("category", activeCategory);
         }
+        
+        // Сортируем по дате по умолчанию
+        query = query.order("created_at", { ascending: false });
+        
+        // Применяем pagination
+        query = query.range((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE - 1);
 
         const { data: cardsData, error: cardsError, count } = await query;
         if (cardsError) throw cardsError;
@@ -185,8 +187,10 @@ export default function Home() {
           commentsCount: commentsCountMap.get(c.id) ?? 0,
         }));
 
+        // Применяем сортировку ПОСЛЕ загрузки всех данных
         if (sortBy === 'popular') {
-          merged.sort((a, b) => b.averageRating - a.averageRating);
+          // Сортируем по количеству лайков (descending)
+          merged.sort((a, b) => b.likesCount - a.likesCount);
         }
 
         if (mounted) setCards(merged);
@@ -273,20 +277,17 @@ export default function Home() {
               }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
-              {activeCategory ? `${isClient ? t('home.filterPrefix') : ''}${activeCategoryLabel}` : (isClient ? t('home.filters') : 'Filters')}
+              {activeCategory ? `${isClient ? t('home.filterPrefix') : ''}${getCategoryLabel(activeCategory)}` : (isClient ? t('home.filters') : 'Filters')}
             </button>
 
             {filterOpen && (
               <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl z-50">
                 {[
                   { value: '', label: isClient ? t('home.allCategories') : 'All categories' },
-                  { value: 'Программирование', label: isClient ? t('home.catProgramming') : 'Программирование' },
-                  { value: 'Готовка', label: isClient ? t('home.catCooking') : 'Готовка' },
-                  { value: 'Учеба', label: isClient ? t('home.catStudy') : 'Учеба' },
-                  { value: 'Маркетинг', label: isClient ? t('home.catMarketing') : 'Маркетинг' },
-                  { value: 'Спорт', label: isClient ? t('home.catSports') : 'Спорт' },
-                  { value: 'Игры', label: isClient ? t('home.catGames') : 'Игры' },
-                  { value: 'Музыка', label: isClient ? t('home.catMusic') : 'Музыка' },
+                  ...categories.map(cat => ({
+                    value: cat.id,
+                    label: getCategoryLabel(cat.id)
+                  }))
                 ].map((cat) => (
                   <button
                     key={cat.value}
