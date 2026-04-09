@@ -24,13 +24,14 @@ export async function POST(req: NextRequest) {
     }
 
     const captchaResult = await verifyRecaptchaToken(recaptchaToken)
+    console.log('[COMMENTS] reCAPTCHA result:', captchaResult)
     if (!captchaResult.success || !isValidScore(captchaResult.score)) {
       console.warn('[COMMENTS] reCAPTCHA validation failed:', {
         success: captchaResult.success,
         score: captchaResult.score,
       })
       return NextResponse.json(
-        { error: 'Failed security check' },
+        { error: `Security check failed (score: ${captchaResult.score})` },
         { status: 403 }
       )
     }

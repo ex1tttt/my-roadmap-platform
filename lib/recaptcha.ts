@@ -16,6 +16,8 @@ export async function verifyRecaptchaToken(token: string): Promise<{
 
   if (!secretKey) {
     console.error('[reCAPTCHA] RECAPTCHA_SECRET_KEY не установлен на сервере')
+    console.error('[reCAPTCHA] NODE_ENV:', process.env.NODE_ENV)
+    console.error('[reCAPTCHA] Available env vars:', Object.keys(process.env).filter(k => k.includes('RECAPTCHA')))
     // На продакшене без SECRET_KEY не можем проверить - возвращаем ошибку
     return { success: false, score: 0, action: '' }
   }

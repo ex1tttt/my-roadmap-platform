@@ -801,6 +801,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     try {
       // Получаем reCAPTCHA токен
       const recaptchaToken = await getToken('comment')
+      console.log('[COMMENT] reCAPTCHA token received:', { 
+        tokenLength: recaptchaToken?.length, 
+        tokenStart: recaptchaToken?.substring(0, 10) + '...' 
+      })
       
       if (!recaptchaToken) {
         throw new Error('Failed to get security token')
@@ -894,6 +898,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     try {
       // Получаем reCAPTCHA токен
       const recaptchaToken = await getToken('reply')
+      console.log('[REPLY] reCAPTCHA token received:', { 
+        tokenLength: recaptchaToken?.length, 
+        tokenStart: recaptchaToken?.substring(0, 10) + '...' 
+      })
       
       if (!recaptchaToken) {
         throw new Error('Failed to get security token')
