@@ -39,9 +39,8 @@ export default function CardClient({ id }: { id: string }) {
       setLoading(true);
 
       // 1. Юзер + карточка параллельно
-      // getSession читает из кукисов без сетевого запроса — не падает при протухшем refresh token
-      const [{ data: { session } }, cardResponse] = await Promise.all([
-        supabase.auth.getSession(),
+      const [{ data: { user } }, cardResponse] = await Promise.all([
+        supabase.auth.getUser(),
         (async () => {
           // Проверяем, это UUID или slug
           const isOldFormat = isUUID(id);
@@ -74,9 +73,6 @@ export default function CardClient({ id }: { id: string }) {
         })(),
       ]);
 
-      const user = session?.user ?? null;
-      const { data: cardData } = cardResponse;
-      
       setCurrentUser(user);
 
       if (cardData) {

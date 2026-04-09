@@ -686,8 +686,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     supabase.from('cards').select('user_id').eq('id', roadmapId).maybeSingle()
       .then(({ data }) => setCardOwnerId(data?.user_id ?? null))
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      const userId = data.session?.user?.id ?? null
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      const userId = user?.id ?? null
       setCurrentUserId(userId)
       if (userId) {
         const { data: profile } = await supabase

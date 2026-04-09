@@ -28,10 +28,10 @@ export async function proxy(req: NextRequest) {
   )
 
   // Обновляем сессию если она устарела (refresh token)
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
   
   const pathname = req.nextUrl.pathname
-  const hasSession = session?.user?.id ? 'yes' : 'no'
+  const hasSession = user?.id ? 'yes' : 'no'
   // Логирование для отладки (можно отключить в production)
   if (process.env.NODE_ENV === 'development' && (pathname === '/' || pathname.startsWith('/create') || pathname.startsWith('/profile'))) {
     console.log(`[PROXY] ${pathname}: session=${hasSession}`)
@@ -39,7 +39,7 @@ export async function proxy(req: NextRequest) {
 
   // Защита роута /create — пускаем, если сессия есть
   if (req.nextUrl.pathname.startsWith('/create')) {
-    if (!session) {
+    if (!user) {
       console.log('[PROXY] Redirecting to login - no session')
       return NextResponse.redirect(new URL('/login', req.url))
     }

@@ -56,12 +56,14 @@ export default function Navbar() {
 
   useEffect(() => {
     // Получаем текущую сессию при монтировании
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) {
-        loadUsername(session.user.id)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setSession({ user } as any)
+        loadUsername(user.id)
         // Обновляем время последнего онлайна
-        supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', session.user.id).then()
+        supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', user.id).then()
+      } else {
+        setSession(null)
       }
     })
 

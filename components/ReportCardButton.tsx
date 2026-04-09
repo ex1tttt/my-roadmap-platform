@@ -35,13 +35,13 @@ export default function ReportCardButton({ cardId }: Props) {
 
   // Проверяем при загрузке — не жаловался ли уже этот пользователь
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
       const { data } = await supabase
         .from('card_reports')
         .select('id')
         .eq('card_id', cardId)
-        .eq('reporter_id', session.user.id)
+        .eq('reporter_id', user.id)
         .maybeSingle()
       if (data) setAlreadyReported(true)
     })
@@ -61,13 +61,13 @@ export default function ReportCardButton({ cardId }: Props) {
 
     try {
       // Сначала проверяем локально перед запросом
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
         const { data: existing } = await supabase
           .from('card_reports')
           .select('id')
           .eq('card_id', cardId)
-          .eq('reporter_id', session.user.id)
+          .eq('reporter_id', user.id)
           .maybeSingle()
         if (existing) {
           setAlreadyReported(true)

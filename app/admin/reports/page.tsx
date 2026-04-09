@@ -41,8 +41,8 @@ export default function AdminReportsPage() {
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session || !ADMIN_IDS.includes(session.user.id)) {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user || !ADMIN_IDS.includes(user.id)) {
         setAuthorized(false)
         router.replace('/')
         return

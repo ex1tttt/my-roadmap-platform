@@ -13,14 +13,21 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Получаем текущую сессию
+    // Получаем текущего пользователя (безопасно)
     const initSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        console.log('[useAuth] Initial session:', session?.user?.id ? 'logged in' : 'not logged in')
-        setSession(session)
+        const { data: { user } } = await supabase.auth.getUser()
+        console.log('[useAuth] Initial user:', user?.id ? 'logged in' : 'not logged in')
+        // Получаем сессию если пользователь авторизован
+        if (user) {
+          const { data: { session } } = await supabase.auth.getSession()
+          setSession(session)
+        } else {
+          setSession(null)
+        }
       } catch (error) {
         console.error('[useAuth] Error getting session:', error)
+        setSession(null)
       } finally {
         setLoading(false)
       }

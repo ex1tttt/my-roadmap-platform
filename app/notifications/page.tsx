@@ -200,8 +200,8 @@ export default function NotificationsPage() {
   // Загрузка и агрегация
   async function load() {
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
-    const uid = session?.user?.id ?? null
+    const { data: { user } } = await supabase.auth.getUser()
+    const uid = user?.id ?? null
     setUserId(uid)
     if (!uid) {
       router.replace('/login')

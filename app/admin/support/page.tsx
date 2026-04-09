@@ -115,15 +115,14 @@ export default function AdminSupportPage() {
 
   // Проверка прав администратора
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session || !ADMIN_IDS.includes(session.user.id)) {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user || !ADMIN_IDS.includes(user.id)) {
         setAuthorized(false)
         router.replace('/')
         return
       }
       setAuthorized(true)
-      setToken(session.access_token)
-      setAdminId(session.user.id)
+      setAdminId(user.id)
       loadSessions()
     })
   }, [])
