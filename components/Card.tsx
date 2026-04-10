@@ -241,10 +241,10 @@ export default function Card({
       <div className="flex flex-col">
         <ol className="text-xs max-h-8 overflow-hidden">
           {(card.steps && card.steps.length > 0)
-            ? card.steps.slice().sort((a, b) => a.order - b.order).slice(0, 1).map((step) => (
+            ? card.steps.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).slice(0, 1).map((step, idx) => (
                 <li key={step.id} className="flex gap-2 items-center">
                   <div className="min-w-5.5 flex-none rounded bg-slate-100 dark:bg-white/5 px-1 text-center font-medium text-slate-600 dark:text-slate-300">
-                    {step.order}
+                    {step.order && step.order > 0 ? step.order : idx + 1}
                   </div>
                   <div className="font-medium text-slate-700 dark:text-slate-200 line-clamp-2">{step.title}</div>
                 </li>
