@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
-import { Home, Save, Camera, Mail, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User, ChevronRight, ArrowLeft } from "lucide-react";
+import { Home, Save, Camera, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User, ChevronRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
@@ -94,10 +94,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [language, setLanguage] = useState<SupportedLanguage>("en");
-
-  // Смена почты
-  const [newEmail, setNewEmail] = useState("");
-  const [emailSaving, setEmailSaving] = useState(false);
 
   // Смена пароля
   const [currentPassword, setCurrentPassword] = useState("");
@@ -365,24 +361,6 @@ export default function SettingsPage() {
       toast.error("Ошибка сохранения: " + (err?.message ?? "Неизвестная ошибка"));
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleEmailUpdate(e: React.FormEvent) {
-    e.preventDefault();
-    setEmailSaving(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
-      if (error) throw error;
-      toast.success("Письмо с подтверждением отправлено на обе почты!", {
-        description: "Перейдите по ссылке в каждом письме для подтверждения.",
-        duration: 6000,
-      });
-      setNewEmail("");
-    } catch (err: any) {
-      toast.error("Ошибка обновления Email: " + (err?.message ?? "Неизвестная ошибка"));
-    } finally {
-      setEmailSaving(false);
     }
   }
 
@@ -673,7 +651,6 @@ export default function SettingsPage() {
                         readOnly
                         className="box-border w-full cursor-not-allowed rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 outline-none"
                       />
-                      <p className="mt-1.5 text-xs text-slate-500">{mounted ? t('settings.emailReadonlyHint') : ''}</p>
                     </label>
                     <label className="mt-4 block">
                       <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.bio') : 'О себе'}</div>
@@ -843,33 +820,6 @@ export default function SettingsPage() {
             {/* ─── БЕЗОПАСНОСТЬ ─── */}
             {activeSection === 'security' && (
               <>
-                {/* Изменить email */}
-                <form onSubmit={handleEmailUpdate}>
-                  <div className={CARD_CLS}>
-                    <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                      <Mail className="h-3.5 w-3.5" />
-                      {mounted ? t('settings.changeEmail') : 'Изменить Email'}
-                    </h2>
-                    <label className="block">
-                      <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">{mounted ? t('settings.newEmail') : 'Новый Email'}</div>
-                      <input
-                        type="email"
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        required
-                        placeholder="new@example.com"
-                        className={INPUT_CLS}
-                      />
-                    </label>
-                    <div className="mt-4 flex justify-end">
-                      <button type="submit" disabled={emailSaving || !newEmail.trim()} className={BTN_PRIMARY}>
-                        {emailSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                        {mounted ? (emailSaving ? t('settings.sending') : t('settings.updateEmail')) : 'Обновить'}
-                      </button>
-                    </div>
-                  </div>
-                </form>
-
                 {/* Изменить пароль */}
                 <form onSubmit={handlePasswordUpdate}>
                   <div className={CARD_CLS}>
