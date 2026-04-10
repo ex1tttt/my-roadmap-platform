@@ -321,6 +321,8 @@
     "remove": "Usuń"
   },
   "home": {
+    "siteTitle": "Roadmap Platform — Platforma do nauki i rozwoju",
+    "siteDescription": "Nowoczesna platforma dla programistów, uczniów i autorów. Udzielaj się poprzez porady krok po kroku, jak nauczyć się języka, gotowania, programowania i innego. Buduj mapy drogowe, śledź postępy i osiągaj cele!",
     "subtitle": "Poradniki krok po kroku od społeczności",
     "searchPlaceholder": "Szukaj po tytule...",
     "allCategories": "Wszystkie kategorie",

@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar"
+import MetaUpdater from "@/components/MetaUpdater"
 import { ThemeProvider } from "@/components/theme-provider"
 import I18nProvider from "@/components/I18nProvider"
 import SupportChat from "@/components/SupportChat"
@@ -48,6 +49,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
+            <MetaUpdater />
             <Navbar />
             {children}
             <SupportChat />

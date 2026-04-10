@@ -315,6 +315,8 @@
     "remove": "Remove"
   },
   "home": {
+    "siteTitle": "Roadmap Platform — Learn by Following Step-by-Step Guides",
+    "siteDescription": "A modern platform for developers, learners, and creators to share step-by-step guides for achieving goals. Build roadmaps, track progress, and learn from our community!",
     "subtitle": "Learn from step-by-step guides shared by our community",
     "searchPlaceholder": "Search by title...",
     "allCategories": "All categories",
