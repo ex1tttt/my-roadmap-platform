@@ -16,6 +16,7 @@ import BackButton from "./BackButton";
 import CardEditButton from "./CardEditButton";
 import T from "@/components/T";
 import ReportCardButton from "@/components/ReportCardButton";
+import CategoryBadge from "@/components/CategoryBadge";
 import { isUUID } from "@/lib/slug";
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label?: string; url?: string };
@@ -343,15 +344,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            {data.category && (
-              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
-                {data.category}
-              </span>
-            )}
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               {data.is_private && (
-                <span title="đčĐÇđŞđ▓đ░ĐéđŻđ░ĐĆ đ║đ░ĐÇĐéđżĐçđ║đ░">
+                <span title="Приватная дорожная карта">
                   <Lock size={18} className="text-amber-500 dark:text-slate-400" />
                 </span>
               )}
@@ -359,6 +355,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 {data.title}
               </h1>
             </div>
+            {data.category && (
+              <CategoryBadge categoryId={data.category} />
+            )}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-4">
             <Link

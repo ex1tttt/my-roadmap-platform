@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Heart, Bookmark, MessageSquare, Star, Download, Lock } from 'lucide-react';
 import ShareButton from './ShareButton';
 import UserAvatar from './UserAvatar';
+import CategoryBadge from './CategoryBadge';
 import { useTranslation } from 'react-i18next';
 import { checkAndAwardBadges } from '@/lib/badges';
 
@@ -207,12 +208,17 @@ export default function Card({
             />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-wrap">
               <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">{card.title ?? "Без названия"}</h3>
               {card.is_private && (
                 <span title="Приватная дорожная карта">
                   <Lock className="ml-1 h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </span>
+              )}
+              {card.category && (
+                <div className="ml-auto">
+                  <CategoryBadge categoryId={card.category} />
+                </div>
               )}
             </div>
             <button
