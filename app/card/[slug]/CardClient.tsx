@@ -99,14 +99,6 @@ export default function CardClient({ id }: { id: string }) {
             .eq('user_id', user.id)
             .eq('card_id', cardData.id);
           setInitialDone(prog?.map((p: any) => p.step_id) || []);
-
-          // Запись в историю просмотров
-          await supabase
-            .from('view_history')
-            .upsert(
-              { user_id: user.id, card_id: cardData.id, viewed_at: new Date().toISOString() },
-              { onConflict: 'user_id,card_id' }
-            );
         }
       }
       setLoading(false);
