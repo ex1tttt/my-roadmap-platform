@@ -203,26 +203,28 @@ export default function ProfileTabsSelf({
       {tab === 'my' && (
         <>
           <DeleteModal />
-          <div className="flex gap-2 mb-4 justify-end">
-            <button
-              onClick={() => setIsSelectionMode((v) => !v)}
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                isSelectionMode
-                  ? 'border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              {isSelectionMode ? t('common.cancel') : t('profileTabs.select')}
-            </button>
-            {isSelectionMode && selectedCardIds.length > 0 && (
+          {myCards.length > 0 && (
+            <div className="flex gap-2 mb-4 justify-end">
               <button
-                onClick={handleBulkDelete}
-                className="flex items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-900/50 transition-colors"
+                onClick={() => setIsSelectionMode((v) => !v)}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isSelectionMode
+                    ? 'border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
               >
-                <Trash2 className="h-4 w-4" /> {t('actions.delete')} ({selectedCardIds.length})
+                {isSelectionMode ? t('common.cancel') : t('profileTabs.select')}
               </button>
-            )}
-          </div>
+              {isSelectionMode && selectedCardIds.length > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-900/50 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" /> {t('actions.delete')} ({selectedCardIds.length})
+                </button>
+              )}
+            </div>
+          )}
           {myCards.length === 0 ? (
             <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-10 text-center">
               <p className="text-slate-500 dark:text-slate-400">{t('profileTabs.noCardsYet')}</p>
