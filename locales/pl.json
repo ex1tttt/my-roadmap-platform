@@ -644,5 +644,86 @@
     "title": "Osiągnięcia",
     "earned": "✅ Uzyskane",
     "locked": "🔒 Nie uzyskane"
+  },
+  "pushNotifications": {
+    "sectionTitle": "Powiadomienia",
+    "sectionDesc": "Zarządzaj ustawieniami powiadomień push",
+    "typesTitle": "TYPY POWIADOMIEŃ",
+    "selectDescription": "Wybierz, jakie powiadomienia chcesz otrzymywać",
+    "types": {
+      "like": "Polubienia",
+      "comment": "Komentarze",
+      "comment_like": "Polubienia komentarzy",
+      "follow": "Nowych obserwujących",
+      "mention": "Wzmiankowania",
+      "new_card": "Nowe karty z subskrypcji"
+    },
+    "save": "Zapisz",
+    "enabled": "Powiadomienia włączone",
+    "disabled": "Powiadomienia wyłączone",
+    "unsupported": "Twoja przeglądarka nie obsługuje powiadomień push",
+    "denied": "Odmówiłeś powiadomień push. Proszę włącz je w ustawieniach przeglądarki",
+    "enable": "Włącz powiadomienia",
+    "disable": "Wyłącz powiadomienia",
+    "waiting": "Przetwarzanie..."
+  },
+  "privacy": {
+    "title": "POLITYKA PRYWATNOŚCI",
+    "description": "Przejrzyj naszą Politykę prywatności i zgódź się z jej warunkami, aby kontynuować korzystanie z usługi.",
+    "viewButton": "Wyświetl",
+    "agreeLabel": "Zgadzam się na Politykę prywatności i warunki korzystania z usługi",
+    "closeButton": "Zamknij",
+    "agreeButton": "Zgadzam się",
+    "sections": {
+      "section1": {
+        "title": "1. Wstęp",
+        "content": "Roadmap Platform (\"my\", \"nasz\" lub \"nasza\") obsługuje witrynę roadmap-platform.vercel.app (\"Usługa\"). Ta strona informuje Cię o naszej polityce prywatności i wyjaśnia, jak zbieramy, wykorzystujemy, ujawniamy i chronimy Twoje dane podczas korzystania z naszej Usługi."
+      },
+      "section2": {
+        "title": "2. Zbieranie informacji",
+        "intro": "Zbieramy kilka rodzajów informacji w celu zapewnienia i usprawnienia naszej Usługi:",
+        "items": [
+          "Poświadczenia: email, hasło i nazwa użytkownika",
+          "Informacje o profilu: awatar, biografia, język, status powiadomień",
+          "Zawartość: karty, komentarze, oceny, które tworzysz",
+          "Informacje techniczne: adres IP, typ przeglądarki, historia użytkowania",
+          "reCAPTCHA: podczas rejestracji i logowania używany jest Google reCAPTCHA v3"
+        ]
+      },
+      "section3": {
+        "title": "3. Użycie danych",
+        "intro": "Używamy zebranych danych do:",
+        "items": [
+          "Świadczenia i wspierania Usługi",
+          "Przetwarzania Twoich żądań i zapewniania wsparcia",
+          "Wysyłania powiadomień i aktualizacji",
+          "Ochrony przed oszustwami i nieautoryzowanym dostępem",
+          "Ulepszania i optymalizacji Usługi",
+          "Analizy użytkowania i śledzenia trendów"
+        ]
+      },
+      "section4": {
+        "title": "4. Bezpieczeństwo",
+        "content": "Używamy rozsądnych środków bezpieczeństwa, aby chronić Twoje dane osobowe przed nieautoryzowanym dostępem, zmianą, ujawnieniem lub zniszczeniem. Jednak żadna metoda transmisji przez Internet nie jest w 100% bezpieczna."
+      },
+      "section5": {
+        "title": "5. Przechowywanie danych",
+        "content": "Twoje dane są przechowywane na zabezpieczonych serwerach Supabase (PostgreSQL) w Europie i mogą być przetwarzane przez naszą usługę techniczną Google Cloud Platform (reCAPTCHA)."
+      },
+      "section6": {
+        "title": "6. Twoje prawa",
+        "intro": "Masz prawo do:",
+        "items": [
+          "Dostępu do swoich danych osobowych",
+          "Poprawiania niedokładnych lub niepełnych danych",
+          "Żądania usunięcia swoich danych",
+          "Wycofania zgody na przetwarzanie danych"
+        ]
+      },
+      "section7": {
+        "title": "7. Kontakty",
+        "content": "Jeśli masz pytania dotyczące tej Polityki prywatności lub innych problemów bezpieczeństwa, użyj wbudowanego czatu techniczny wsparcia (prawy dolny róg witryny). Nasz zespół wsparcia jest gotów Ci pomóc w godzinach pracy."
+      }
+    }
   }
 }

@@ -640,5 +640,86 @@
     "title": "Achievements",
     "earned": "✅ Earned",
     "locked": "🔒 Not Earned"
+  },
+  "pushNotifications": {
+    "sectionTitle": "Notifications",
+    "sectionDesc": "Manage your push notification settings",
+    "typesTitle": "NOTIFICATION TYPES",
+    "selectDescription": "Choose what notifications you want to receive",
+    "types": {
+      "like": "Likes",
+      "comment": "Comments",
+      "comment_like": "Likes on comments",
+      "follow": "New followers",
+      "mention": "Mentions",
+      "new_card": "New cards from subscriptions"
+    },
+    "save": "Save",
+    "enabled": "Notifications enabled",
+    "disabled": "Notifications disabled",
+    "unsupported": "Your browser does not support push notifications",
+    "denied": "You have denied push notifications. Please enable them in your browser settings",
+    "enable": "Enable notifications",
+    "disable": "Disable notifications",
+    "waiting": "Processing..."
+  },
+  "privacy": {
+    "title": "PRIVACY POLICY",
+    "description": "Please review our Privacy Policy and agree to its terms to continue using the service.",
+    "viewButton": "View",
+    "agreeLabel": "I agree to the Privacy Policy and terms of service",
+    "closeButton": "Close",
+    "agreeButton": "Agree",
+    "sections": {
+      "section1": {
+        "title": "1. Introduction",
+        "content": "Roadmap Platform (\"we\", \"our\" or \"us\") operates the website roadmap-platform.vercel.app (the \"Service\"). This page informs you of our privacy policy and explains how we collect, use, disclose, and protect your data when using our Service."
+      },
+      "section2": {
+        "title": "2. Information Collection",
+        "intro": "We collect several types of information to provide and improve our Service:",
+        "items": [
+          "Credentials: email, password, and username",
+          "Profile information: avatar, biography, language, notification status",
+          "Content: cards, comments, ratings you create",
+          "Technical information: IP address, browser type, usage history",
+          "reCAPTCHA: Google reCAPTCHA v3 is used during registration and login"
+        ]
+      },
+      "section3": {
+        "title": "3. Data Usage",
+        "intro": "We use collected data for:",
+        "items": [
+          "Providing and supporting the Service",
+          "Processing your requests and providing support",
+          "Sending notifications and updates",
+          "Protecting against fraud and unauthorized access",
+          "Improving and optimizing the Service",
+          "Analyzing usage and tracking trends"
+        ]
+      },
+      "section4": {
+        "title": "4. Security",
+        "content": "We use reasonable security measures to protect your personal data from unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the Internet is 100% secure."
+      },
+      "section5": {
+        "title": "5. Data Storage",
+        "content": "Your data is stored on protected Supabase (PostgreSQL) servers in Europe and may be processed by our technical service Google Cloud Platform (reCAPTCHA)."
+      },
+      "section6": {
+        "title": "6. Your Rights",
+        "intro": "You have the right to:",
+        "items": [
+          "Access your personal data",
+          "Correct inaccurate or incomplete data",
+          "Request deletion of your data",
+          "Withdraw consent to data processing"
+        ]
+      },
+      "section7": {
+        "title": "7. Contacts",
+        "content": "If you have questions about this Privacy Policy or other security concerns, please use the built-in support chat (bottom right corner of the site). Our support team is ready to help you during business hours."
+      }
+    }
   }
 }

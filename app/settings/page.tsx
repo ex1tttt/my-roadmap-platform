@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import { Home, Save, Camera, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User, ChevronRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -749,9 +750,9 @@ export default function SettingsPage() {
                 <div className={CARD_CLS}>
                   <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
                     <Bell className="h-3.5 w-3.5" />
-                    Типы уведомлений
+                    {mounted ? t('pushNotifications.typesTitle') : 'Типы уведомлений'}
                   </h2>
-                  <p className="mb-4 text-xs text-slate-500">Выберите, о чём хотите получать уведомления</p>
+                  <p className="mb-4 text-xs text-slate-500">{mounted ? t('pushNotifications.selectDescription') : 'Выберите, о чём хотите получать уведомления'}</p>
                   <div className="space-y-3">
                     {NOTIF_TYPES.map(({ key, label }) => (
                       <label key={key} className="flex cursor-pointer items-center gap-3">
@@ -761,7 +762,7 @@ export default function SettingsPage() {
                           onChange={(e) => setNotifPrefs(prev => ({ ...prev, [key]: e.target.checked }))}
                           className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 accent-blue-500"
                         />
-                        <span className="text-sm text-slate-700 dark:text-slate-300">{label}</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{mounted ? t(`pushNotifications.types.${key}`) : label}</span>
                       </label>
                     ))}
                   </div>
@@ -783,7 +784,7 @@ export default function SettingsPage() {
                       }}
                       className={BTN_PRIMARY}
                     >
-                      {notifSaved ? <span className="text-green-300">✓ Сохранено</span> : <><Save className="h-4 w-4" /> Сохранить</>}
+                      {notifSaved ? <span className="text-green-300">✓ {mounted ? t('pushNotifications.save') : 'Сохранено'}</span> : <><Save className="h-4 w-4" /> {mounted ? t('pushNotifications.save') : 'Сохранить'}</>}
                     </button>
                   </div>
                 </div>
@@ -886,10 +887,10 @@ export default function SettingsPage() {
                 <div className={CARD_CLS}>
                   <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
                     <Globe className="h-3.5 w-3.5" />
-                    Privacy Policy
+                    {mounted ? t('privacy.title') : 'Privacy Policy'}
                   </h2>
                   <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                    Пожалуйста, ознакомьтесь с нашей политикой приватности и согласитесь с её условиями для продолжения использования сервиса.
+                    {mounted ? t('privacy.description') : 'Пожалуйста, ознакомьтесь с нашей политикой приватности и согласитесь с её условиями для продолжения использования сервиса.'}
                   </p>
                   <div className="flex gap-3">
                     <button
@@ -898,132 +899,20 @@ export default function SettingsPage() {
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/5 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"
                     >
                       <Eye className="h-4 w-4" />
-                      Посмотреть
+                      {mounted ? t('privacy.viewButton') : 'Посмотреть'}
                     </button>
                   </div>
                 </div>
 
                 {/* Privacy Policy Modal */}
-                {showPrivacyModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-lg bg-white dark:bg-slate-900 p-6">
-                      <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Privacy Policy</h2>
-                        <button
-                          type="button"
-                          onClick={() => setShowPrivacyModal(false)}
-                          className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      <div className="prose dark:prose-invert mb-6 text-sm text-slate-700 dark:text-slate-300 space-y-4">
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">1. Введение</h3>
-                          <p>
-                            Roadmap Platform ("мы", "наш" или "наша") управляет веб-сайтом roadmap-platform.vercel.app (далее "Сервис"). Эта страница информирует вас о нашей политике конфиденциальности и объясняет, как мы собираем, используем, раскрываем и защищаем ваши данные при использовании нашего Сервиса.
-                          </p>
-                        </section>
-
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">2. Сбор информации</h3>
-                          <p>
-                            Мы собираем несколько видов информации для предоставления и улучшения нашего Сервиса:
-                          </p>
-                          <ul className="list-disc list-inside space-y-1">
-                            <li><strong>Учетные данные:</strong> электронная почта, пароль и имя пользователя</li>
-                            <li><strong>Информация профиля:</strong> аватар, биография, язык, статус уведомлений</li>
-                            <li><strong>Содержимое:</strong> карточки, комментарии, рейтинги, которые вы создаёте</li>
-                            <li><strong>Техническая информация:</strong> IP-адрес, тип браузера, история использования</li>
-                            <li><strong>reCAPTCHA:</strong> при регистрации и входе используется Google reCAPTCHA v3</li>
-                          </ul>
-                        </section>
-
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">3. Использование данных</h3>
-                          <p>
-                            Мы используем собранные данные для:
-                          </p>
-                          <ul className="list-disc list-inside space-y-1">
-                            <li>Предоставления и поддержки Сервиса</li>
-                            <li>Обработки ваших запросов и предоставления поддержки</li>
-                            <li>Отправки уведомлений и обновлений</li>
-                            <li>Защиты от мошенничества и несанкционированного доступа</li>
-                            <li>Улучшения и оптимизации Сервиса</li>
-                            <li>Анализа использования и отслеживания тенденций</li>
-                          </ul>
-                        </section>
-
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">4. Безопасность</h3>
-                          <p>
-                            Мы используем приемлемые меры безопасности для защиты ваших личных данных от несанкционированного доступа, изменения, раскрытия или уничтожения. Однако ни один метод передачи через Интернет не является 100% безопасным.
-                          </p>
-                        </section>
-
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">5. Хранение данных</h3>
-                          <p>
-                            Ваши данные хранятся на защищённых серверах Supabase (PostgreSQL) в Европе и могут быть обработаны нашей технической услугой Google Cloud Platform (reCAPTCHA).
-                          </p>
-                        </section>
-
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">6. Ваши права</h3>
-                          <p>
-                            Вы имеете право:
-                          </p>
-                          <ul className="list-disc list-inside space-y-1">
-                            <li>Получить доступ к своим личным данным</li>
-                            <li>Исправить неточные или неполные данные</li>
-                            <li>Запросить удаление ваших данных</li>
-                            <li>Отозвать согласие на обработку данных</li>
-                          </ul>
-                        </section>
-
-                        <section>
-                          <h3 className="font-semibold text-slate-900 dark:text-white mb-2">7. Контакты</h3>
-                          <p>
-                            Если у вас есть вопросы об этой политике конфиденциальности или по другим вопросам безопасности, используйте встроенный чат технической поддержки (нижний правый угол сайта). Наша команда поддержки готова вам помочь в течение рабочего времени.
-                          </p>
-                        </section>
-                      </div>
-
-                      <div className="space-y-3">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={privacyAgreed}
-                            onChange={(e) => setPrivacyAgreed(e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 accent-blue-500"
-                          />
-                          <span className="text-sm text-slate-700 dark:text-slate-300">
-                            Я согласен с Privacy Policy и условиями использования
-                          </span>
-                        </label>
-                        <div className="flex gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setShowPrivacyModal(false)}
-                            className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-50 dark:hover:bg-white/5"
-                          >
-                            Закрыть
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handlePrivacyAgree}
-                            disabled={!privacyAgreed || privacySaving}
-                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {privacySaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            {privacySaving ? 'Сохранение...' : 'Согласиться'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <PrivacyPolicyModal
+                  isOpen={showPrivacyModal}
+                  onClose={() => setShowPrivacyModal(false)}
+                  onAgree={handlePrivacyAgree}
+                  isAgreed={privacyAgreed}
+                  onAgreeChange={setPrivacyAgreed}
+                  isSaving={privacySaving}
+                />
 
                 {/* Удалить аккаунт */}
                 <form onSubmit={handleDeleteAccount}>
