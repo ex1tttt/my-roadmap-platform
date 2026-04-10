@@ -46,6 +46,7 @@ type CardProps = {
   actions?: React.ReactNode;
   onLike?: (cardId: string, isLiked: boolean) => void;
   onFavorite?: (cardId: string, isFavorite: boolean) => void;
+  showCategory?: boolean;
 };
 
 export default function Card({
@@ -59,6 +60,7 @@ export default function Card({
   actions,
   onLike,
   onFavorite,
+  showCategory = false,
 }: CardProps) {
   const router = useRouter();
   const cardRef = useRef<HTMLElement>(null);
@@ -215,7 +217,7 @@ export default function Card({
                   <Lock className="ml-1 h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </span>
               )}
-              {card.category && (
+              {showCategory && card.category && (
                 <div className="ml-auto">
                   <CategoryBadge categoryId={card.category} />
                 </div>
