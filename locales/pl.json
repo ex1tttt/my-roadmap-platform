@@ -639,5 +639,10 @@
       "resolved": "Rozwiązane",
       "closed": "Zamknięte"
     }
+  },
+  "achievements": {
+    "title": "Osiągnięcia",
+    "earned": "✅ Uzyskane",
+    "locked": "🔒 Nie uzyskane"
   }
 }

@@ -77,7 +77,7 @@ export default function AchievementsPage() {
             {earned.length > 0 && (
               <section className="mb-8">
                 <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                  ✅ Получено ({earned.length})
+                  {t('achievements.earned')} ({earned.length})
                 </h2>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {earned.map(badge => (
@@ -104,7 +104,7 @@ export default function AchievementsPage() {
             {locked.length > 0 && (
               <section>
                 <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                  🔒 Не получено ({locked.length})
+                  {t('achievements.locked')} ({locked.length})
                 </h2>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {locked.map(badge => (

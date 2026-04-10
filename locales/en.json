@@ -275,6 +275,7 @@
     "following": "Following",
     "noFollowers": "No followers yet.",
     "noFollowing": "Not following anyone yet.",
+    "unfollow": "Unfollow",
     "subscribe": "Follow",
     "subscribed": "Following",
     "unsubscribe": "Unfollow",
@@ -634,5 +635,10 @@
       "resolved": "Mark Resolved",
       "closed": "Closed"
     }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "earned": "✅ Earned",
+    "locked": "🔒 Not Earned"
   }
 }

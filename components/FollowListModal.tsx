@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { X, UserMinus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import UserAvatar from '@/components/UserAvatar'
 
@@ -37,6 +38,7 @@ export default function FollowListModal({
   const [users, setUsers] = useState<FollowUser[]>([])
   const [loading, setLoading] = useState(false)
   const [unfollowing, setUnfollowing] = useState<Set<string>>(new Set())
+  const { t } = useTranslation()
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -124,7 +126,7 @@ export default function FollowListModal({
 
   if (!isOpen) return null
 
-  const title = mode === 'followers' ? 'Подписчики' : 'Подписки'
+  const title = mode === 'followers' ? t('follow.followers') : t('follow.following')
 
   return (
     /* Backdrop */
@@ -162,7 +164,7 @@ export default function FollowListModal({
             </div>
           ) : users.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500">
-              {mode === 'followers' ? 'Пока нет подписчиков' : 'Нет подписок'}
+              {mode === 'followers' ? t('follow.noFollowers') : t('follow.noFollowing')}
             </p>
           ) : (
             <ul className="flex flex-col gap-0.5">
@@ -199,7 +201,7 @@ export default function FollowListModal({
                     >
                       {unfollowing.has(user.id)
                         ? '...'
-                        : <><UserMinus className="h-3 w-3" /> <span>Отписаться</span></>}
+                        : <><UserMinus className="h-3 w-3" /> <span>{t('follow.unfollow')}</span></>}
                     </button>
                   )}
                 </li>
