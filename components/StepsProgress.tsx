@@ -206,7 +206,7 @@ export default function StepsProgress({ cardId, userId, steps, initialDone }: Pr
                     : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.4)]'
                 }`}
               >
-                {isDone ? '✓' : (s.order ?? idx + 1)}
+                {isDone ? '✓' : (s.order && s.order > 0 ? s.order : idx + 1)}
               </div>
 
               {/* Карточка шага */}
