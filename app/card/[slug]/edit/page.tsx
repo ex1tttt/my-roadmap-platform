@@ -227,7 +227,7 @@ export default function EditPage() {
         const { data: collabRow } = await supabase
           .from('card_collaborators')
           .select('id, role')
-          .eq('card_id', cardId)
+          .eq('card_id', card.id)
           .eq('user_email', user.email)
           .maybeSingle();
         if (!collabRow || collabRow.role !== 'editor') { setForbidden(true); setLoading(false); return; }
