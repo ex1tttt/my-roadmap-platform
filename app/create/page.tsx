@@ -153,13 +153,15 @@ function SortableStepCreate({ s, idx, updateStep, removeStep, removeStepImage, h
               ))}
             </div>
           )}
-          <button
-            type="button"
-            className="mt-auto self-start text-sm text-red-600 hover:text-red-800"
-            onClick={() => removeStep(s.id)}
-          >
-            {t('create.deleteStep')}
-          </button>
+          {idx > 0 && (
+            <button
+              type="button"
+              className="mt-auto self-start text-sm text-red-600 hover:text-red-800"
+              onClick={() => removeStep(s.id)}
+            >
+              {t('create.deleteStep')}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -564,6 +566,13 @@ export default function CreatePage() {
           </section>
 
           <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="rounded-md border border-gray-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              {t('common.cancel') || 'Отмена'}
+            </button>
             <button
               type="submit"
               disabled={saving}
