@@ -7,6 +7,11 @@ import ProfileTabsWrapper from "./ProfileTabsWrapper";
 import PublicProfileCards from "@/components/PublicProfileCards";
 import ProfileHeader from "@/components/ProfileHeader";
 
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948', // atrybut2006
+];
+
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -63,6 +68,15 @@ export default async function PublicProfilePage({
   ]);
 
   const isOwner = currentUser?.id === id;
+  const isCurrentUserAdmin = currentUser?.id ? ADMIN_IDS.includes(currentUser.id) : false;
+
+  // Фильтруем приватные карточки: показываем только владельцу профиля, администраторам и самому себе
+  const filteredCards = cards?.filter(card => {
+    if (!card.is_private) return true; // Публичные видны всем
+    if (isOwner) return true; // Владелец видит все свои карточки
+    if (isCurrentUserAdmin) return true; // Администраторы видят все
+    return false; // Обычные пользователи не видят приватные карточки других
+  }) ?? [];
 
   // --- Доступные мне карточки (только для владельца) ---
   let sharedCards: any[] = [];
@@ -121,8 +135,8 @@ export default async function PublicProfilePage({
   const isBlocked = !!blockByViewer.data
 
   // Загружаем социальные данные для карточек
-  const cardIds = (cards ?? []).map((c: any) => c.id as string);
-  const enrichedCards = cards ?? [];
+  const cardIds = (filteredCards ?? []).map((c: any) => c.id as string);
+  const enrichedCards = filteredCards ?? [];
 
   if (cardIds.length > 0) {
     const [likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([

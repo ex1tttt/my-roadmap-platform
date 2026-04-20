@@ -11,6 +11,11 @@ import { CardSkeleton } from "@/components/ui/CardSkeleton";
 import { useTranslation } from 'react-i18next';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948', // atrybut2006
+];
+
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
@@ -46,6 +51,7 @@ export default function Home() {
   const filterRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Функция для получения названия категории на текущем языке
   const getCategoryLabel = (categoryId: string) => {
@@ -69,7 +75,9 @@ export default function Home() {
   // Получаем текущего пользователя один раз при монтировании
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
+      const uid = data.user?.id ?? null;
+      setUserId(uid);
+      setIsAdmin(uid ? ADMIN_IDS.includes(uid) : false);
     });
   }, []);
 
@@ -103,6 +111,11 @@ export default function Home() {
         }
         if (activeCategory) {
           query = query.eq("category", activeCategory);
+        }
+        
+        // Администраторы видят все карточки, обычные пользователи - только публичные
+        if (!isAdmin) {
+          query = query.eq("is_private", false);
         }
         
         // Сортируем по дате по умолчанию

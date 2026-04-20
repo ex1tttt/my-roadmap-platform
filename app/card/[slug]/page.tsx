@@ -18,6 +18,12 @@ import T from "@/components/T";
 import ReportCardButton from "@/components/ReportCardButton";
 import CategoryBadge from "@/components/CategoryBadge";
 import { isUUID } from "@/lib/slug";
+
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948', // atrybut2006
+];
+
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label?: string; url?: string };
 
@@ -279,7 +285,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     );
   }
 
-  if (!data || (data.is_private && (!currentUser || (currentUser.id !== data.user_id && !isCollaborator)))) {
+  if (!data || (data.is_private && (!currentUser || (currentUser.id !== data.user_id && !isCollaborator && !ADMIN_IDS.includes(currentUser.id))))) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#020617] py-12 px-4 sm:px-6">
         <main className="mx-auto max-w-4xl">

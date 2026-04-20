@@ -10,6 +10,11 @@ import { Heart, Home } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948', // atrybut2006
+];
+
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
@@ -33,6 +38,7 @@ export default function LikedPage() {
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     async function loadLiked() {
@@ -42,6 +48,7 @@ export default function LikedPage() {
         return;
       }
       setUserId(user.id);
+      setIsAdmin(ADMIN_IDS.includes(user.id));
 
       const { data: likesData, error } = await supabase
         .from("likes")
@@ -63,7 +70,15 @@ export default function LikedPage() {
         supabase.from("profiles").select("*"),
       ]);
 
-      const cardsRaw = cardsRes.data ?? [];
+      let cardsRaw = cardsRes.data ?? [];
+      
+      // Фильтруем приватные карточки: показываем только владельцу, администраторам и автору лайка
+      cardsRaw = cardsRaw.filter(c => {
+        if (!c.is_private) return true; // Публичные видны всем
+        if (c.user_id === user.id) return true; // Владелец видит свои карточки
+        if (ADMIN_IDS.includes(user.id)) return true; // Администраторы видят все
+        return false; // Обычные пользователи не видят приватные карточки других
+      });
 
       const profilesMap = new Map<string, Profile>();
       (profilesAll.data ?? []).forEach((p: any) =>

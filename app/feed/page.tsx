@@ -12,6 +12,11 @@ import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Rss, Users, Check, Loader2 } from "lucide-react";
 
+const ADMIN_IDS = [
+  'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
+  'b63af445-e18d-4e5b-a0e1-ba747f2b4948', // atrybut2006
+];
+
 // ─── Типы ─────────────────────────────────────────────────────────────
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
@@ -212,6 +217,7 @@ export default function FeedPage() {
       }
 
       const uid = user.id;
+      const isAdmin = ADMIN_IDS.includes(uid);
       if (mounted) setUserId(uid);
 
       // Получаем список ID авторов, на которых подписан пользователь
@@ -236,11 +242,19 @@ export default function FeedPage() {
         }
         return;
       }
-      const { data: cardsData, error: cardsError } = await supabase
+      
+      let query = supabase
         .from("cards")
         .select("*")
         .in("user_id", followingIds)
         .order("created_at", { ascending: false });
+      
+      // Администраторы видят все карточки, обычные пользователи - только публичные
+      if (!isAdmin) {
+        query = query.eq("is_private", false);
+      }
+
+      const { data: cardsData, error: cardsError } = await query;
 
       if (cardsError || !cardsData || cardsData.length === 0) {
         if (mounted) {
