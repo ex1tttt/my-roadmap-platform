@@ -238,8 +238,8 @@ export default function Card({
         </div>
       </div>
       {/* Блок шага */}
-      <div className="flex flex-col">
-        <ol className="text-xs max-h-8 overflow-hidden">
+      <div className="flex flex-col gap-1">
+        <ol className="text-xs">
           {(card.steps && card.steps.length > 0)
             ? card.steps.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).slice(0, 1).map((step, idx) => (
                 <li key={step.id} className="flex gap-2 items-center">
@@ -251,12 +251,12 @@ export default function Card({
               ))
             : <li className="text-xs text-slate-400 dark:text-slate-500">Нет шагов</li>
           }
-          {card.steps && card.steps.length > 1 && (
-            <li className="text-xs text-slate-400 dark:text-slate-500">
-              + еще {card.steps.length - 1} шаг(ов)
-            </li>
-          )}
         </ol>
+        {card.steps && card.steps.length > 1 && (
+          <div className="text-xs text-slate-400 dark:text-slate-500 pl-1">
+            + еще {card.steps.length - 1} шаг(ов)
+          </div>
+        )}
       </div>
       {/* Нижняя панель */}
       <div className="mt-auto pt-2 flex items-center justify-between border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl px-2 overflow-hidden">
