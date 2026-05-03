@@ -19,7 +19,11 @@
     "history": "Історія",
     "stats": "Статистика",
     "liked": "Подобалось",
-    "achievements": "Досягнення"
+    "achievements": "Досягнення",
+    "switchAccount": "Змінити обліковий запис",
+    "clickToLogin": "Натисніть, щоб увійти",
+    "noSavedAccounts": "Немає збережених облікових записів",
+    "addNewAccount": "Додати новий обліковий запис"
   },
   "profile": {
     "title": "Профіль",

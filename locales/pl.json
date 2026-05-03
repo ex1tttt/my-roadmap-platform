@@ -19,7 +19,11 @@
     "history": "Historia",
     "stats": "Statystyki",
     "liked": "Polubione",
-    "achievements": "Odznaczenia"
+    "achievements": "Odznaczenia",
+    "switchAccount": "Zmień konto",
+    "clickToLogin": "Kliknij, aby się zalogować",
+    "noSavedAccounts": "Brak zapisanych kont",
+    "addNewAccount": "Dodaj nowe konto"
   },
   "profile": {
     "title": "Profil",

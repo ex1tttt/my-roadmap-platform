@@ -19,7 +19,11 @@
     "history": "История",
     "stats": "Статистика",
     "liked": "Понравилось",
-    "achievements": "Достижения"
+    "achievements": "Достижения",
+    "switchAccount": "Смена учётной записи",
+    "clickToLogin": "Нажмите, чтобы войти",
+    "noSavedAccounts": "Нет сохранённых учётных записей",
+    "addNewAccount": "Добавить новую учётную запись"
   },
   "profile": {
     "title": "Профиль",

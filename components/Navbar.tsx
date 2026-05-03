@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy, Headphones, Flag } from 'lucide-react'
+import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy, Headphones, Flag, ArrowRightLeft } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
+import AccountSwitcher from '@/components/AccountSwitcher'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { saveLanguage, type SupportedLanguage } from '@/lib/i18n'
@@ -22,6 +23,7 @@ export default function Navbar() {
   const [username, setUsername] = useState('')
   const [usernameLoading, setUsernameLoading] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [accountSwitcherOpen, setAccountSwitcherOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const mounted = useHasMounted()
   const router = useRouter()
@@ -281,6 +283,20 @@ export default function Navbar() {
                       {t('nav.settings')}
                     </Link>
 
+                    <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+
+                    {/* Смена учётной записи */}
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false)
+                        setAccountSwitcherOpen(true)
+                      }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <ArrowRightLeft className="w-4 h-4" />
+                      {t('nav.switchAccount')}
+                    </button>
+
                     {/* Выход */}
                     <button
                       onClick={handleSignOut}
@@ -318,6 +334,8 @@ export default function Navbar() {
           )}
         </div>
       </nav>
+
+      <AccountSwitcher isOpen={accountSwitcherOpen} onClose={() => setAccountSwitcherOpen(false)} />
     </header>
   )
 }

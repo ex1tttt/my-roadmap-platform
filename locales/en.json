@@ -19,7 +19,11 @@
     "history": "History",
     "stats": "Statistics",
     "liked": "Liked",
-    "achievements": "Achievements"
+    "achievements": "Achievements",
+    "switchAccount": "Switch Account",
+    "clickToLogin": "Click to sign in",
+    "noSavedAccounts": "No saved accounts",
+    "addNewAccount": "Add new account"
   },
   "profile": {
     "title": "Profile",
