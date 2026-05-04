@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
-import { X, LogOut, Plus } from 'lucide-react'
+import { X, LogOut, Plus, Trash2 } from 'lucide-react'
 import { useRecaptcha } from '@/hooks/useRecaptcha'
 
 interface AccountSwitcherProps {
@@ -124,6 +124,20 @@ export default function AccountSwitcher({ isOpen, onClose }: AccountSwitcherProp
     }
   }
 
+  const handleDeleteAccount = (emailToDelete: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Предотвращаем срабатывание клика на кнопке входа
+    
+    console.log('[ACCOUNT_SWITCHER] Deleting account:', emailToDelete)
+    
+    // Удаляем аккаунт из списка
+    const updated = accounts.filter(a => a.email !== emailToDelete)
+    setAccounts(updated)
+    
+    // Сохраняем обновленный список в localStorage
+    localStorage.setItem('saved_accounts', JSON.stringify(updated))
+    console.log('[ACCOUNT_SWITCHER] Account deleted and saved to localStorage')
+  }
+
   if (!isOpen) return null
 
   return (
@@ -147,15 +161,27 @@ export default function AccountSwitcher({ isOpen, onClose }: AccountSwitcherProp
           {accounts.length > 0 ? (
             <div className="space-y-2">
               {accounts.map((account) => (
-                <button
+                <div
                   key={account.email}
-                  onClick={() => handleSwitchAccount(account.email, account.password)}
-                  disabled={loading}
-                  className="w-full rounded-lg border border-slate-200 dark:border-white/10 px-4 py-3 text-left text-sm transition-colors hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-60"
+                  className="relative rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                 >
-                  <div className="font-medium text-slate-900 dark:text-white">{account.email}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{t('nav.clickToLogin', { defaultValue: 'Нажмите, чтобы войти' })}</div>
-                </button>
+                  <button
+                    onClick={() => handleSwitchAccount(account.email, account.password)}
+                    disabled={loading}
+                    className="w-full px-4 py-3 text-left text-sm disabled:opacity-60 pr-12"
+                  >
+                    <div className="font-medium text-slate-900 dark:text-white">{account.email}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{t('nav.clickToLogin', { defaultValue: 'Нажмите, чтобы войти' })}</div>
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteAccount(account.email, e)}
+                    disabled={loading}
+                    title="Удалить аккаунт"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               ))}
             </div>
           ) : (
