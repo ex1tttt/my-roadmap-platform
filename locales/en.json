@@ -354,6 +354,13 @@
   },
   "create": {
     "title": "Create Roadmap",
+    "selectType": "Choose how to create",
+    "actionList": "Action List",
+    "actionListDesc": "Step-by-step roadmap with actions, resources, and media",
+    "ganttDiagram": "Gantt Diagram",
+    "ganttDiagramDesc": "Visual project timeline diagram",
+    "ganttTasks": "Tasks",
+    "addTask": "+ Add task",
     "category": "Category",
     "selectCategory": "Select a category",
     "addStep": "+ Add step",

@@ -13,6 +13,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Toast from "@/components/Toast";
+import CreateTypeModal from "@/components/CreateTypeModal";
 import { checkAndAwardBadges } from '@/lib/badges';
 
 type Step = { id: string; title: string; content: string; link?: string; media_urls?: string[]; duration_minutes?: number };
@@ -173,6 +174,10 @@ export default function CreatePage() {
   const { t, i18n } = useTranslation();
   const { getToken: getRecaptchaToken } = useRecaptcha();
   const mounted = useHasMounted();
+  
+  // State for type selection
+  const [createType, setCreateType] = useState<"list" | "gantt" | null>(null);
+  
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -397,11 +402,27 @@ export default function CreatePage() {
 
   if (!mounted) return <div className="opacity-0" />;
 
-  return (
-    <>
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+  // Show type selection modal if type not selected
+  if (!createType) {
+    return (
+      <>
+        <CreateTypeModal
+          isOpen={true}
+          onSelectActionList={() => setCreateType("list")}
+          onSelectGantt={() => router.push("/create/gantt")}
+          onClose={() => router.back()}
+        />
+      </>
+    );
+  }
+
+  // Show action list form if type is "list"
+  if (createType === "list") {
+    return (
+      <>
+        {toast && (
+          <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        )}
       <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-12">
         <h1 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white">{t('create.title')}</h1>
 
@@ -584,5 +605,8 @@ export default function CreatePage() {
         </form>
       </main>
     </>
-  );
+    );
+  }
+
+  return null;
 }

@@ -358,8 +358,13 @@
     "hoursShort": "h"
   },
   "create": {
-    "title": "Utwórz kartę",
-    "category": "Kategoria",
+    "title": "Utwórz kartę",    "selectType": "Wybierz typ tworzenia",
+    "actionList": "Lista działań",
+    "actionListDesc": "Krok po kroku mapa drogowa z działaniami, zasobami i mediami",
+    "ganttDiagram": "Diagram Gantta",
+    "ganttDiagramDesc": "Wizualny diagram osi czasu projektu",
+    "ganttTasks": "Zadania",
+    "addTask": "+ Dodaj zadanie",    "category": "Kategoria",
     "selectCategory": "Wybierz kategorię",
     "addStep": "+ Dodaj krok",
     "stepTitle": "Tytuł kroku",
