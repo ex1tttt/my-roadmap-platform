@@ -418,7 +418,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 />
               </ClientOnly>
               {(isOwner || collaboratorRole === "editor") && (
-                <CardEditButton cardId={data.id} />
+                <CardEditButton cardId={data.id} cardType={data.card_type === "gantt" ? "gantt" : "list"} />
               )}
               {isOwner && (
                 <DeleteButton cardId={data.id} />
