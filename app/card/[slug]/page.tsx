@@ -90,62 +90,53 @@ function priorityBadgeClass(priority: GanttTask["priority"]) {
 }
 
 function GanttView({ tasks }: { tasks: GanttTask[] }) {
-  const tasksWithDates = tasks.filter((t) => t.start_date && t.end_date);
-  const timelineStart = tasksWithDates.length
-    ? new Date(Math.min(...tasksWithDates.map((t) => new Date(t.start_date as string).getTime())))
-    : null;
-  const timelineEnd = tasksWithDates.length
-    ? new Date(Math.max(...tasksWithDates.map((t) => new Date(t.end_date as string).getTime())))
-    : null;
-  const totalDays = timelineStart && timelineEnd
-    ? Math.max(1, Math.round((timelineEnd.getTime() - timelineStart.getTime()) / 86400000) + 1)
-    : 1;
+  const desktopOffsets = [0, 120, 240, 120];
 
   return (
-    <div className="space-y-4">
-      {tasks.map((task) => {
-        const hasDates = !!task.start_date && !!task.end_date && !!timelineStart;
-        const startOffsetDays = hasDates
-          ? Math.max(0, Math.round((new Date(task.start_date as string).getTime() - timelineStart!.getTime()) / 86400000))
-          : 0;
-        const durationDays = hasDates
-          ? Math.max(1, Math.round((new Date(task.end_date as string).getTime() - new Date(task.start_date as string).getTime()) / 86400000) + 1)
-          : 0;
-        const left = (startOffsetDays / totalDays) * 100;
-        const width = (durationDays / totalDays) * 100;
+    <div className="space-y-3">
+      {tasks.map((task, idx) => {
+        const offset = desktopOffsets[idx % desktopOffsets.length];
+        const prevOffset = idx > 0 ? desktopOffsets[(idx - 1) % desktopOffsets.length] : 0;
+        const lineStart = Math.min(prevOffset, offset) + 24;
+        const lineWidth = Math.abs(offset - prevOffset);
 
         return (
-          <article key={task.id} className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{task.title}</h3>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${priorityBadgeClass(task.priority)}`}>
-                {task.priority ?? "medium"}
-              </span>
-              {task.assignee && (
-                <span className="text-xs text-slate-500 dark:text-slate-400">Исп.: {task.assignee}</span>
-              )}
-            </div>
-
-            {hasDates ? (
+          <div key={task.id} className="relative pt-3">
+            {idx > 0 && (
               <>
-                <div className="mb-2 text-xs text-slate-500 dark:text-slate-400">
-                  {task.start_date} - {task.end_date}
-                </div>
-                <div className="relative h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                  <div
-                    className="absolute top-0 h-full rounded-full bg-indigo-500"
-                    style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
-                  />
-                </div>
+                <div
+                  className="absolute top-0 hidden h-3 border-l border-dashed border-slate-500/40 md:block"
+                  style={{ left: `${prevOffset + 24}px` }}
+                />
+                <div
+                  className="absolute top-3 hidden border-t border-dashed border-slate-500/40 md:block"
+                  style={{ left: `${lineStart}px`, width: `${lineWidth}px` }}
+                />
               </>
-            ) : (
-              <div className="text-xs text-slate-500 dark:text-slate-400">Без дат</div>
             )}
-
-            {task.description && (
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{task.description}</p>
-            )}
-          </article>
+            <article
+              className="w-full rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-2 md:w-[260px]"
+              style={{ marginLeft: `${offset}px` }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="text-xs text-emerald-400">✓</span>
+                  <h3 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{task.title}</h3>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${priorityBadgeClass(task.priority)}`}>
+                    {task.priority ?? "medium"}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                {task.start_date && task.end_date ? `${task.start_date} - ${task.end_date}` : "Без дат"}
+              </div>
+              {task.description && (
+                <p className="mt-1 truncate text-xs text-slate-600 dark:text-slate-300">{task.description}</p>
+              )}
+            </article>
+          </div>
         );
       })}
     </div>
