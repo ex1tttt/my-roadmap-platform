@@ -18,7 +18,9 @@ export async function POST(req: NextRequest) {
       category, 
       description, 
       is_private, 
+      card_type,
       steps, 
+      tasks,
       resources,
       recaptchaToken 
     } = await req.json()
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
     console.log('[CARDS] Parsed request body:', {
       title: title?.substring(0, 20),
       category,
+      card_type,
     })
 
     // reCAPTCHA не требуется на карточках - защита через логин + RLS политика
@@ -74,6 +77,7 @@ export async function POST(req: NextRequest) {
         category,
         description: description?.trim().slice(0, 5000) || null,
         is_private: !!is_private,
+        card_type: card_type === 'gantt' ? 'gantt' : 'list',
       })
       .select('id')
       .single()
@@ -113,6 +117,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Вставляем задачи gantt если они есть
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      const tasksPayload = tasks.map((task: any, idx: number) => ({
+        card_id: cardId,
+        order: idx,
+        title: task.title?.trim().slice(0, 200) || '',
+        description: task.description?.trim().slice(0, 5000) || '',
+        start_date: task.start_date || null,
+        end_date: task.end_date || null,
+        priority: ['low', 'medium', 'high'].includes(task.priority) ? task.priority : 'medium',
+        assignee: task.assignee?.trim().slice(0, 200) || null,
+      }))
+
+      const { error: tasksError } = await supabaseAdmin
+        .from('gantt_tasks')
+        .insert(tasksPayload)
+
+      if (tasksError) {
+        console.error('[CARDS] Gantt tasks insert error:', tasksError)
+        return NextResponse.json({ error: 'Failed to create gantt tasks' }, { status: 500 })
+      }
+    }
+
     // Вставляем ресурсы если они есть
     if (Array.isArray(resources) && resources.length > 0) {
       const resourcesPayload = resources.map((res: any) => ({
@@ -140,6 +167,7 @@ export async function POST(req: NextRequest) {
       category,
       description,
       is_private,
+      card_type: card_type === 'gantt' ? 'gantt' : 'list',
     })
   } catch (error: any) {
     console.error('[CARDS] API error:', error)

@@ -102,6 +102,33 @@ export default function CreateGanttPage() {
         return;
       }
 
+      const normalizedTasks = tasks
+        .map((task) => ({
+          ...task,
+          title: task.title.trim(),
+          description: task.description.trim(),
+          assignee: task.assignee?.trim() || "",
+        }))
+        .filter((task) => task.title.length > 0);
+
+      if (normalizedTasks.length === 0) {
+        setToast({ message: "Добавьте хотя бы одну задачу с названием", type: "error" });
+        setSaving(false);
+        return;
+      }
+
+      const invalidDatesTask = normalizedTasks.find(
+        (task) => task.startDate && task.endDate && task.endDate < task.startDate
+      );
+      if (invalidDatesTask) {
+        setToast({
+          message: `Проверьте даты в задаче «${invalidDatesTask.title}»: дата завершения раньше даты начала`,
+          type: "error",
+        });
+        setSaving(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert(t("edit.errorNotAuth"));
@@ -109,9 +136,9 @@ export default function CreateGanttPage() {
         return;
       }
 
-      const tasksPayload = tasks.map((task, idx) => ({
+      const tasksPayload = normalizedTasks.map((task, idx) => ({
         id: task.id,
-        order: idx + 1,
+        order: idx,
         title: task.title,
         description: task.description,
         start_date: task.startDate || null,
@@ -130,6 +157,7 @@ export default function CreateGanttPage() {
           is_private: isPrivate,
           card_type: "gantt",
           tasks: tasksPayload,
+          resources: [],
           recaptchaToken,
         }),
       });

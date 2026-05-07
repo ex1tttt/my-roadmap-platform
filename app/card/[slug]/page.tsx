@@ -26,6 +26,16 @@ const ADMIN_IDS = [
 
 type Step = { id: string; order: number; title: string; content?: string; link?: string; media_url?: string; media_urls?: string[]; duration_minutes?: number };
 type Resource = { id: string; label?: string; url?: string };
+type GanttTask = {
+  id: string;
+  order: number;
+  title: string;
+  description?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  priority?: "low" | "medium" | "high";
+  assignee?: string | null;
+};
 
 function normalizeUrl(url: string): string {
   if (!url) return url;
@@ -70,6 +80,75 @@ function renderMedia(url: string | undefined, title: string) {
     <a href={url} target="_blank" rel="noopener noreferrer" className="mt-4 block overflow-hidden rounded-xl">
       <img src={url} alt={title} className="w-full object-cover transition-transform duration-300 hover:scale-105" />
     </a>
+  );
+}
+
+function priorityBadgeClass(priority: GanttTask["priority"]) {
+  if (priority === "high") return "bg-red-500/15 text-red-400";
+  if (priority === "low") return "bg-emerald-500/15 text-emerald-400";
+  return "bg-amber-500/15 text-amber-400";
+}
+
+function GanttView({ tasks }: { tasks: GanttTask[] }) {
+  const tasksWithDates = tasks.filter((t) => t.start_date && t.end_date);
+  const timelineStart = tasksWithDates.length
+    ? new Date(Math.min(...tasksWithDates.map((t) => new Date(t.start_date as string).getTime())))
+    : null;
+  const timelineEnd = tasksWithDates.length
+    ? new Date(Math.max(...tasksWithDates.map((t) => new Date(t.end_date as string).getTime())))
+    : null;
+  const totalDays = timelineStart && timelineEnd
+    ? Math.max(1, Math.round((timelineEnd.getTime() - timelineStart.getTime()) / 86400000) + 1)
+    : 1;
+
+  return (
+    <div className="space-y-4">
+      {tasks.map((task) => {
+        const hasDates = !!task.start_date && !!task.end_date && !!timelineStart;
+        const startOffsetDays = hasDates
+          ? Math.max(0, Math.round((new Date(task.start_date as string).getTime() - timelineStart!.getTime()) / 86400000))
+          : 0;
+        const durationDays = hasDates
+          ? Math.max(1, Math.round((new Date(task.end_date as string).getTime() - new Date(task.start_date as string).getTime()) / 86400000) + 1)
+          : 0;
+        const left = (startOffsetDays / totalDays) * 100;
+        const width = (durationDays / totalDays) * 100;
+
+        return (
+          <article key={task.id} className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{task.title}</h3>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${priorityBadgeClass(task.priority)}`}>
+                {task.priority ?? "medium"}
+              </span>
+              {task.assignee && (
+                <span className="text-xs text-slate-500 dark:text-slate-400">Исп.: {task.assignee}</span>
+              )}
+            </div>
+
+            {hasDates ? (
+              <>
+                <div className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+                  {task.start_date} - {task.end_date}
+                </div>
+                <div className="relative h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                  <div
+                    className="absolute top-0 h-full rounded-full bg-indigo-500"
+                    style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-slate-500 dark:text-slate-400">Без дат</div>
+            )}
+
+            {task.description && (
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{task.description}</p>
+            )}
+          </article>
+        );
+      })}
+    </div>
   );
 }
 
@@ -206,8 +285,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   
   // Получаем пользователя и карточку параллельно
   const cardQuery = isOldFormat
-    ? supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("id", slug).maybeSingle()
-    : supabaseAuth.from("cards").select("*, steps(*), resources(*), profiles:user_id(*)").eq("slug", slug).maybeSingle();
+    ? supabaseAuth.from("cards").select("*, steps(*), gantt_tasks(*), resources(*), profiles:user_id(*)").eq("id", slug).maybeSingle()
+    : supabaseAuth.from("cards").select("*, steps(*), gantt_tasks(*), resources(*), profiles:user_id(*)").eq("slug", slug).maybeSingle();
     
   const [
     cardResult,
@@ -223,7 +302,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   if (error && !isOldFormat) {
     const fallbackResult = await supabaseAuth
       .from("cards")
-      .select("*, steps(*), resources(*), profiles:user_id(*)")
+      .select("*, steps(*), gantt_tasks(*), resources(*), profiles:user_id(*)")
       .eq("id", slug)
       .maybeSingle();
     data = fallbackResult.data;
@@ -308,6 +387,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const authorName = author?.username ?? 'đÉđ▓ĐéđżĐÇ đŻđÁđŞđĚđ▓đÁĐüĐéđÁđŻ';
   const authorAvatar: string | null = author?.avatar ?? null;
   const steps: Step[] = (data.steps || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+  const ganttTasks: GanttTask[] = (data.gantt_tasks || []).slice().sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
   const resources: Resource[] = (data.resources || []).filter((r: Resource) => r.url);
   const stepIds = steps.map((s) => s.id)
   let initialDoneArr: string[] = []
@@ -350,78 +430,86 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              {data.is_private && (
-                <span title="Приватная дорожная карта">
-                  <Lock size={18} className="text-amber-500 dark:text-slate-400" />
-                </span>
+          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {data.is_private && (
+                    <span title="Приватная дорожная карта">
+                      <Lock size={18} className="text-amber-500 dark:text-slate-400" />
+                    </span>
+                  )}
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {data.title}
+                  </h1>
+                </div>
+                {data.category && (
+                  <CategoryBadge categoryId={data.category} />
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-4">
+                <Link
+                  href={`/profile/${data.user_id}`}
+                  className="group flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:text-blue-500 dark:hover:text-blue-400"
+                >
+                  {authorAvatar ? (
+                    <img
+                      src={authorAvatar}
+                      alt={authorName}
+                      className="h-5 w-5 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserAvatar username={authorName} size={20} />
+                  )}
+                  <span className="font-medium">{authorName}</span>
+                </Link>
+                <div className="flex items-center">
+                  <ClientOnly fallback={<div className="h-5 w-20" />}>
+                    <StarRating roadmapId={data.id} compact />
+                  </ClientOnly>
+                </div>
+              </div>
+              {data.description && (
+                <p className="mt-2 line-clamp-2 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
+                  {data.description}
+                </p>
               )}
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {data.title}
-              </h1>
             </div>
-            {data.category && (
-              <CategoryBadge categoryId={data.category} />
-            )}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-4">
-            <Link
-              href={`/profile/${data.user_id}`}
-              className="group flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:text-blue-500 dark:hover:text-blue-400"
-            >
-              {authorAvatar ? (
-                <img
-                  src={authorAvatar}
-                  alt={authorName}
-                  className="h-5 w-5 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <UserAvatar username={authorName} size={20} />
-              )}
-              <span className="font-medium">{authorName}</span>
-            </Link>
-            <div className="flex items-center">
-              <ClientOnly fallback={<div className="h-5 w-20" />}>
-                <StarRating roadmapId={data.id} compact />
+            <div className="w-fit justify-self-start md:justify-self-end rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 px-4 py-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <T k="card.rate" />
+              </p>
+              <ClientOnly fallback={<div className="h-6 w-24" />}>
+                <StarRating roadmapId={data.id} />
               </ClientOnly>
             </div>
           </div>
-          {data.description && (
-            <p className="mt-2 line-clamp-2 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
-              {data.description}
-            </p>
-          )}
         </div>
       </div>
       <div className="mx-auto max-w-5xl gap-8 px-4 sm:px-6 py-12 lg:grid lg:grid-cols-[1fr_280px]">
         <section>
           <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
             <BookOpen className="h-5 w-5 text-blue-400" />
-            <T k="card.roadmap" />
+            {data.card_type === "gantt" ? "Gantt" : <T k="card.roadmap" />}
             <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
-              {steps.length}
+              {data.card_type === "gantt" ? ganttTasks.length : steps.length}
             </span>
           </h2>
-          <ClientOnly>
-            <StepsProgress
-              cardId={data.id}
-              userId={currentUser?.id ?? null}
-              steps={steps}
-              initialDone={initialDoneArr}
-            />
-          </ClientOnly>
+          {data.card_type === "gantt" ? (
+            <GanttView tasks={ganttTasks} />
+          ) : (
+            <ClientOnly>
+              <StepsProgress
+                cardId={data.id}
+                userId={currentUser?.id ?? null}
+                steps={steps}
+                initialDone={initialDoneArr}
+              />
+            </ClientOnly>
+          )}
         </section>
         <aside className="mt-12 lg:mt-0">
           <div className="space-y-4">
-            <div className="fixed right-3 top-20 w-[calc(100%-24px)] max-w-xs sm:right-6 sm:w-80 z-50 lg:static lg:w-auto lg:max-w-none lg:relative rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                <T k="card.rate" />
-              </h2>
-              <ClientOnly fallback={<div className="h-16" />}>
-                <StarRating roadmapId={data.id} />
-              </ClientOnly>
-            </div>
             {resources.length > 0 && (
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
                 <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">

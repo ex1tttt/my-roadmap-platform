@@ -17,7 +17,8 @@ create table if not exists cards (
   user_id uuid not null references profiles(id) on delete cascade,
   title text not null,
   category text,
-  description text
+  description text,
+  card_type text not null default 'list' check (card_type in ('list', 'gantt'))
 );
 
 -- Steps for each card
@@ -38,6 +39,21 @@ create table if not exists resources (
   label text,
   url text
 );
+
+-- Gantt tasks for gantt cards
+create table if not exists gantt_tasks (
+  id uuid primary key default gen_random_uuid(),
+  card_id uuid not null references cards(id) on delete cascade,
+  "order" integer not null,
+  title text not null,
+  description text,
+  start_date date,
+  end_date date,
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
+  assignee text
+);
+
+alter table gantt_tasks enable row level security;
 
 -- Likes for cards
 create table if not exists likes (
