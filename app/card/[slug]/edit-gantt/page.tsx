@@ -9,9 +9,20 @@ import { categories } from "@/constants/categories";
 import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { ArrowLeft, Globe, Lock, Save, Trash2 } from "lucide-react";
+import {
+  collectDescendantIds,
+  dfsOrder,
+  inferLinearParents,
+  maxSiblingOrder,
+  renumberSiblingOrders,
+  sortTasksDfs,
+  topologicalInsertOrder,
+} from "@/lib/gantt-tree";
 
 type GanttTask = {
   id: string;
+  parentId: string | null;
+  order: number;
   title: string;
   description: string;
   startDate: string;
@@ -20,12 +31,22 @@ type GanttTask = {
   assignee?: string;
 };
 
-function uid() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+function newTaskId() {
+  return crypto.randomUUID();
 }
 
 const INPUT_CLS =
   "w-full rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
+
+/** Tasks that can be this row's parent (no self, no descendant — avoids cycles). */
+function eligibleParentTasks(all: GanttTask[], taskId: string): GanttTask[] {
+  const forbidden = collectDescendantIds(
+    all.map((t) => ({ id: t.id, parent_id: t.parentId })),
+    taskId
+  );
+  forbidden.add(taskId);
+  return all.filter((t) => !forbidden.has(t.id));
+}
 
 export default function EditGanttPage() {
   const params = useParams();
@@ -46,6 +67,8 @@ export default function EditGanttPage() {
   const [category, setCategory] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [tasks, setTasks] = useState<GanttTask[]>([]);
+  /** Shown after opening editor via «ветка» from карточки — имя родительского шага */
+  const [branchHintParentTitle, setBranchHintParentTitle] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -60,8 +83,26 @@ export default function EditGanttPage() {
   useEffect(() => {
     if (!slug) return;
     const load = async () => {
+      const branchPendingKey = `gantt-branch:${slug}`;
+      const clearBranchPending = () => {
+        if (typeof window !== "undefined") sessionStorage.removeItem(branchPendingKey);
+      };
+
+      let pendingBranchId: string | null = null;
+      if (typeof window !== "undefined") {
+        const u = new URL(window.location.href);
+        const fromUrl = u.searchParams.get("branch");
+        if (fromUrl) {
+          sessionStorage.setItem(branchPendingKey, fromUrl);
+          u.searchParams.delete("branch");
+          window.history.replaceState({}, "", `${u.pathname}${u.search}${u.hash}`);
+        }
+        pendingBranchId = sessionStorage.getItem(branchPendingKey);
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        clearBranchPending();
         router.replace("/login");
         return;
       }
@@ -79,10 +120,12 @@ export default function EditGanttPage() {
       }
 
       if (error || !card) {
+        clearBranchPending();
         setLoading(false);
         return;
       }
       if (card.card_type !== "gantt") {
+        clearBranchPending();
         router.replace(`/card/${card.id}/edit`);
         return;
       }
@@ -92,6 +135,7 @@ export default function EditGanttPage() {
         setIsOwner(true);
       } else {
         if (!user.email) {
+          clearBranchPending();
           setForbidden(true);
           setLoading(false);
           return;
@@ -103,6 +147,7 @@ export default function EditGanttPage() {
           .eq("user_email", user.email)
           .maybeSingle();
         if (!collabRow || collabRow.role !== "editor") {
+          clearBranchPending();
           setForbidden(true);
           setLoading(false);
           return;
@@ -113,46 +158,156 @@ export default function EditGanttPage() {
       setDescription(card.description ?? "");
       setCategory(card.category ?? "");
       setIsPrivate(card.is_private === true);
-      const mapped = (card.gantt_tasks ?? [])
+      const sortedRaw = (card.gantt_tasks ?? [])
         .slice()
-        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
-        .map((task: any) => ({
-          id: task.id ?? uid(),
-          title: task.title ?? "",
-          description: task.description ?? "",
-          startDate: task.start_date ?? "",
-          endDate: task.end_date ?? "",
-          priority: (task.priority ?? "medium") as "low" | "medium" | "high",
-          assignee: task.assignee ?? "",
-        }));
-      setTasks(mapped.length ? mapped : [{
-        id: uid(),
-        title: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-        priority: "medium",
-        assignee: "",
-      }]);
+        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+      const mappedFromDb: GanttTask[] = sortedRaw.map((task: any) => ({
+        id: task.id ?? newTaskId(),
+        parentId:
+          task.parent_id != null && task.parent_id !== "" ? String(task.parent_id) : null,
+        order: task.order ?? 0,
+        title: task.title ?? "",
+        description: task.description ?? "",
+        startDate: task.start_date ?? "",
+        endDate: task.end_date ?? "",
+        priority: (task.priority ?? "medium") as "low" | "medium" | "high",
+        assignee: task.assignee ?? "",
+      }));
+      const idSet = new Set(mappedFromDb.map((t) => t.id));
+      const withValidParent = mappedFromDb.map((t) => ({
+        ...t,
+        parentId:
+          t.parentId && idSet.has(t.parentId) && t.parentId !== t.id ? t.parentId : null,
+      }));
+      const allParentsEmpty = withValidParent.length > 0 && withValidParent.every((t) => t.parentId == null);
+      let mapped: GanttTask[];
+      if (allParentsEmpty) {
+        const inferred = inferLinearParents(
+          withValidParent.map((t) => ({
+            id: t.id,
+            parent_id: null as string | null,
+            order: t.order,
+          }))
+        );
+        const infById = new Map(inferred.map((x) => [x.id, x]));
+        mapped = withValidParent.map((base) => {
+          const inf = infById.get(base.id)!;
+          return {
+            ...base,
+            parentId: inf.parent_id ?? null,
+            order: inf.order ?? base.order,
+          };
+        });
+      } else {
+        mapped = withValidParent;
+      }
+
+      let nextTasks: GanttTask[] =
+        mapped.length > 0
+          ? mapped
+          : [
+              {
+                id: newTaskId(),
+                parentId: null,
+                order: 0,
+                title: "",
+                description: "",
+                startDate: "",
+                endDate: "",
+                priority: "medium",
+                assignee: "",
+              },
+            ];
+
+      let branchHintTitle: string | null = null;
+      let newBranchTaskId: string | null = null;
+      if (pendingBranchId) {
+        const parentRow = nextTasks.find((t) => t.id === pendingBranchId);
+        if (parentRow) {
+          // Новая ветка — первый среди детей (order 0), чтобы в списке шла сразу под родителем, а не после всей старой цепочки.
+          nextTasks = nextTasks.map((t) =>
+            t.parentId === pendingBranchId ? { ...t, order: (t.order ?? 0) + 1 } : t
+          );
+          newBranchTaskId = newTaskId();
+          nextTasks = [
+            ...nextTasks,
+            {
+              id: newBranchTaskId,
+              parentId: pendingBranchId,
+              order: 0,
+              title: "",
+              description: "",
+              startDate: "",
+              endDate: "",
+              priority: "medium" as const,
+              assignee: "",
+            },
+          ];
+          branchHintTitle = parentRow.title?.trim() || null;
+        }
+        clearBranchPending();
+      }
+
+      setTasks(sortTasksDfs(nextTasks));
+      setBranchHintParentTitle(branchHintTitle);
       setLoading(false);
+
+      if (newBranchTaskId && typeof window !== "undefined") {
+        window.setTimeout(() => {
+          document.getElementById(`gantt-task-${newBranchTaskId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 120);
+      }
     };
     load();
   }, [slug, router]);
 
   function addTask() {
-    setTasks((prev) => [...prev, {
-      id: uid(),
-      title: "",
-      description: "",
-      startDate: "",
-      endDate: "",
-      priority: "medium",
-      assignee: "",
-    }]);
+    setBranchHintParentTitle(null);
+    setTasks((prev) => {
+      const dfs = dfsOrder(
+        prev.map((t) => ({
+          id: t.id,
+          parent_id: t.parentId,
+          order: t.order,
+        }))
+      );
+      const lastId = dfs.length ? dfs[dfs.length - 1]!.id : null;
+      const parentId = lastId;
+      const nextOrder =
+        parentId == null
+          ? maxSiblingOrder(
+              prev.map((t) => ({ parent_id: t.parentId, order: t.order })),
+              null
+            ) + 1
+          : maxSiblingOrder(
+              prev.map((t) => ({ parent_id: t.parentId, order: t.order })),
+              parentId
+            ) + 1;
+      return sortTasksDfs([
+        ...prev,
+        {
+          id: newTaskId(),
+          parentId: parentId,
+          order: nextOrder,
+          title: "",
+          description: "",
+          startDate: "",
+          endDate: "",
+          priority: "medium" as const,
+          assignee: "",
+        },
+      ]);
+    });
   }
 
   function removeTask(id: string) {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+    setTasks((prev) => {
+      if (prev.length <= 1) return prev;
+      const flat = prev.map((t) => ({ id: t.id, parent_id: t.parentId }));
+      const drop = collectDescendantIds(flat, id);
+      drop.add(id);
+      return sortTasksDfs(prev.filter((task) => !drop.has(task.id)));
+    });
   }
 
   function updateTask(id: string, patch: Partial<GanttTask>) {
@@ -172,11 +327,21 @@ export default function EditGanttPage() {
         }))
         .filter((task) => task.title.length > 0);
 
-      if (trimmedTasks.length === 0) {
+      const idSet = new Set(trimmedTasks.map((x) => x.id));
+      let trimmedSafe = trimmedTasks.map((task) => ({
+        ...task,
+        parentId:
+          task.parentId && idSet.has(task.parentId) && task.parentId !== task.id
+            ? task.parentId
+            : null,
+      }));
+      trimmedSafe = renumberSiblingOrders(trimmedSafe);
+
+      if (trimmedSafe.length === 0) {
         alert(t("create.errorMinTasks"));
         return;
       }
-      const invalidDates = trimmedTasks.find(
+      const invalidDates = trimmedSafe.find(
         (task) => task.startDate && task.endDate && task.endDate < task.startDate
       );
       if (invalidDates) {
@@ -192,13 +357,27 @@ export default function EditGanttPage() {
       const { error: delTasksErr } = await supabase.from("gantt_tasks").delete().eq("card_id", cardId);
       if (delTasksErr) throw delTasksErr;
 
-      const payload = trimmedTasks.map((task, index) => ({
-        card_id: cardId,
-        order: index,
+      const forTopo = trimmedSafe.map((task) => ({
+        id: task.id,
+        parent_id: task.parentId,
+        order: task.order,
         title: task.title,
         description: task.description || null,
         start_date: task.startDate || null,
         end_date: task.endDate || null,
+        priority: task.priority,
+        assignee: task.assignee || null,
+      }));
+      const ordered = topologicalInsertOrder(forTopo);
+      const payload = ordered.map((task) => ({
+        id: task.id,
+        card_id: cardId,
+        parent_id: task.parent_id ?? null,
+        order: task.order ?? 0,
+        title: task.title,
+        description: task.description || null,
+        start_date: task.start_date || null,
+        end_date: task.end_date || null,
         priority: task.priority,
         assignee: task.assignee || null,
       }));
@@ -283,6 +462,11 @@ export default function EditGanttPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-medium">{t("create.ganttTasks")}</h2>
+            {branchHintParentTitle ? (
+              <div className="rounded-lg border border-indigo-400/35 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-950 dark:text-indigo-100">
+                {t("gantt.branchEditorBanner", { parent: branchHintParentTitle })}
+              </div>
+            ) : null}
             {tasks.map((task, idx) => (
               <div
                 key={task.id}
@@ -291,7 +475,7 @@ export default function EditGanttPage() {
               >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-400">{t("create.taskNumber", { number: idx + 1 })}</span>
-                  {idx > 0 && (
+                  {tasks.length > 1 && (
                     <button type="button" onClick={() => removeTask(task.id)} className="text-red-500">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -307,12 +491,47 @@ export default function EditGanttPage() {
                   <input type="date" className={INPUT_CLS} value={task.startDate} onChange={(e) => updateTask(task.id, { startDate: e.target.value })} />
                   <input type="date" className={INPUT_CLS} value={task.endDate} onChange={(e) => updateTask(task.id, { endDate: e.target.value })} />
                 </div>
+                {tasks.length <= 1 ? (
+                  <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">{t("gantt.firstStepNoParent")}</p>
+                ) : (
+                  <div className="mt-3 md:col-span-2">
+                    <label className="block">
+                      <div className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {t("gantt.parentStep")}
+                      </div>
+                      <select
+                        key={`${task.id}:${task.parentId ?? ""}`}
+                        className={INPUT_CLS}
+                        value={task.parentId ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value === "" ? null : e.target.value;
+                          setTasks((prev) => {
+                            const cur = prev.find((x) => x.id === task.id);
+                            if (!cur) return prev;
+                            if ((cur.parentId ?? null) === v) return prev;
+                            const next = prev.map((x) => (x.id === task.id ? { ...x, parentId: v } : x));
+                            return sortTasksDfs(renumberSiblingOrders(next));
+                          });
+                        }}
+                      >
+                        <option value="">{t("gantt.parentRoot")}</option>
+                        {eligibleParentTasks(tasks, task.id).map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {(p.title?.trim() || t("gantt.untitledStep")).slice(0, 80)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{t("gantt.parentStepHint")}</p>
+                  </div>
+                )}
                 <textarea className={`${INPUT_CLS} mt-3`} rows={2} placeholder={t("create.description")} value={task.description} onChange={(e) => updateTask(task.id, { description: e.target.value })} />
               </div>
             ))}
             <button id="add-gantt-task" type="button" onClick={addTask} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm">
-              {t("create.addTask")}
+              {t("gantt.addNextInChain")}
             </button>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t("gantt.addNextInChainHint")}</p>
           </section>
 
           <div className="flex justify-end gap-3">

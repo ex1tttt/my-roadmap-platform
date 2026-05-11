@@ -750,6 +750,17 @@
     "markUndone": "Mark as undone",
     "taskMenu": "Task menu",
     "configure": "Configure task",
-    "configureHint": "Configuration available to author or editor"
+    "configureHint": "Configuration available to author or editor",
+    "untitledStep": "Untitled step",
+    "confirmDelete": "Delete the step \"{{title}}\"? This cannot be undone.",
+    "taskDeleted": "Step deleted",
+    "addBranch": "Add branch step",
+    "branchEditorBanner": "You are adding a parallel step after «{{parent}}». Fill it in below and save — on the card it will branch from that step (not only at the end of the chain).",
+    "addNextInChain": "Add next step (continue chain)",
+    "addNextInChainHint": "This attaches a new step after the last one in the current path. Step titles are whatever you type. To branch from a chosen step, on the card use ⋮ → «Add branch step».",
+    "parentStep": "Parent step",
+    "parentRoot": "— No parent (top level)",
+    "parentStepHint": "Two parallel branches from the same step: pick the same parent for both rows. Change the parent here if a step ended up in the wrong place.",
+    "firstStepNoParent": "This is the beginning of the diagram — it has no parent. After you add more steps, you can choose a parent for each one."
   }
 }

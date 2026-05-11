@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -30,6 +30,7 @@ type Resource = { id: string; label?: string; url?: string };
 type GanttTask = {
   id: string;
   order: number;
+  parent_id?: string | null;
   title: string;
   description?: string;
   start_date?: string | null;
@@ -430,6 +431,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             <ClientOnly>
               <GanttCardView
                 cardId={data.id}
+                cardSlug={data.slug}
                 tasks={ganttTasks}
                 canConfigure={isOwner || collaboratorRole === "editor"}
               />

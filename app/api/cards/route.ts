@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { topologicalInsertOrder } from '@/lib/gantt-tree'
 
 // Service-role клиент
 const supabaseAdmin = createClient(
@@ -119,15 +120,30 @@ export async function POST(req: NextRequest) {
 
     // Вставляем задачи gantt если они есть
     if (Array.isArray(tasks) && tasks.length > 0) {
-      const tasksPayload = tasks.map((task: any, idx: number) => ({
+      const rows = tasks.map((task: any) => ({
+        id: task.id,
+        parent_id: task.parent_id ?? null,
+        order: task.order ?? 0,
         card_id: cardId,
-        order: idx,
         title: task.title?.trim().slice(0, 200) || '',
         description: task.description?.trim().slice(0, 5000) || '',
         start_date: task.start_date || null,
         end_date: task.end_date || null,
         priority: ['low', 'medium', 'high'].includes(task.priority) ? task.priority : 'medium',
         assignee: task.assignee?.trim().slice(0, 200) || null,
+      }))
+      const ordered = topologicalInsertOrder(rows)
+      const tasksPayload = ordered.map((task) => ({
+        id: task.id,
+        card_id: cardId,
+        parent_id: task.parent_id ?? null,
+        order: task.order ?? 0,
+        title: task.title,
+        description: task.description,
+        start_date: task.start_date,
+        end_date: task.end_date,
+        priority: task.priority,
+        assignee: task.assignee,
       }))
 
       const { error: tasksError } = await supabaseAdmin

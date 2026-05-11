@@ -10,9 +10,19 @@ import { useHasMounted } from "@/hooks/useHasMounted";
 import { Lock, Globe, Trash2 } from "lucide-react";
 import Toast from "@/components/Toast";
 import { checkAndAwardBadges } from "@/lib/badges";
+import {
+  collectDescendantIds,
+  dfsOrder,
+  maxSiblingOrder,
+  renumberSiblingOrders,
+  sortTasksDfs,
+  topologicalInsertOrder,
+} from "@/lib/gantt-tree";
 
 type GanttTask = {
   id: string;
+  parentId: string | null;
+  order: number;
   title: string;
   description: string;
   startDate: string;
@@ -21,8 +31,17 @@ type GanttTask = {
   assignee?: string;
 };
 
-function uid() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+function newTaskId() {
+  return crypto.randomUUID();
+}
+
+function eligibleParentTasksCreate(all: GanttTask[], taskId: string): GanttTask[] {
+  const forbidden = collectDescendantIds(
+    all.map((t) => ({ id: t.id, parent_id: t.parentId })),
+    taskId
+  );
+  forbidden.add(taskId);
+  return all.filter((t) => !forbidden.has(t.id));
 }
 
 export default function CreateGanttPage() {
@@ -39,7 +58,9 @@ export default function CreateGanttPage() {
 
   const [tasks, setTasks] = useState<GanttTask[]>([
     {
-      id: uid(),
+      id: newTaskId(),
+      parentId: null,
+      order: 0,
       title: "",
       description: "",
       startDate: "",
@@ -54,21 +75,50 @@ export default function CreateGanttPage() {
   } | null>(null);
 
   function addTask() {
-    setTasks((t) => [
-      ...t,
-      {
-        id: uid(),
-        title: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-        priority: "medium",
-      },
-    ]);
+    setTasks((prev) => {
+      const dfs = dfsOrder(
+        prev.map((x) => ({
+          id: x.id,
+          parent_id: x.parentId,
+          order: x.order,
+        }))
+      );
+      const lastId = dfs.length ? dfs[dfs.length - 1]!.id : null;
+      const parentId = lastId;
+      const nextOrder =
+        parentId == null
+          ? maxSiblingOrder(
+              prev.map((x) => ({ parent_id: x.parentId, order: x.order })),
+              null
+            ) + 1
+          : maxSiblingOrder(
+              prev.map((x) => ({ parent_id: x.parentId, order: x.order })),
+              parentId
+            ) + 1;
+      return [
+        ...prev,
+        {
+          id: newTaskId(),
+          parentId,
+          order: nextOrder,
+          title: "",
+          description: "",
+          startDate: "",
+          endDate: "",
+          priority: "medium" as const,
+        },
+      ];
+    });
   }
 
   function removeTask(id: string) {
-    setTasks((t) => t.filter((task) => task.id !== id));
+    setTasks((prev) => {
+      if (prev.length <= 1) return prev;
+      const flat = prev.map((t) => ({ id: t.id, parent_id: t.parentId }));
+      const drop = collectDescendantIds(flat, id);
+      drop.add(id);
+      return prev.filter((task) => !drop.has(task.id));
+    });
   }
 
   function updateTask(id: string, patch: Partial<GanttTask>) {
@@ -136,13 +186,36 @@ export default function CreateGanttPage() {
         return;
       }
 
-      const tasksPayload = normalizedTasks.map((task, idx) => ({
+      const idSet = new Set(normalizedTasks.map((x) => x.id));
+      const normalizedSafe = renumberSiblingOrders(
+        normalizedTasks.map((task) => ({
+          ...task,
+          parentId:
+            task.parentId && idSet.has(task.parentId) && task.parentId !== task.id
+              ? task.parentId
+              : null,
+        }))
+      );
+      const rows = normalizedSafe.map((task) => ({
         id: task.id,
-        order: idx,
+        parent_id: task.parentId,
+        order: task.order,
         title: task.title,
         description: task.description,
         start_date: task.startDate || null,
         end_date: task.endDate || null,
+        priority: task.priority,
+        assignee: task.assignee || null,
+      }));
+      const ordered = topologicalInsertOrder(rows);
+      const tasksPayload = ordered.map((task) => ({
+        id: task.id,
+        parent_id: task.parent_id ?? null,
+        order: task.order ?? 0,
+        title: task.title,
+        description: task.description,
+        start_date: task.start_date || null,
+        end_date: task.end_date || null,
         priority: task.priority,
         assignee: task.assignee || null,
       }));
@@ -205,7 +278,9 @@ export default function CreateGanttPage() {
       setIsPrivate(false);
       setTasks([
         {
-          id: uid(),
+          id: newTaskId(),
+          parentId: null,
+          order: 0,
           title: "",
           description: "",
           startDate: "",
@@ -363,7 +438,7 @@ export default function CreateGanttPage() {
                     <span className="text-xs font-semibold text-slate-400">
                       {t("create.taskNumber", { number: idx + 1 })}
                     </span>
-                    {idx > 0 && (
+                    {tasks.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeTask(task.id)}
@@ -435,6 +510,45 @@ export default function CreateGanttPage() {
                       />
                     </label>
                   </div>
+
+                  {tasks.length <= 1 ? (
+                    <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+                      {t("gantt.firstStepNoParent")}
+                    </p>
+                  ) : (
+                    <div className="mt-3">
+                      <label className="block">
+                        <div className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                          {t("gantt.parentStep")}
+                        </div>
+                        <select
+                          key={`${task.id}:${task.parentId ?? ""}`}
+                          className="w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={task.parentId ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value === "" ? null : e.target.value;
+                            setTasks((prev) => {
+                              const cur = prev.find((x) => x.id === task.id);
+                              if (!cur) return prev;
+                              if ((cur.parentId ?? null) === v) return prev;
+                              const next = prev.map((x) => (x.id === task.id ? { ...x, parentId: v } : x));
+                              return sortTasksDfs(renumberSiblingOrders(next));
+                            });
+                          }}
+                        >
+                          <option value="">{t("gantt.parentRoot")}</option>
+                          {eligibleParentTasksCreate(tasks, task.id).map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {(p.title?.trim() || t("gantt.untitledStep")).slice(0, 80)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        {t("gantt.parentStepHint")}
+                      </p>
+                    </div>
+                  )}
 
                   <label className="mt-3 block">
                     <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">

@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import {
+  collectDescendantIds,
+  dfsOrder,
+  inferLinearParents,
+  taskDepth,
+} from "@/lib/gantt-tree";
 
 export type GanttTaskRow = {
   id: string;
@@ -14,23 +22,46 @@ export type GanttTaskRow = {
   end_date?: string | null;
   priority?: "low" | "medium" | "high";
   is_done?: boolean;
+  parent_id?: string | null;
+  order?: number | null;
 };
 
 type Props = {
   cardId: string;
+  /** Человекочитаемый slug для URL редактора (если нет — используется cardId) */
+  cardSlug?: string | null;
   tasks: GanttTaskRow[];
   canConfigure: boolean;
 };
 
-export default function GanttCardView({ cardId, tasks, canConfigure }: Props) {
+export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }: Props) {
   const { t } = useTranslation();
+  const pathname = usePathname();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [localTasks, setLocalTasks] = useState<GanttTaskRow[]>(tasks);
   const tasksById = useMemo(() => new Map(localTasks.map((x) => [x.id, x])), [localTasks]);
+  const confirmToastRef = useRef<string | number | null>(null);
+
+  const displayRows = useMemo(() => {
+    const rows = localTasks.map((x) => ({
+      ...x,
+      parent_id: x.parent_id ?? null,
+      order: x.order ?? 0,
+    }));
+    return dfsOrder(inferLinearParents(rows));
+  }, [localTasks]);
+
+  const displayById = useMemo(() => new Map(displayRows.map((x) => [x.id, x])), [displayRows]);
 
   useEffect(() => {
     setLocalTasks(tasks);
   }, [tasks]);
+
+  useEffect(() => {
+    return () => {
+      if (confirmToastRef.current !== null) toast.dismiss(confirmToastRef.current);
+    };
+  }, [pathname]);
 
   const toggleDone = async (taskId: string) => {
     const cur = tasksById.get(taskId);
@@ -58,13 +89,73 @@ export default function GanttCardView({ cardId, tasks, canConfigure }: Props) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, [openMenuId]);
 
-  const desktopOffsets = [0, 120, 240, 120];
+  const requestDeleteTask = (task: GanttTaskRow) => {
+    setOpenMenuId(null);
+    const titleLabel = task.title?.trim() ? task.title.trim() : t("gantt.untitledStep");
+    const tId = toast(
+      <div className="flex w-full flex-col items-center gap-2.5" style={{ maxWidth: 300 }}>
+        <span className="block w-full text-center text-[13px] leading-snug text-slate-900 dark:text-white">
+          {t("gantt.confirmDelete", { title: titleLabel })}
+        </span>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            className="rounded-md bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
+            onClick={async () => {
+              toast.dismiss(tId);
+              confirmToastRef.current = null;
+              const { error } = await supabase.from("gantt_tasks").delete().eq("id", task.id);
+              if (error) {
+                toast.error(`${t("common.error")}: ${error.message}`);
+                return;
+              }
+              setLocalTasks((prev) => {
+                const drop = collectDescendantIds(
+                  prev.map((x) => ({ id: x.id, parent_id: x.parent_id ?? null })),
+                  task.id
+                );
+                drop.add(task.id);
+                return prev.filter((x) => !drop.has(x.id));
+              });
+              toast.success(t("gantt.taskDeleted"));
+            }}
+          >
+            {t("actions.delete")}
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-200 dark:border-slate-500/60 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            onClick={() => {
+              toast.dismiss(tId);
+              confirmToastRef.current = null;
+            }}
+          >
+            {t("common.cancel")}
+          </button>
+        </div>
+      </div>,
+      {
+        duration: 12000,
+        id: "gantt-delete-confirm",
+        position: "top-center",
+        closeButton: false,
+        style: { padding: "14px 18px", minWidth: 0, width: "auto", maxWidth: 320 },
+      }
+    );
+    confirmToastRef.current = tId;
+  };
+
+  const editPathSegment = cardSlug?.trim() || cardId;
+  const depthOffset = (depth: number) => Math.min(depth * 56, 224);
 
   return (
     <div className="space-y-3">
-      {localTasks.map((task, idx) => {
-        const offset = desktopOffsets[idx % desktopOffsets.length];
-        const prevOffset = idx > 0 ? desktopOffsets[(idx - 1) % desktopOffsets.length] : 0;
+      {displayRows.map((task, idx) => {
+        const depth = taskDepth(task.id, displayById);
+        const offset = depthOffset(depth);
+        const prevTask = idx > 0 ? displayRows[idx - 1]! : null;
+        const prevDepth = prevTask ? taskDepth(prevTask.id, displayById) : 0;
+        const prevOffset = prevTask ? depthOffset(prevDepth) : 0;
         const lineStart = Math.min(prevOffset, offset) + 24;
         const lineWidth = Math.abs(offset - prevOffset);
         const isDone = !!task.is_done;
@@ -72,7 +163,10 @@ export default function GanttCardView({ cardId, tasks, canConfigure }: Props) {
           task.start_date && task.end_date ? `${task.start_date} — ${task.end_date}` : t("gantt.noDates");
 
         return (
-          <div key={task.id} className="relative pt-3">
+          <div
+            key={task.id}
+            className={`relative pt-3 ${openMenuId === task.id ? "z-50" : ""}`}
+          >
             {idx > 0 && (
               <>
                 <div
@@ -86,7 +180,7 @@ export default function GanttCardView({ cardId, tasks, canConfigure }: Props) {
               </>
             )}
             <article
-              className="w-full overflow-hidden rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 md:w-[min(100%,320px)]"
+              className="w-full overflow-visible rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 md:w-[min(100%,320px)]"
               style={{ marginLeft: `${offset}px` }}
               id={`gantt-task-${task.id}`}
             >
@@ -142,29 +236,23 @@ export default function GanttCardView({ cardId, tasks, canConfigure }: Props) {
                         >
                           <Link
                             role="menuitem"
-                            href={`/card/${cardId}/edit-gantt#add-gantt-task`}
+                            href={`/card/${editPathSegment}/edit-gantt?branch=${encodeURIComponent(task.id)}#add-gantt-task`}
                             className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
                             onClick={() => setOpenMenuId(null)}
                           >
-                            Add
+                            {t("gantt.addBranch")}
                           </Link>
                           <button
                             role="menuitem"
                             type="button"
                             className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                            onClick={async () => {
-                              if (!confirm(t("gantt.confirmDelete") || "Удалить шаг?")) return;
-                              const { error } = await supabase.from("gantt_tasks").delete().eq("id", task.id);
-                              if (error) return alert(t("common.error") + ": " + error.message);
-                              setLocalTasks((prev) => prev.filter((x) => x.id !== task.id));
-                              setOpenMenuId(null);
-                            }}
+                            onClick={() => requestDeleteTask(task)}
                           >
                             Delete
                           </button>
                           <Link
                             role="menuitem"
-                            href={`/card/${cardId}/edit-gantt#gantt-task-${task.id}`}
+                            href={`/card/${editPathSegment}/edit-gantt#gantt-task-${task.id}`}
                             className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
                             onClick={() => setOpenMenuId(null)}
                           >

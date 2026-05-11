@@ -754,6 +754,17 @@
     "markUndone": "Oznacz jako niewykonane",
     "taskMenu": "Menu zadania",
     "configure": "Skonfiguruj zadanie",
-    "configureHint": "Konfiguracja dostępna dla autora lub redaktora"
+    "configureHint": "Konfiguracja dostępna dla autora lub redaktora",
+    "untitledStep": "Krok bez tytułu",
+    "confirmDelete": "Usunąć krok „{{title}}”? Tego nie da się cofnąć.",
+    "taskDeleted": "Krok został usunięty",
+    "addBranch": "Dodaj równoległy krok",
+    "branchEditorBanner": "Dodajesz równoległy krok po „{{parent}}”. Uzupełnij pola poniżej i zapisz — na karcie pojawi się jako druga gałąź od tego kroku, a nie tylko na końcu jednego łańcucha.",
+    "addNextInChain": "Następny krok (kontynuuj łańcuch)",
+    "addNextInChainHint": "Nowy krok jest doklejany po ostatnim w bieżącej ścieżce. Tytuły kroków wpisujesz sam. Żeby rozgałęzić się od wybranego kroku, na karcie użyj ⋮ → „Dodaj równoległy krok”.",
+    "parentStep": "Krok nadrzędny",
+    "parentRoot": "— Bez rodzica (poziom główny)",
+    "parentStepHint": "Dwie równoległe gałęzie od jednego kroku: wybierz tego samego rodzica dla obu wierszy. Zmień rodzica, jeśli krok jest w złym miejscu.",
+    "firstStepNoParent": "To początek diagramu — pierwszy krok nie ma rodzica. Po dodaniu kolejnych kroków pojawi się wybór rodzica."
   }
 }

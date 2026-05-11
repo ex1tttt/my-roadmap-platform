@@ -44,6 +44,7 @@ create table if not exists resources (
 create table if not exists gantt_tasks (
   id uuid primary key default gen_random_uuid(),
   card_id uuid not null references cards(id) on delete cascade,
+  parent_id uuid references gantt_tasks(id) on delete cascade,
   "order" integer not null,
   title text not null,
   description text,
