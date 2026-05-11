@@ -310,7 +310,7 @@ export default function EditGanttPage() {
                 <textarea className={`${INPUT_CLS} mt-3`} rows={2} placeholder={t("create.description")} value={task.description} onChange={(e) => updateTask(task.id, { description: e.target.value })} />
               </div>
             ))}
-            <button type="button" onClick={addTask} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm">
+            <button id="add-gantt-task" type="button" onClick={addTask} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm">
               {t("create.addTask")}
             </button>
           </section>

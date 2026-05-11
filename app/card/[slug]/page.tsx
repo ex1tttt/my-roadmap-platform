@@ -36,6 +36,7 @@ type GanttTask = {
   end_date?: string | null;
   priority?: "low" | "medium" | "high";
   assignee?: string | null;
+  is_done?: boolean;
 };
 
 function normalizeUrl(url: string): string {
@@ -431,7 +432,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 cardId={data.id}
                 tasks={ganttTasks}
                 canConfigure={isOwner || collaboratorRole === "editor"}
-                viewerKey={currentUser?.id ?? "guest"}
               />
             </ClientOnly>
           ) : (

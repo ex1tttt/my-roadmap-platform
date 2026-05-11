@@ -50,7 +50,8 @@ create table if not exists gantt_tasks (
   start_date date,
   end_date date,
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
-  assignee text
+  assignee text,
+  is_done boolean not null default false
 );
 
 alter table gantt_tasks enable row level security;

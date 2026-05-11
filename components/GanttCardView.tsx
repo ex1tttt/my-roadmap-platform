@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
 
 export type GanttTaskRow = {
   id: string;
@@ -12,48 +13,39 @@ export type GanttTaskRow = {
   start_date?: string | null;
   end_date?: string | null;
   priority?: "low" | "medium" | "high";
+  is_done?: boolean;
 };
 
 type Props = {
   cardId: string;
   tasks: GanttTaskRow[];
   canConfigure: boolean;
-  /** Used to separate progress per viewer in localStorage */
-  viewerKey?: string;
 };
 
-function doneStorageKey(cardId: string, viewerKey: string) {
-  return `gantt_task_done_${cardId}_${viewerKey}`;
-}
-
-export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey = "guest" }: Props) {
+export default function GanttCardView({ cardId, tasks, canConfigure }: Props) {
   const { t } = useTranslation();
-  const [doneMap, setDoneMap] = useState<Record<string, boolean>>({});
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [localTasks, setLocalTasks] = useState<GanttTaskRow[]>(tasks);
+  const tasksById = useMemo(() => new Map(localTasks.map((x) => [x.id, x])), [localTasks]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(doneStorageKey(cardId, viewerKey));
-      if (raw) setDoneMap(JSON.parse(raw) as Record<string, boolean>);
-    } catch {
-      /* ignore */
+    setLocalTasks(tasks);
+  }, [tasks]);
+
+  const toggleDone = async (taskId: string) => {
+    const cur = tasksById.get(taskId);
+    if (!cur) return;
+    const nextDone = !cur.is_done;
+
+    // optimistic UI
+    setLocalTasks((prev) => prev.map((t2) => (t2.id === taskId ? { ...t2, is_done: nextDone } : t2)));
+
+    const { error } = await supabase.from("gantt_tasks").update({ is_done: nextDone }).eq("id", taskId);
+    if (error) {
+      // rollback
+      setLocalTasks((prev) => prev.map((t2) => (t2.id === taskId ? { ...t2, is_done: cur.is_done } : t2)));
+      alert(t("common.error") + ": " + error.message);
     }
-  }, [cardId, viewerKey]);
-
-  const persistDone = useCallback(
-    (next: Record<string, boolean>) => {
-      setDoneMap(next);
-      try {
-        localStorage.setItem(doneStorageKey(cardId, viewerKey), JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-    },
-    [cardId, viewerKey]
-  );
-
-  const toggleDone = (taskId: string) => {
-    persistDone({ ...doneMap, [taskId]: !doneMap[taskId] });
   };
 
   useEffect(() => {
@@ -70,12 +62,12 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
 
   return (
     <div className="space-y-3">
-      {tasks.map((task, idx) => {
+      {localTasks.map((task, idx) => {
         const offset = desktopOffsets[idx % desktopOffsets.length];
         const prevOffset = idx > 0 ? desktopOffsets[(idx - 1) % desktopOffsets.length] : 0;
         const lineStart = Math.min(prevOffset, offset) + 24;
         const lineWidth = Math.abs(offset - prevOffset);
-        const isDone = !!doneMap[task.id];
+        const isDone = !!task.is_done;
         const dateLine =
           task.start_date && task.end_date ? `${task.start_date} — ${task.end_date}` : t("gantt.noDates");
 
@@ -150,11 +142,33 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
                         >
                           <Link
                             role="menuitem"
+                            href={`/card/${cardId}/edit-gantt#add-gantt-task`}
+                            className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
+                            onClick={() => setOpenMenuId(null)}
+                          >
+                            Add
+                          </Link>
+                          <button
+                            role="menuitem"
+                            type="button"
+                            className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                            onClick={async () => {
+                              if (!confirm(t("gantt.confirmDelete") || "Удалить шаг?")) return;
+                              const { error } = await supabase.from("gantt_tasks").delete().eq("id", task.id);
+                              if (error) return alert(t("common.error") + ": " + error.message);
+                              setLocalTasks((prev) => prev.filter((x) => x.id !== task.id));
+                              setOpenMenuId(null);
+                            }}
+                          >
+                            Delete
+                          </button>
+                          <Link
+                            role="menuitem"
                             href={`/card/${cardId}/edit-gantt#gantt-task-${task.id}`}
                             className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
                             onClick={() => setOpenMenuId(null)}
                           >
-                            {t("gantt.configure")}
+                            Settings
                           </Link>
                         </div>
                       )}
