@@ -358,13 +358,24 @@
     "hoursShort": "h"
   },
   "create": {
-    "title": "Utwórz kartę",    "selectType": "Wybierz typ tworzenia",
+    "title": "Utwórz kartę",
+    "cardTitle": "Tytuł",
+    "selectType": "Wybierz typ tworzenia",
     "actionList": "Lista działań",
     "actionListDesc": "Krok po kroku mapa drogowa z działaniami, zasobami i mediami",
     "ganttDiagram": "Diagram Gantta",
     "ganttDiagramDesc": "Wizualny diagram osi czasu projektu",
     "ganttTasks": "Zadania",
-    "addTask": "+ Dodaj zadanie",    "category": "Kategoria",
+    "addTask": "+ Dodaj zadanie",
+    "taskNumber": "Zadanie {{number}}",
+    "taskName": "Nazwa zadania",
+    "priority": "Priorytet",
+    "priorityLow": "Niski",
+    "priorityMedium": "Średni",
+    "priorityHigh": "Wysoki",
+    "startDate": "Data rozpoczęcia",
+    "endDate": "Data zakończenia",
+    "category": "Kategoria",
     "selectCategory": "Wybierz kategorię",
     "addStep": "+ Dodaj krok",
     "stepTitle": "Tytuł kroku",
@@ -385,7 +396,9 @@
     "publishSuccess": "Karta opublikowana pomyślnie",
     "publishSuccessDesc": "Teraz jest dostępna na ogólnej liście",
     "errorTitleRequired": "Tytuł karty nie może być pusty",
-    "errorCategoryRequired": "Proszę wybrać kategorię"
+    "errorCategoryRequired": "Proszę wybrać kategorię",
+    "errorMinTasks": "Dodaj co najmniej jedno zadanie z tytułem",
+    "errorInvalidDates": "Sprawdź daty w zadaniu «{{title}}»: data zakończenia jest przed datą rozpoczęcia"
   },
   "edit": {
     "title": "Edytuj kartę",
@@ -734,5 +747,13 @@
         "content": "Jeśli masz pytania dotyczące tej Polityki prywatności lub innych problemów bezpieczeństwa, użyj wbudowanego czatu techniczny wsparcia (prawy dolny róg witryny). Nasz zespół wsparcia jest gotów Ci pomóc w godzinach pracy."
       }
     }
+  },
+  "gantt": {
+    "noDates": "Brak dat",
+    "markDone": "Oznacz jako wykonane",
+    "markUndone": "Oznacz jako niewykonane",
+    "taskMenu": "Menu zadania",
+    "configure": "Skonfiguruj zadanie",
+    "configureHint": "Konfiguracja dostępna dla autora lub redaktora"
   }
 }

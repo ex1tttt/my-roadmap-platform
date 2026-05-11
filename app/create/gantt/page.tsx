@@ -112,7 +112,7 @@ export default function CreateGanttPage() {
         .filter((task) => task.title.length > 0);
 
       if (normalizedTasks.length === 0) {
-        setToast({ message: "Добавьте хотя бы одну задачу с названием", type: "error" });
+        setToast({ message: t("create.errorMinTasks"), type: "error" });
         setSaving(false);
         return;
       }
@@ -122,7 +122,7 @@ export default function CreateGanttPage() {
       );
       if (invalidDatesTask) {
         setToast({
-          message: `Проверьте даты в задаче «${invalidDatesTask.title}»: дата завершения раньше даты начала`,
+          message: t("create.errorInvalidDates", { title: invalidDatesTask.title }),
           type: "error",
         });
         setSaving(false);
@@ -246,7 +246,7 @@ export default function CreateGanttPage() {
           <section className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md p-6">
             <label className="block">
               <div className="mb-1 flex items-center justify-between text-sm font-medium text-gray-700 dark:text-slate-200">
-                <span>Title</span>
+                <span>{t("create.cardTitle")}</span>
                 <span
                   className={`text-xs tabular-nums ${
                     title.length >= 35 ? "text-red-400" : "text-slate-500"
@@ -300,7 +300,7 @@ export default function CreateGanttPage() {
 
             <label className="mt-4 block">
               <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
-                Description
+                {t("create.description")}
               </div>
               <textarea
                 className="w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -361,7 +361,7 @@ export default function CreateGanttPage() {
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-400">
-                      Задача {idx + 1}
+                      {t("create.taskNumber", { number: idx + 1 })}
                     </span>
                     {idx > 0 && (
                       <button
@@ -377,7 +377,7 @@ export default function CreateGanttPage() {
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <label className="block">
                       <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
-                        Название
+                        {t("create.taskName")}
                       </div>
                       <input
                         type="text"
@@ -390,7 +390,7 @@ export default function CreateGanttPage() {
 
                     <label className="block">
                       <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
-                        Приоритет
+                        {t("create.priority")}
                       </div>
                       <select
                         className="w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -401,15 +401,15 @@ export default function CreateGanttPage() {
                           })
                         }
                       >
-                        <option value="low">Низкий</option>
-                        <option value="medium">Средний</option>
-                        <option value="high">Высокий</option>
+                        <option value="low">{t("create.priorityLow")}</option>
+                        <option value="medium">{t("create.priorityMedium")}</option>
+                        <option value="high">{t("create.priorityHigh")}</option>
                       </select>
                     </label>
 
                     <label className="block">
                       <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
-                        Дата начала
+                        {t("create.startDate")}
                       </div>
                       <input
                         type="date"
@@ -423,7 +423,7 @@ export default function CreateGanttPage() {
 
                     <label className="block">
                       <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
-                        Дата завершения
+                        {t("create.endDate")}
                       </div>
                       <input
                         type="date"
@@ -438,7 +438,7 @@ export default function CreateGanttPage() {
 
                   <label className="mt-3 block">
                     <div className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
-                      Описание
+                      {t("create.description")}
                     </div>
                     <textarea
                       className="w-full rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"

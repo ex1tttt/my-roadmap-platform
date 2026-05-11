@@ -354,6 +354,7 @@
   },
   "create": {
     "title": "Create Roadmap",
+    "cardTitle": "Title",
     "selectType": "Choose how to create",
     "actionList": "Action List",
     "actionListDesc": "Step-by-step roadmap with actions, resources, and media",
@@ -361,6 +362,14 @@
     "ganttDiagramDesc": "Visual project timeline diagram",
     "ganttTasks": "Tasks",
     "addTask": "+ Add task",
+    "taskNumber": "Task {{number}}",
+    "taskName": "Task name",
+    "priority": "Priority",
+    "priorityLow": "Low",
+    "priorityMedium": "Medium",
+    "priorityHigh": "High",
+    "startDate": "Start date",
+    "endDate": "End date",
     "category": "Category",
     "selectCategory": "Select a category",
     "addStep": "+ Add step",
@@ -382,7 +391,9 @@
     "publishSuccess": "Card published successfully",
     "publishSuccessDesc": "Now it's available in the general list",
     "errorTitleRequired": "Card title cannot be empty",
-    "errorCategoryRequired": "Please select a category"
+    "errorCategoryRequired": "Please select a category",
+    "errorMinTasks": "Add at least one task with a title",
+    "errorInvalidDates": "Check the dates in the task «{{title}}»: end date is before start date"
   },
   "edit": {
     "title": "Edit Roadmap",
@@ -732,5 +743,13 @@
         "content": "If you have questions about this Privacy Policy or other security concerns, please use the built-in support chat (bottom right corner of the site). Our support team is ready to help you during business hours."
       }
     }
+  },
+  "gantt": {
+    "noDates": "No dates",
+    "markDone": "Mark as done",
+    "markUndone": "Mark as undone",
+    "taskMenu": "Task menu",
+    "configure": "Configure task",
+    "configureHint": "Configuration available to author or editor"
   }
 }

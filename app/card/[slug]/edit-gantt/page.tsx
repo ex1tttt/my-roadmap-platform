@@ -173,14 +173,14 @@ export default function EditGanttPage() {
         .filter((task) => task.title.length > 0);
 
       if (trimmedTasks.length === 0) {
-        alert("Добавьте хотя бы одну задачу с названием");
+        alert(t("create.errorMinTasks"));
         return;
       }
       const invalidDates = trimmedTasks.find(
         (task) => task.startDate && task.endDate && task.endDate < task.startDate
       );
       if (invalidDates) {
-        alert(`Проверьте даты в задаче "${invalidDates.title}"`);
+        alert(t("create.errorInvalidDates", { title: invalidDates.title }));
         return;
       }
 
@@ -259,7 +259,21 @@ export default function EditGanttPage() {
             </label>
             {isOwner && (
               <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 py-3">
-                <div className="flex items-center gap-2">{isPrivate ? <Lock className="h-4 w-4 text-amber-400" /> : <Globe className="h-4 w-4 text-slate-400" />}<span className="text-sm">{isPrivate ? t("privacy.privateCard") : t("privacy.publicCard")}</span></div>
+                <div className="flex items-center gap-3">
+                  {isPrivate ? (
+                    <Lock className="h-4 w-4 text-amber-400" />
+                  ) : (
+                    <Globe className="h-4 w-4 text-slate-400" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                      {isPrivate ? t('privacy.privateCard') : t('privacy.publicCard')}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {isPrivate ? t('privacy.privateDesc') : t('privacy.publicDesc')}
+                    </p>
+                  </div>
+                </div>
                 <button type="button" onClick={() => setIsPrivate((v) => !v)} className={`relative inline-flex h-6 w-11 items-center rounded-full ${isPrivate ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPrivate ? "translate-x-5" : "translate-x-1"}`} />
                 </button>
@@ -268,7 +282,7 @@ export default function EditGanttPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-medium">Gantt Tasks</h2>
+            <h2 className="text-lg font-medium">{t("create.ganttTasks")}</h2>
             {tasks.map((task, idx) => (
               <div
                 key={task.id}
@@ -276,7 +290,7 @@ export default function EditGanttPage() {
                 className="scroll-mt-24 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4"
               >
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">Задача {idx + 1}</span>
+                  <span className="text-xs font-semibold text-slate-400">{t("create.taskNumber", { number: idx + 1 })}</span>
                   {idx > 0 && (
                     <button type="button" onClick={() => removeTask(task.id)} className="text-red-500">
                       <Trash2 className="h-4 w-4" />
@@ -284,20 +298,20 @@ export default function EditGanttPage() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <input className={INPUT_CLS} placeholder="Название" value={task.title} onChange={(e) => updateTask(task.id, { title: e.target.value })} required />
+                  <input className={INPUT_CLS} placeholder={t("create.taskName")} value={task.title} onChange={(e) => updateTask(task.id, { title: e.target.value })} required />
                   <select className={INPUT_CLS} value={task.priority} onChange={(e) => updateTask(task.id, { priority: e.target.value as "low" | "medium" | "high" })}>
-                    <option value="low">Низкий</option>
-                    <option value="medium">Средний</option>
-                    <option value="high">Высокий</option>
+                    <option value="low">{t("create.priorityLow")}</option>
+                    <option value="medium">{t("create.priorityMedium")}</option>
+                    <option value="high">{t("create.priorityHigh")}</option>
                   </select>
                   <input type="date" className={INPUT_CLS} value={task.startDate} onChange={(e) => updateTask(task.id, { startDate: e.target.value })} />
                   <input type="date" className={INPUT_CLS} value={task.endDate} onChange={(e) => updateTask(task.id, { endDate: e.target.value })} />
                 </div>
-                <textarea className={`${INPUT_CLS} mt-3`} rows={2} placeholder="Описание" value={task.description} onChange={(e) => updateTask(task.id, { description: e.target.value })} />
+                <textarea className={`${INPUT_CLS} mt-3`} rows={2} placeholder={t("create.description")} value={task.description} onChange={(e) => updateTask(task.id, { description: e.target.value })} />
               </div>
             ))}
             <button type="button" onClick={addTask} className="rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm">
-              Добавить задачу
+              {t("create.addTask")}
             </button>
           </section>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Check, MoreVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type GanttTaskRow = {
   id: string;
@@ -26,6 +27,7 @@ function doneStorageKey(cardId: string, viewerKey: string) {
 }
 
 export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey = "guest" }: Props) {
+  const { t } = useTranslation();
   const [doneMap, setDoneMap] = useState<Record<string, boolean>>({});
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
@@ -75,7 +77,7 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
         const lineWidth = Math.abs(offset - prevOffset);
         const isDone = !!doneMap[task.id];
         const dateLine =
-          task.start_date && task.end_date ? `${task.start_date} — ${task.end_date}` : "Без дат";
+          task.start_date && task.end_date ? `${task.start_date} — ${task.end_date}` : t("gantt.noDates");
 
         return (
           <div key={task.id} className="relative pt-3">
@@ -102,7 +104,7 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
                   onClick={() => toggleDone(task.id)}
                   className="flex w-11 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-100/80 transition-colors hover:bg-slate-200/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                   aria-pressed={isDone}
-                  aria-label={isDone ? "Отметить как невыполненное" : "Отметить как выполненное"}
+                  aria-label={isDone ? t("gantt.markUndone") : t("gantt.markDone")}
                 >
                   {isDone ? (
                     <Check className="h-5 w-5 text-emerald-500" strokeWidth={2.5} />
@@ -137,7 +139,7 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
                         className="flex w-full items-center justify-center text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800 dark:hover:bg-white/10 dark:hover:text-slate-200"
                         aria-expanded={openMenuId === task.id}
                         aria-haspopup="menu"
-                        aria-label="Меню задачи"
+                        aria-label={t("gantt.taskMenu")}
                       >
                         <MoreVertical className="h-5 w-5" />
                       </button>
@@ -152,7 +154,7 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
                             className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
                             onClick={() => setOpenMenuId(null)}
                           >
-                            Настроить шаг
+                            {t("gantt.configure")}
                           </Link>
                         </div>
                       )}
@@ -160,7 +162,7 @@ export default function GanttCardView({ cardId, tasks, canConfigure, viewerKey =
                   ) : (
                     <span
                       className="flex w-full items-center justify-center text-slate-400/50 dark:text-slate-600"
-                      title="Настройка доступна автору или редактору"
+                      title={t("gantt.configureHint")}
                     >
                       <MoreVertical className="h-5 w-5" />
                     </span>
