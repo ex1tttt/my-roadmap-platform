@@ -48,6 +48,16 @@ export default function EditGanttPage() {
   const [tasks, setTasks] = useState<GanttTask[]>([]);
 
   useEffect(() => {
+    if (loading) return;
+    const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+    if (!hash) return;
+    const id = window.setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+    return () => clearTimeout(id);
+  }, [loading]);
+
+  useEffect(() => {
     if (!slug) return;
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -260,7 +270,11 @@ export default function EditGanttPage() {
           <section className="space-y-3">
             <h2 className="text-lg font-medium">Gantt Tasks</h2>
             {tasks.map((task, idx) => (
-              <div key={task.id} className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4">
+              <div
+                key={task.id}
+                id={`gantt-task-${task.id}`}
+                className="scroll-mt-24 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 p-4"
+              >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-400">Задача {idx + 1}</span>
                   {idx > 0 && (

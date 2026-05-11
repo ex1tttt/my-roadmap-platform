@@ -17,6 +17,7 @@ import CardEditButton from "./CardEditButton";
 import T from "@/components/T";
 import ReportCardButton from "@/components/ReportCardButton";
 import CategoryBadge from "@/components/CategoryBadge";
+import GanttCardView from "@/components/GanttCardView";
 import { isUUID } from "@/lib/slug";
 
 const ADMIN_IDS = [
@@ -82,68 +83,6 @@ function renderMedia(url: string | undefined, title: string) {
     </a>
   );
 }
-
-function priorityBadgeClass(priority: GanttTask["priority"]) {
-  if (priority === "high") return "bg-red-500/15 text-red-400";
-  if (priority === "low") return "bg-emerald-500/15 text-emerald-400";
-  return "bg-amber-500/15 text-amber-400";
-}
-
-function GanttView({ tasks }: { tasks: GanttTask[] }) {
-  const desktopOffsets = [0, 120, 240, 120];
-
-  return (
-    <div className="space-y-3">
-      {tasks.map((task, idx) => {
-        const offset = desktopOffsets[idx % desktopOffsets.length];
-        const prevOffset = idx > 0 ? desktopOffsets[(idx - 1) % desktopOffsets.length] : 0;
-        const lineStart = Math.min(prevOffset, offset) + 24;
-        const lineWidth = Math.abs(offset - prevOffset);
-
-        return (
-          <div key={task.id} className="relative pt-3">
-            {idx > 0 && (
-              <>
-                <div
-                  className="absolute top-0 hidden h-3 border-l border-dashed border-slate-500/40 md:block"
-                  style={{ left: `${prevOffset + 24}px` }}
-                />
-                <div
-                  className="absolute top-3 hidden border-t border-dashed border-slate-500/40 md:block"
-                  style={{ left: `${lineStart}px`, width: `${lineWidth}px` }}
-                />
-              </>
-            )}
-            <article
-              className="w-full rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-2 md:w-[260px]"
-              style={{ marginLeft: `${offset}px` }}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="text-xs text-emerald-400">✓</span>
-                  <h3 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{task.title}</h3>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${priorityBadgeClass(task.priority)}`}>
-                    {task.priority ?? "medium"}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                {task.start_date && task.end_date ? `${task.start_date} - ${task.end_date}` : "Без дат"}
-              </div>
-              {task.description && (
-                <p className="mt-1 truncate text-xs text-slate-600 dark:text-slate-300">{task.description}</p>
-              )}
-            </article>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-
 
 const DEFAULT_OG_IMAGE = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://roadmap-platform.vercel.app"}/og-default.svg`;
 
@@ -487,7 +426,14 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             </span>
           </h2>
           {data.card_type === "gantt" ? (
-            <GanttView tasks={ganttTasks} />
+            <ClientOnly>
+              <GanttCardView
+                cardId={data.id}
+                tasks={ganttTasks}
+                canConfigure={isOwner || collaboratorRole === "editor"}
+                viewerKey={currentUser?.id ?? "guest"}
+              />
+            </ClientOnly>
           ) : (
             <ClientOnly>
               <StepsProgress
