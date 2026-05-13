@@ -419,35 +419,34 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </div>
       </div>
       <div className="mx-auto max-w-5xl gap-8 px-4 sm:px-6 py-12 lg:grid lg:grid-cols-[1fr_280px]">
-        <section>
-          <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
-            <BookOpen className="h-5 w-5 text-blue-400" />
-            {data.card_type === "gantt" ? "Gantt" : <T k="card.roadmap" />}
-            <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
-              {data.card_type === "gantt" ? ganttTasks.length : steps.length}
-            </span>
-          </h2>
-          {data.card_type === "gantt" ? (
-            <ClientOnly>
-              <GanttCardView
-                cardId={data.id}
-                cardSlug={data.slug}
-                tasks={ganttTasks}
-                canConfigure={isOwner || collaboratorRole === "editor"}
-              />
-            </ClientOnly>
-          ) : (
-            <ClientOnly>
-              <StepsProgress
-                cardId={data.id}
-                userId={currentUser?.id ?? null}
-                steps={steps}
-                initialDone={initialDoneArr}
-              />
-            </ClientOnly>
-          )}
+        <section className={data.card_type === "gantt" ? "hidden min-w-0" : "min-w-0"}>
+          {data.card_type !== "gantt" ? (
+            <>
+              <h2 className="mb-8 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
+                <BookOpen className="h-5 w-5 text-blue-400" />
+                <T k="card.roadmap" />
+                <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
+                  {steps.length}
+                </span>
+              </h2>
+              <ClientOnly>
+                <StepsProgress
+                  cardId={data.id}
+                  userId={currentUser?.id ?? null}
+                  steps={steps}
+                  initialDone={initialDoneArr}
+                />
+              </ClientOnly>
+            </>
+          ) : null}
         </section>
-        <aside className="mt-12 lg:mt-0">
+        <aside
+          className={
+            data.card_type === "gantt"
+              ? "mt-12 lg:col-start-2 lg:row-start-1 lg:mt-0"
+              : "mt-12 lg:mt-0"
+          }
+        >
           <div className="space-y-4">
             {resources.length > 0 && (
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
@@ -474,6 +473,27 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             )}
           </div>
         </aside>
+        {data.card_type === "gantt" ? (
+          <div className="flex min-w-0 flex-col lg:col-span-2 lg:col-start-1 lg:row-start-2">
+            <h2 className="mb-6 flex w-[120%] -mx-[10%] items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
+              <BookOpen className="h-5 w-5 shrink-0 text-blue-400" />
+              <T k="card.ganttTitle" />
+              <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
+                {ganttTasks.length}
+              </span>
+            </h2>
+            <div className="scrollbar-subtle max-h-[min(70vh,36rem)] w-[120%] min-h-0 min-w-0 -mx-[10%] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain">
+              <ClientOnly>
+                <GanttCardView
+                  cardId={data.id}
+                  cardSlug={data.slug}
+                  tasks={ganttTasks}
+                  canConfigure={isOwner || collaboratorRole === "editor"}
+                />
+              </ClientOnly>
+            </div>
+          </div>
+        ) : null}
       </div>
       <ScrollToHash />
       <ViewHistoryRecorder cardId={data.id} />

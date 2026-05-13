@@ -2,17 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Check, MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import {
-  collectDescendantIds,
-  dfsOrder,
-  inferLinearParents,
-  taskDepth,
-} from "@/lib/gantt-tree";
+import { buildChildrenMap, collectDescendantIds, inferLinearParents } from "@/lib/gantt-tree";
 
 export type GanttTaskRow = {
   id: string;
@@ -28,11 +24,107 @@ export type GanttTaskRow = {
 
 type Props = {
   cardId: string;
-  /** Человекочитаемый slug для URL редактора (если нет — используется cardId) */
   cardSlug?: string | null;
   tasks: GanttTaskRow[];
   canConfigure: boolean;
 };
+
+/** Вертикальная «шина» только между мостом и центрами карточек детей — без хвостов на всю высоту строк с поддеревьями. При одном ребёнке вертикаль не рисуется. */
+function GanttBusConnectorPanel({
+  kids,
+  kidIds,
+  colLayout,
+  renderChildRow,
+}: {
+  kids: GanttTaskRow[];
+  kidIds: string;
+  colLayout: string;
+  renderChildRow: (k: GanttTaskRow) => ReactNode;
+}) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [spine, setSpine] = useState<{ top: number; height: number } | null>(null);
+  const showSpine = kids.length >= 2;
+
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host || !showSpine) {
+      setSpine(null);
+      return;
+    }
+
+    const measure = () => {
+      const h = hostRef.current;
+      if (!h) return;
+      const hostR = h.getBoundingClientRect();
+
+      const rows = Array.from(
+        h.querySelectorAll<HTMLElement>(":scope > .gantt-bus-children-col > .gantt-bus-row")
+      );
+      const mids: number[] = [];
+      for (const row of rows) {
+        const card = row.querySelector<HTMLElement>("[data-gantt-card-root]");
+        if (!card) continue;
+        const r = card.getBoundingClientRect();
+        mids.push(r.top + r.height / 2);
+      }
+      if (mids.length === 0) {
+        setSpine(null);
+        return;
+      }
+      const lo = Math.min(...mids);
+      const hi = Math.max(...mids);
+      /** Только между центрами карточек; центр моста в высокой колонке тянул бы шину «в никуда». */
+      const topY = lo;
+      const botY = hi;
+      const height = Math.max(0, botY - topY);
+      setSpine({ top: topY - hostR.top, height: Math.max(height, 2) });
+    };
+
+    measure();
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(host);
+
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [showSpine, kidIds]);
+
+  const isBranching = kids.length >= 2;
+  const bridgeColClass = isBranching ? "w-6" : "w-3";
+  const spineLeftClass = isBranching ? "left-6" : "left-3";
+  const childrenPad = isBranching ? "md:pl-1" : "md:pl-0";
+
+  return (
+    <div ref={hostRef} className="relative flex w-max shrink-0 min-h-0 flex-col gap-2 md:flex-row md:items-stretch md:gap-0">
+      <div className="gantt-dash-h mx-auto w-[min(92vw,20rem)] shrink-0 md:hidden" aria-hidden />
+
+      <div
+        className={`gantt-bus-bridge-col hidden shrink-0 self-stretch md:flex md:flex-col md:items-stretch md:justify-center ${bridgeColClass}`}
+        aria-hidden
+      >
+        <div className="gantt-bus-bridge-line gantt-dash-h w-full" aria-hidden />
+      </div>
+
+      {showSpine && spine && spine.height > 0 ? (
+        <div
+          className={`gantt-dash-v pointer-events-none absolute z-0 hidden shrink-0 md:block ${spineLeftClass}`}
+          style={{ top: spine.top, height: spine.height }}
+          aria-hidden
+        />
+      ) : null}
+
+      <div className={`gantt-bus-children-col flex w-max shrink-0 min-h-0 flex-col ${childrenPad} ${colLayout}`}>
+        {kids.map((k) => (
+          <div key={k.id} className="gantt-bus-row flex w-max flex-row items-start">
+            {renderChildRow(k)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }: Props) {
   const { t } = useTranslation();
@@ -42,16 +134,16 @@ export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }:
   const tasksById = useMemo(() => new Map(localTasks.map((x) => [x.id, x])), [localTasks]);
   const confirmToastRef = useRef<string | number | null>(null);
 
-  const displayRows = useMemo(() => {
+  const treeRows = useMemo(() => {
     const rows = localTasks.map((x) => ({
       ...x,
       parent_id: x.parent_id ?? null,
       order: x.order ?? 0,
     }));
-    return dfsOrder(inferLinearParents(rows));
+    return inferLinearParents(rows);
   }, [localTasks]);
 
-  const displayById = useMemo(() => new Map(displayRows.map((x) => [x.id, x])), [displayRows]);
+  const childrenMap = useMemo(() => buildChildrenMap(treeRows), [treeRows]);
 
   useEffect(() => {
     setLocalTasks(tasks);
@@ -67,13 +159,9 @@ export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }:
     const cur = tasksById.get(taskId);
     if (!cur) return;
     const nextDone = !cur.is_done;
-
-    // optimistic UI
     setLocalTasks((prev) => prev.map((t2) => (t2.id === taskId ? { ...t2, is_done: nextDone } : t2)));
-
     const { error } = await supabase.from("gantt_tasks").update({ is_done: nextDone }).eq("id", taskId);
     if (error) {
-      // rollback
       setLocalTasks((prev) => prev.map((t2) => (t2.id === taskId ? { ...t2, is_done: cur.is_done } : t2)));
       alert(t("common.error") + ": " + error.message);
     }
@@ -146,135 +234,158 @@ export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }:
   };
 
   const editPathSegment = cardSlug?.trim() || cardId;
-  const depthOffset = (depth: number) => Math.min(depth * 56, 224);
 
-  return (
-    <div className="space-y-3">
-      {displayRows.map((task, idx) => {
-        const depth = taskDepth(task.id, displayById);
-        const offset = depthOffset(depth);
-        const prevTask = idx > 0 ? displayRows[idx - 1]! : null;
-        const prevDepth = prevTask ? taskDepth(prevTask.id, displayById) : 0;
-        const prevOffset = prevTask ? depthOffset(prevDepth) : 0;
-        const lineStart = Math.min(prevOffset, offset) + 24;
-        const lineWidth = Math.abs(offset - prevOffset);
-        const isDone = !!task.is_done;
-        const dateLine =
-          task.start_date && task.end_date ? `${task.start_date} — ${task.end_date}` : t("gantt.noDates");
+  const renderCard = (task: GanttTaskRow): ReactNode => {
+    const isDone = !!task.is_done;
+    const dateLine =
+      task.start_date && task.end_date ? `${task.start_date} — ${task.end_date}` : t("gantt.noDates");
 
-        return (
-          <div
-            key={task.id}
-            className={`relative pt-3 ${openMenuId === task.id ? "z-50" : ""}`}
+    return (
+      <article
+        data-gantt-card-root
+        className="w-full max-w-[min(100%,20rem)] shrink-0 overflow-visible rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5"
+        id={`gantt-task-${task.id}`}
+      >
+        <div className="flex min-h-[48px] items-stretch">
+          <button
+            type="button"
+            onClick={() => void toggleDone(task.id)}
+            className="flex w-11 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-100/80 transition-colors hover:bg-slate-200/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+            aria-pressed={isDone}
+            aria-label={isDone ? t("gantt.markUndone") : t("gantt.markDone")}
           >
-            {idx > 0 && (
-              <>
-                <div
-                  className="absolute top-0 hidden h-3 border-l border-dashed border-slate-500/40 md:block"
-                  style={{ left: `${prevOffset + 24}px` }}
-                />
-                <div
-                  className="absolute top-3 hidden border-t border-dashed border-slate-500/40 md:block"
-                  style={{ left: `${lineStart}px`, width: `${lineWidth}px` }}
-                />
-              </>
+            {isDone ? (
+              <Check className="h-5 w-5 text-emerald-500" strokeWidth={2.5} />
+            ) : (
+              <span className="text-lg leading-none text-slate-400 dark:text-slate-500">○</span>
             )}
-            <article
-              className="w-full overflow-visible rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 md:w-[min(100%,320px)]"
-              style={{ marginLeft: `${offset}px` }}
-              id={`gantt-task-${task.id}`}
+          </button>
+
+          <div className="min-w-0 flex-1 px-3 py-2">
+            <h3
+              className={`truncate text-sm font-semibold uppercase tracking-wide ${
+                isDone ? "text-slate-500 line-through dark:text-slate-400" : "text-slate-900 dark:text-slate-100"
+              }`}
             >
-              <div className="flex min-h-[48px] items-stretch">
+              {task.title}
+            </h3>
+            <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{dateLine}</p>
+            {task.description?.trim() ? (
+              <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{task.description}</p>
+            ) : null}
+          </div>
+
+          <div
+            data-gantt-menu={canConfigure ? task.id : undefined}
+            className="relative flex w-11 shrink-0 items-stretch border-l border-slate-200 dark:border-white/10"
+          >
+            {canConfigure ? (
+              <>
                 <button
                   type="button"
-                  onClick={() => toggleDone(task.id)}
-                  className="flex w-11 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-100/80 transition-colors hover:bg-slate-200/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                  aria-pressed={isDone}
-                  aria-label={isDone ? t("gantt.markUndone") : t("gantt.markDone")}
+                  onClick={() => setOpenMenuId((id) => (id === task.id ? null : task.id))}
+                  className="flex w-full items-center justify-center text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800 dark:hover:bg-white/10 dark:hover:text-slate-200"
+                  aria-expanded={openMenuId === task.id}
+                  aria-haspopup="menu"
+                  aria-label={t("gantt.taskMenu")}
                 >
-                  {isDone ? (
-                    <Check className="h-5 w-5 text-emerald-500" strokeWidth={2.5} />
-                  ) : (
-                    <span className="text-lg leading-none text-slate-400 dark:text-slate-500">○</span>
-                  )}
+                  <MoreVertical className="h-5 w-5" />
                 </button>
-
-                <div className="min-w-0 flex-1 px-3 py-2">
-                  <h3
-                    className={`truncate text-sm font-semibold uppercase tracking-wide ${
-                      isDone ? "text-slate-500 line-through dark:text-slate-400" : "text-slate-900 dark:text-slate-100"
-                    }`}
+                {openMenuId === task.id && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-30 mt-1 min-w-44 rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-white/10 dark:bg-slate-900"
                   >
-                    {task.title}
-                  </h3>
-                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{dateLine}</p>
-                  {task.description?.trim() ? (
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{task.description}</p>
-                  ) : null}
-                </div>
-
-                <div
-                  data-gantt-menu={canConfigure ? task.id : undefined}
-                  className="relative flex w-11 shrink-0 items-stretch border-l border-slate-200 dark:border-white/10"
-                >
-                  {canConfigure ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setOpenMenuId((id) => (id === task.id ? null : task.id))}
-                        className="flex w-full items-center justify-center text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800 dark:hover:bg-white/10 dark:hover:text-slate-200"
-                        aria-expanded={openMenuId === task.id}
-                        aria-haspopup="menu"
-                        aria-label={t("gantt.taskMenu")}
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
-                      {openMenuId === task.id && (
-                        <div
-                          role="menu"
-                          className="absolute right-0 top-full z-30 mt-1 min-w-44 rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-white/10 dark:bg-slate-900"
-                        >
-                          <Link
-                            role="menuitem"
-                            href={`/card/${editPathSegment}/edit-gantt?branch=${encodeURIComponent(task.id)}#add-gantt-task`}
-                            className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
-                            onClick={() => setOpenMenuId(null)}
-                          >
-                            {t("gantt.addBranch")}
-                          </Link>
-                          <button
-                            role="menuitem"
-                            type="button"
-                            className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                            onClick={() => requestDeleteTask(task)}
-                          >
-                            Delete
-                          </button>
-                          <Link
-                            role="menuitem"
-                            href={`/card/${editPathSegment}/edit-gantt#gantt-task-${task.id}`}
-                            className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
-                            onClick={() => setOpenMenuId(null)}
-                          >
-                            Settings
-                          </Link>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <span
-                      className="flex w-full items-center justify-center text-slate-400/50 dark:text-slate-600"
-                      title={t("gantt.configureHint")}
+                    <Link
+                      role="menuitem"
+                      href={`/card/${editPathSegment}/edit-gantt?branch=${encodeURIComponent(task.id)}#add-gantt-task`}
+                      className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
+                      onClick={() => setOpenMenuId(null)}
                     >
-                      <MoreVertical className="h-5 w-5" />
-                    </span>
-                  )}
-                </div>
-              </div>
-            </article>
+                      {t("gantt.addBranch")}
+                    </Link>
+                    <button
+                      role="menuitem"
+                      type="button"
+                      className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                      onClick={() => requestDeleteTask(task)}
+                    >
+                      Delete
+                    </button>
+                    <Link
+                      role="menuitem"
+                      href={`/card/${editPathSegment}/edit-gantt#gantt-task-${task.id}`}
+                      className="block px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
+                      onClick={() => setOpenMenuId(null)}
+                    >
+                      Settings
+                    </Link>
+                  </div>
+                )}
+              </>
+            ) : (
+              <span
+                className="flex w-full items-center justify-center text-slate-400/50 dark:text-slate-600"
+                title={t("gantt.configureHint")}
+              >
+                <MoreVertical className="h-5 w-5" />
+              </span>
+            )}
           </div>
-        );
-      })}
+        </div>
+      </article>
+    );
+  };
+
+  /** Горизонтальное дерево: карточка слева, дети в колонке справа (как на схеме). */
+  function renderNode(task: GanttTaskRow): ReactNode {
+    const kids = (childrenMap.get(task.id) ?? []) as GanttTaskRow[];
+    const wrapZ = openMenuId === task.id ? "relative z-50" : "relative";
+
+    if (kids.length === 0) {
+      return <div className={`shrink-0 ${wrapZ}`}>{renderCard(task)}</div>;
+    }
+
+    /** Без min-height / justify-between — иначе вертикальная шина тянется выше/ниже карточек. */
+    const colLayout =
+      kids.length === 1 ? "gap-y-0 py-0" : "gap-y-5 py-0 md:gap-y-6";
+
+    const kidIds = kids.map((x) => x.id).join("\n");
+    const linearOnly = kids.length === 1;
+
+    return (
+      <div
+        className={`flex w-max shrink-0 max-w-none flex-col md:flex-row md:items-stretch md:gap-0 ${linearOnly ? "gap-1" : "gap-2"}`}
+      >
+        <div className={`flex shrink-0 items-center md:self-center ${wrapZ}`}>{renderCard(task)}</div>
+
+        <GanttBusConnectorPanel
+          kids={kids}
+          kidIds={kidIds}
+          colLayout={colLayout}
+          renderChildRow={(k) => (
+            <>
+              <div
+                className={`hidden shrink-0 self-center md:flex md:flex-col md:items-center md:justify-center ${linearOnly ? "w-3" : "w-5"}`}
+                aria-hidden
+              >
+                <div className="gantt-dash-h w-full" aria-hidden />
+              </div>
+              <div className="shrink-0">{renderNode(k)}</div>
+            </>
+          )}
+        />
+      </div>
+    );
+  }
+
+  const roots = (childrenMap.get(null) ?? []) as GanttTaskRow[];
+
+  return (
+    <div className="flex w-max shrink-0 flex-col gap-8 pb-2 md:gap-10">
+      {roots.map((r) => (
+        <div key={r.id}>{renderNode(r)}</div>
+      ))}
     </div>
   );
 }

@@ -152,6 +152,7 @@
     "back": "Powrót",
     "home": "Strona główna",
     "roadmap": "Mapa drogowa",
+    "ganttTitle": "Gantt",
     "materials": "Materiały",
     "editCard": "Edytuj",
     "cardNotFound": "Karta o tym ID nie została znaleziona.",
@@ -765,6 +766,8 @@
     "parentStep": "Krok nadrzędny",
     "parentRoot": "— Bez rodzica (poziom główny)",
     "parentStepHint": "Dwie równoległe gałęzie od jednego kroku: wybierz tego samego rodzica dla obu wierszy. Zmień rodzica, jeśli krok jest w złym miejscu.",
-    "firstStepNoParent": "To początek diagramu — pierwszy krok nie ma rodzica. Po dodaniu kolejnych kroków pojawi się wybór rodzica."
+    "firstStepNoParent": "To początek diagramu — pierwszy krok nie ma rodzica. Po dodaniu kolejnych kroków pojawi się wybór rodzica.",
+    "moreThanTwoBranches": "Ten krok ma więcej niż dwa bezpośrednie odgałęzienia: na karcie pierwsze dwa są obok siebie po prawej, reszta poniżej. Układ przewiduje maksymalnie dwie gałęzie od jednego kroku.",
+    "addBranchDisabledHint": "Ten krok ma już dwie gałęzie. Usuń lub przepnij jedną w edytorze, aby dodać kolejną."
   }
 }
