@@ -754,6 +754,8 @@
     "markDone": "Mark as done",
     "markUndone": "Mark as undone",
     "taskMenu": "Task menu",
+    "deleteTask": "Delete",
+    "taskSettings": "Settings",
     "configure": "Configure task",
     "configureHint": "Configuration available to author or editor",
     "untitledStep": "Untitled step",

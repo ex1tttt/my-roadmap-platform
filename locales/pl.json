@@ -758,6 +758,8 @@
     "markDone": "Oznacz jako wykonane",
     "markUndone": "Oznacz jako niewykonane",
     "taskMenu": "Menu zadania",
+    "deleteTask": "Usuń",
+    "taskSettings": "Ustawienia",
     "configure": "Skonfiguruj zadanie",
     "configureHint": "Konfiguracja dostępna dla autora lub redaktora",
     "untitledStep": "Krok bez tytułu",
