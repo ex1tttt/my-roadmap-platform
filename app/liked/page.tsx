@@ -16,14 +16,18 @@ const ADMIN_IDS = [
 ];
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
+type GanttTaskPreview = { id: string; title?: string | null; order?: number | null };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
   id: string;
   title: string;
+  slug?: string;
   description?: string;
   category?: string;
+  card_type?: "list" | "gantt" | null;
   user: Profile;
   steps?: Step[];
+  gantt_tasks?: GanttTaskPreview[];
   likesCount: number;
   isLiked: boolean;
   isFavorite: boolean;
@@ -62,9 +66,10 @@ export default function LikedPage() {
 
       const cardIds = likesData.map((l: any) => l.card_id);
 
-      const [cardsRes, stepsRes, likesCountRes, userFavsRes, profilesAll] = await Promise.all([
+      const [cardsRes, stepsRes, ganttRes, likesCountRes, userFavsRes, profilesAll] = await Promise.all([
         supabase.from("cards").select("*").order("created_at", { ascending: false }).in("id", cardIds),
         supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
+        supabase.from("gantt_tasks").select("id, card_id, title, order").in("card_id", cardIds).order("order", { ascending: true }),
         supabase.from("likes").select("card_id").in("card_id", cardIds),
         supabase.from("favorites").select("roadmap_id").eq("user_id", user.id).in("roadmap_id", cardIds),
         supabase.from("profiles").select("*"),
@@ -92,6 +97,13 @@ export default function LikedPage() {
         stepsByCard.set(s.card_id, arr);
       });
 
+      const ganttByCard = new Map<string, GanttTaskPreview[]>();
+      (ganttRes.data ?? []).forEach((g: any) => {
+        const arr = ganttByCard.get(g.card_id) ?? [];
+        arr.push({ id: g.id, title: g.title, order: g.order });
+        ganttByCard.set(g.card_id, arr);
+      });
+
       const likesCountMap = new Map<string, number>();
       (likesCountRes.data ?? []).forEach((l: any) =>
         likesCountMap.set(l.card_id, (likesCountMap.get(l.card_id) ?? 0) + 1)
@@ -103,10 +115,13 @@ export default function LikedPage() {
         cardsRaw.map((c: any) => ({
           id: c.id,
           title: c.title,
+          slug: c.slug,
           description: c.description,
           category: c.category,
+          card_type: c.card_type ?? "list",
           user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: "Unknown" },
           steps: stepsByCard.get(c.id) ?? [],
+          gantt_tasks: ganttByCard.get(c.id) ?? [],
           likesCount: likesCountMap.get(c.id) ?? 0,
           isLiked: true,
           isFavorite: userFavSet.has(c.id),

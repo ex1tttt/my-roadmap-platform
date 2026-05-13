@@ -157,7 +157,9 @@
     "editCard": "Редагувати",
     "cardNotFound": "Картку з таким ID не знайдено.",
     "loadError": "Помилка при завантаженні картки",
-    "rate": "Оцінити"
+    "rate": "Оцінити",
+    "stepsPreviewEmpty": "Немає кроків",
+    "moreStepsShort": "+ ще {{count}}"
   },
   "comments": {
     "title": "Коментарі",
@@ -238,7 +240,9 @@
     "invalidCredentials": "Невірна пошта або пароль.",
     "signingIn": "Вхід...",
     "registering": "Реєстрація...",
-    "username": "Імʼя користувача"
+    "username": "Імʼя користувача",
+    "showPassword": "Показати пароль",
+    "hidePassword": "Приховати пароль"
   },
   "notifications": {
     "title": "Сповіщення",

@@ -17,14 +17,18 @@ const ADMIN_IDS = [
 ];
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
+type GanttTaskPreview = { id: string; title?: string | null; order?: number | null };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
   id: string;
   title: string;
+  slug?: string;
   description?: string;
   category?: string;
   user: Profile;
   steps?: Step[];
+  card_type?: "list" | "gantt" | null;
+  gantt_tasks?: GanttTaskPreview[];
   likesCount: number;
   isLiked: boolean;
   isFavorite: boolean;
@@ -136,8 +140,9 @@ export default function Home() {
         const userIds = Array.from(new Set(cardsData.map((c: any) => c.user_id)));
 
         // Параллельно грузим шаги, профили, лайки, избранное, рейтинги и комментарии
-        const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
+        const [stepsRes, ganttRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
           supabase.from("steps").select("*").in("card_id", cardIds).order("order", { ascending: true }),
+          supabase.from("gantt_tasks").select("id, card_id, title, order").in("card_id", cardIds).order("order", { ascending: true }),
           supabase.from("profiles").select("*").in("id", userIds),
           supabase.from("likes").select("card_id").in("card_id", cardIds),
           userId ? supabase.from("likes").select("card_id").eq("user_id", userId).in("card_id", cardIds) : Promise.resolve({ data: [] }),
@@ -147,7 +152,15 @@ export default function Home() {
         ]);
 
         if (stepsRes.error) throw stepsRes.error;
+        if (ganttRes.error) throw ganttRes.error;
         if (profilesRes.error) throw profilesRes.error;
+
+        const ganttByCard = new Map<string, GanttTaskPreview[]>();
+        (ganttRes.data || []).forEach((g: any) => {
+          const arr = ganttByCard.get(g.card_id) || [];
+          arr.push({ id: g.id, title: g.title, order: g.order });
+          ganttByCard.set(g.card_id, arr);
+        });
 
         const profilesMap = new Map<string, Profile>();
         (profilesRes.data || []).forEach((p: any) => profilesMap.set(p.id, { id: p.id, username: p.username, avatar: p.avatar }));
@@ -189,10 +202,13 @@ export default function Home() {
         const merged = (cardsData || []).map((c: any) => ({
           id: c.id,
           title: c.title,
+          slug: c.slug,
           description: c.description,
           category: c.category,
+          card_type: c.card_type ?? "list",
           user: profilesMap.get(c.user_id) || { id: c.user_id, username: "Unknown" },
           steps: stepsByCard.get(c.id) || [],
+          gantt_tasks: ganttByCard.get(c.id) || [],
           likesCount: likesCountMap.get(c.id) || 0,
           isLiked: userLikedSet.has(c.id),
           isFavorite: userFavSet.has(c.id),

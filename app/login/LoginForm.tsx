@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { supabase } from "@/lib/supabase";
@@ -56,6 +57,7 @@ export default function LoginForm() {
   const { getToken } = useRecaptcha();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordRequired, setPasswordRequired] = useState(false);
@@ -206,14 +208,25 @@ export default function LoginForm() {
           
           <label className="block">
             <div className="mb-1 text-sm text-gray-700 dark:text-gray-300">{t('auth.password')}</div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoFocus={passwordRequired}
-              className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoFocus={passwordRequired}
+                autoComplete="current-password"
+                className="w-full rounded-md border border-gray-200 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+              </button>
+            </div>
           </label>
 
           <div className="flex items-center justify-between">

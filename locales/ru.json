@@ -156,7 +156,9 @@
     "cardNotFound": "Карточка с таким ID не найдена.",
     "loadError": "Ошибка при загрузке карточки",
     "rate": "Оценить",
-    "ganttTitle": "Gantt"
+    "ganttTitle": "Gantt",
+    "stepsPreviewEmpty": "Нет шагов",
+    "moreStepsShort": "+ ещё {{count}}"
   },
   "comments": {
     "title": "Комментарии",
@@ -237,7 +239,9 @@
     "invalidCredentials": "Неверная почта или пароль.",
     "signingIn": "Вход...",
     "registering": "Регистрация...",
-    "username": "Имя пользователя"
+    "username": "Имя пользователя",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль"
   },
   "notifications": {
     "title": "Уведомления",

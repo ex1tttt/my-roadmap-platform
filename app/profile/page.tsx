@@ -15,15 +15,19 @@ import { toast } from 'sonner'
 import { checkAndRevokeBadges } from '@/lib/badges'
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string }
+type GanttTaskPreview = { id: string; title?: string | null; order?: number | null }
 type Profile = { id: string; username: string; avatar?: string; bio?: string | null }
 type CardType = {
   id: string
   title: string
+  slug?: string
   description?: string
   category?: string
   is_pinned?: boolean
+  card_type?: 'list' | 'gantt' | null
   user: Profile
   steps?: Step[]
+  gantt_tasks?: GanttTaskPreview[]
   likesCount: number
   isLiked: boolean
   isFavorite: boolean
@@ -107,8 +111,9 @@ export default function ProfilePage() {
       const limitedCardIds = allCardIds.slice(0, CARDS_PER_PAGE)
 
       // Загружаем шаги, профили и социальные данные параллельно
-      const [stepsRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
+      const [stepsRes, ganttRes, profilesRes, likesRes, userLikesRes, userFavsRes, ratingsRes, commentsRes] = await Promise.all([
         supabase.from('steps').select('*').in('card_id', limitedCardIds).order('order', { ascending: true }),
+        supabase.from('gantt_tasks').select('id, card_id, title, order').in('card_id', limitedCardIds).order('order', { ascending: true }),
         supabase.from('profiles').select('*').in('id', allUserIds),
         supabase.from('likes').select('card_id').in('card_id', limitedCardIds),
         supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', limitedCardIds),
@@ -127,6 +132,13 @@ export default function ProfilePage() {
         const arr = stepsByCard.get(s.card_id) ?? []
         arr.push({ id: s.id, order: s.order, title: s.title, content: s.content, media_url: s.media_url })
         stepsByCard.set(s.card_id, arr)
+      })
+
+      const ganttByCard = new Map<string, GanttTaskPreview[]>()
+      ;(ganttRes.data ?? []).forEach((g: any) => {
+        const arr = ganttByCard.get(g.card_id) ?? []
+        arr.push({ id: g.id, title: g.title, order: g.order })
+        ganttByCard.set(g.card_id, arr)
       })
 
       const likesCountMap = new Map<string, number>()
@@ -156,11 +168,14 @@ export default function ProfilePage() {
       const toCardType = (c: any): CardType => ({
         id: c.id,
         title: c.title,
+        slug: c.slug,
         description: c.description,
         category: c.category,
         is_pinned: c.is_pinned ?? false,
+        card_type: c.card_type ?? 'list',
         user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: 'Unknown' },
         steps: stepsByCard.get(c.id) ?? [],
+        gantt_tasks: ganttByCard.get(c.id) ?? [],
         likesCount: likesCountMap.get(c.id) ?? 0,
         isLiked: userLikedSet.has(c.id),
         isFavorite: userFavSet.has(c.id),
@@ -189,11 +204,12 @@ export default function ProfilePage() {
 
           // Загружаем профили владельцев, шаги и социальные данные для shared карточек
           const sharedOwnerIds = Array.from(new Set(sharedCards.map((c: any) => c.user_id)));
-          const [sharedProfilesRes, sharedStepsRes, sharedLikesRes, sharedUserLikesRes, sharedUserFavsRes, sharedRatingsRes, sharedCommentsRes] = await Promise.all([
+          const [sharedProfilesRes, sharedStepsRes, sharedGanttRes, sharedLikesRes, sharedUserLikesRes, sharedUserFavsRes, sharedRatingsRes, sharedCommentsRes] = await Promise.all([
             sharedOwnerIds.length > 0
               ? supabase.from('profiles').select('*').in('id', sharedOwnerIds)
               : Promise.resolve({ data: [] }),
             supabase.from('steps').select('*').in('card_id', limitedSharedCardIds).order('order', { ascending: true }),
+            supabase.from('gantt_tasks').select('id, card_id, title, order').in('card_id', limitedSharedCardIds).order('order', { ascending: true }),
             supabase.from('likes').select('card_id').in('card_id', limitedSharedCardIds),
             supabase.from('likes').select('card_id').eq('user_id', userId).in('card_id', limitedSharedCardIds),
             supabase.from('favorites').select('roadmap_id').eq('user_id', userId).in('roadmap_id', limitedSharedCardIds),
@@ -211,6 +227,13 @@ export default function ProfilePage() {
             const arr = sharedStepsByCard.get(s.card_id) ?? [];
             arr.push({ id: s.id, order: s.order, title: s.title, content: s.content, media_url: s.media_url });
             sharedStepsByCard.set(s.card_id, arr);
+          });
+
+          const sharedGanttByCard = new Map<string, GanttTaskPreview[]>();
+          (sharedGanttRes.data ?? []).forEach((g: any) => {
+            const arr = sharedGanttByCard.get(g.card_id) ?? [];
+            arr.push({ id: g.id, title: g.title, order: g.order });
+            sharedGanttByCard.set(g.card_id, arr);
           });
 
           const sharedLikesCountMap = new Map<string, number>();
@@ -239,11 +262,14 @@ export default function ProfilePage() {
           const toSharedCardType = (c: any): CardType => ({
             id: c.id,
             title: c.title,
+            slug: c.slug,
             description: c.description,
             category: c.category,
             is_pinned: c.is_pinned ?? false,
+            card_type: c.card_type ?? 'list',
             user: profilesMap.get(c.user_id) ?? { id: c.user_id, username: 'Unknown' },
             steps: sharedStepsByCard.get(c.id) ?? [],
+            gantt_tasks: sharedGanttByCard.get(c.id) ?? [],
             likesCount: sharedLikesCountMap.get(c.id) ?? 0,
             isLiked: sharedUserLikedSet.has(c.id),
             isFavorite: sharedUserFavSet.has(c.id),

@@ -11,14 +11,18 @@ import { useTranslation } from 'react-i18next';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
+type GanttTaskPreview = { id: string; title?: string | null; order?: number | null };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
   id: string;
   title: string;
+  slug?: string;
   description?: string;
   category?: string;
+  card_type?: "list" | "gantt" | null;
   user: Profile;
   steps?: Step[];
+  gantt_tasks?: GanttTaskPreview[];
   likesCount: number;
   isLiked: boolean;
   isFavorite: boolean;
@@ -48,7 +52,7 @@ export default function FavoritesPage() {
       // Один join-запрос: favorites + cards (roadmap) + steps + profiles
       const { data: favData, error: favError } = await supabase
         .from("favorites")
-        .select("roadmap_id, roadmap:roadmap_id(*, steps(*))")
+        .select("roadmap_id, roadmap:roadmap_id(*, steps(*), gantt_tasks(id,title,order))")
         .eq("user_id", user.id);
 
       if (favError) {
@@ -89,12 +93,17 @@ export default function FavoritesPage() {
       const merged: CardType[] = rawRoadmaps.map((r: any) => ({
         id: r.id,
         title: r.title,
+        slug: r.slug,
         description: r.description,
         category: r.category,
+        card_type: r.card_type ?? "list",
         user: profilesMap.get(r.user_id) || { id: r.user_id, username: "Unknown" },
         steps: ((r.steps || []) as Step[])
           .slice()
           .sort((a, b) => a.order - b.order),
+        gantt_tasks: ((r.gantt_tasks || []) as GanttTaskPreview[])
+          .slice()
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
         likesCount: likesCountMap.get(r.id) || 0,
         isLiked: userLikedSet.has(r.id),
         isFavorite: true,

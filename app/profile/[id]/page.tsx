@@ -57,7 +57,7 @@ export default async function PublicProfilePage({
     supabaseServer.from("profiles").select("id, username, avatar, bio").eq("id", id).maybeSingle(),
     supabaseServer
       .from("cards")
-      .select("*, steps(*)")
+      .select("*, steps(*), gantt_tasks(id,title,order)")
       .eq("user_id", id)
       .order("created_at", { ascending: false }),
     supabaseAuth.auth.getUser(),
@@ -91,7 +91,7 @@ export default async function PublicProfilePage({
       if (cardIds.length > 0) {
         const { data: shared = [] } = await supabaseAuth
           .from("cards")
-          .select("*, steps(*)")
+          .select("*, steps(*), gantt_tasks(id,title,order)")
           .in("id", cardIds);
         sharedCards = shared ?? [];
       }

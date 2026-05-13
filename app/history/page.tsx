@@ -11,14 +11,18 @@ import { useTranslation } from "react-i18next";
 import { useHasMounted } from "@/hooks/useHasMounted";
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
+type GanttTaskPreview = { id: string; title?: string | null; order?: number | null };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
   id: string;
   title: string;
+  slug?: string;
   description?: string;
   category?: string;
+  card_type?: "list" | "gantt" | null;
   user: Profile;
   steps?: Step[];
+  gantt_tasks?: GanttTaskPreview[];
   likesCount: number;
   isLiked: boolean;
   isFavorite: boolean;
@@ -70,7 +74,7 @@ export default function HistoryPage() {
 
       // Шаг 2: параллельно тянем карточки + лайки + избранное
       const [cardsRes, likesRes, userLikesRes, favRes] = await Promise.all([
-        supabase.from("cards").select("*, steps(*), profiles:user_id(*)").in("id", cardIds),
+        supabase.from("cards").select("*, steps(*), gantt_tasks(id,title,order), profiles:user_id(*)").in("id", cardIds),
         supabase.from("likes").select("card_id").in("card_id", cardIds),
         supabase.from("likes").select("card_id").eq("user_id", user.id).in("card_id", cardIds),
         supabase.from("favorites").select("roadmap_id").eq("user_id", user.id).in("roadmap_id", cardIds),
@@ -106,13 +110,18 @@ export default function HistoryPage() {
         .map((r: any) => ({
           id: r.id,
           title: r.title,
+          slug: r.slug,
           description: r.description,
           category: r.category,
+          card_type: r.card_type ?? "list",
           user: (() => {
             const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
             return p ? { id: p.id, username: p.username, avatar: p.avatar } : profilesMap.get(r.user_id) || { id: r.user_id, username: "Unknown" };
           })(),
           steps: ((r.steps || []) as Step[]).slice().sort((a: any, b: any) => a.order - b.order),
+          gantt_tasks: ((r.gantt_tasks || []) as GanttTaskPreview[])
+            .slice()
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
           likesCount: likesCountMap.get(r.id) || 0,
           isLiked: userLikedSet.has(r.id),
           isFavorite: favSet.has(r.id),

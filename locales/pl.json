@@ -157,7 +157,9 @@
     "editCard": "Edytuj",
     "cardNotFound": "Karta o tym ID nie została znaleziona.",
     "loadError": "Błąd podczas ładowania karty",
-    "rate": "Oceń"
+    "rate": "Oceń",
+    "stepsPreviewEmpty": "Brak kroków",
+    "moreStepsShort": "+ jeszcze {{count}}"
   },
   "comments": {
     "title": "Komentarze",
@@ -238,7 +240,9 @@
     "invalidCredentials": "Nieprawidłowy e-mail lub hasło.",
     "signingIn": "Logowanie...",
     "registering": "Rejestracja...",
-    "username": "Nazwa użytkownika"
+    "username": "Nazwa użytkownika",
+    "showPassword": "Pokaż hasło",
+    "hidePassword": "Ukryj hasło"
   },
   "notifications": {
     "title": "Powiadomienia",

@@ -23,6 +23,7 @@ interface HtmlToImageOptions {
 }
 
 type Step = { id: string; order: number; title: string; content?: string; media_url?: string };
+type GanttTaskPreview = { id: string; title?: string | null; order?: number | null };
 type Profile = { id: string; username: string; avatar?: string };
 type CardType = {
   id: string;
@@ -32,6 +33,8 @@ type CardType = {
   description?: string;
   user: Profile;
   steps?: Step[];
+  card_type?: "list" | "gantt" | null;
+  gantt_tasks?: GanttTaskPreview[];
   is_private?: boolean;
 };
 
@@ -188,6 +191,23 @@ export default function Card({
 
   const cardLink = card.slug || card.id;
 
+  const isGantt = card.card_type === "gantt";
+  const ganttSorted = [...(card.gantt_tasks ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const stepsSorted = [...(card.steps ?? [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const previewItems = isGantt
+    ? ganttSorted.map((task, idx) => ({
+        id: task.id,
+        order: task.order != null && task.order > 0 ? task.order : idx + 1,
+        title: (task.title ?? "").trim() || t("gantt.untitledStep"),
+      }))
+    : stepsSorted.map((step, idx) => ({
+        id: step.id,
+        order: step.order && step.order > 0 ? step.order : idx + 1,
+        title: step.title,
+      }));
+  const previewCount = previewItems.length;
+  const moreCount = Math.max(0, previewCount - 1);
+
   return (
     <article
       ref={cardRef}
@@ -237,25 +257,24 @@ export default function Card({
           {card.description || '\u00a0'}
         </div>
       </div>
-      {/* Блок шага */}
+      {/* Блок шага / задачи Gantt */}
       <div className="flex flex-col gap-1">
         <ol className="text-xs">
-          {(card.steps && card.steps.length > 0)
-            ? card.steps.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).slice(0, 1).map((step, idx) => (
-                <li key={step.id} className="flex gap-2 items-center">
-                  <div className="min-w-5.5 flex-none rounded bg-slate-100 dark:bg-white/5 px-1 text-center font-medium text-slate-600 dark:text-slate-300">
-                    {step.order && step.order > 0 ? step.order : idx + 1}
-                  </div>
-                  <div className="font-medium text-slate-700 dark:text-slate-200 line-clamp-2">{step.title}</div>
-                </li>
-              ))
-            : <li className="text-xs text-slate-400 dark:text-slate-500">Нет шагов</li>
-          }
+          {previewCount > 0 ? (
+            previewItems.slice(0, 1).map((row) => (
+              <li key={row.id} className="flex items-center gap-2">
+                <div className="min-w-5.5 flex-none rounded bg-slate-100 px-1 text-center font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
+                  {row.order}
+                </div>
+                <div className="line-clamp-2 font-medium text-slate-700 dark:text-slate-200">{row.title}</div>
+              </li>
+            ))
+          ) : (
+            <li className="text-xs text-slate-400 dark:text-slate-500">{t("card.stepsPreviewEmpty")}</li>
+          )}
         </ol>
-        {card.steps && card.steps.length > 1 && (
-          <div className="text-xs text-slate-400 dark:text-slate-500 pl-1">
-            + еще {card.steps.length - 1} шаг(ов)
-          </div>
+        {moreCount > 0 && (
+          <div className="pl-1 text-xs text-slate-400 dark:text-slate-500">{t("card.moreStepsShort", { count: moreCount })}</div>
         )}
       </div>
       {/* Нижняя панель */}

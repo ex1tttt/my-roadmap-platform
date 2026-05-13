@@ -155,7 +155,9 @@
     "editCard": "Edit",
     "cardNotFound": "Card with this ID not found.",
     "loadError": "Error loading card",
-    "rate": "Rate"
+    "rate": "Rate",
+    "stepsPreviewEmpty": "No steps",
+    "moreStepsShort": "+ {{count}} more"
   },
   "comments": {
     "title": "Comments",
@@ -234,7 +236,9 @@
     "invalidCredentials": "Invalid email or password.",
     "signingIn": "Signing in...",
     "registering": "Registering...",
-    "username": "Username"
+    "username": "Username",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "notifications": {
     "title": "Notifications",
