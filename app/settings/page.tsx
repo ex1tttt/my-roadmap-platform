@@ -420,8 +420,6 @@ export default function SettingsPage() {
       // 3. Вызываем серверный API-роут, передаём userId в теле
       const res = await fetch("/api/delete-account", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Ошибка сервера");
