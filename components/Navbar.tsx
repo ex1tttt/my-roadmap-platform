@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useHasMounted } from '@/hooks/useHasMounted'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import { Map, Plus, LogIn, UserPlus, LogOut, User, Rss, Clock, Settings, Sun, Moon, ChevronDown, TrendingUp, Heart, Bookmark, Trophy, Headphones, Flag, ArrowRightLeft } from 'lucide-react'
@@ -27,6 +27,7 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const mounted = useHasMounted()
   const router = useRouter()
+  const pathname = usePathname()
   const { t, i18n } = useTranslation()
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -149,15 +150,30 @@ export default function Navbar() {
                 <span className="hidden sm:inline">{mounted ? t('nav.feed') : ''}</span>
               </Link>
 
-              {/* Кнопка Создать */}
-              <Link
-                href="/create"
-                suppressHydrationWarning
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-2 sm:px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">{mounted ? t('nav.create') : ''}</span>
-              </Link>
+              {/* Кнопка Создать: на /create тот же URL не перезагружает страницу — шлём событие сброса */}
+              {pathname === "/create" ? (
+                <button
+                  type="button"
+                  suppressHydrationWarning
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-2 sm:px-3 py-1.5 rounded-lg transition-colors"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent("roadmap:create-flow-restart"))
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{mounted ? t("nav.create") : ""}</span>
+                </button>
+              ) : (
+                <Link
+                  href="/create"
+                  suppressHydrationWarning
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-2 sm:px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{mounted ? t("nav.create") : ""}</span>
+                </Link>
+              )}
 
               {/* Dropdown с именем пользователя */}
               <div className="relative" ref={dropdownRef}>

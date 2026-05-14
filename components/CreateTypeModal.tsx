@@ -22,7 +22,7 @@ export default function CreateTypeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 min-h-screen">
+    <div className="fixed inset-x-0 bottom-0 top-16 z-40 flex items-center justify-center bg-black/50 p-4 min-h-[calc(100dvh-4rem)]">
       <div className="w-full max-w-md rounded-lg shadow-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-white/10 p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

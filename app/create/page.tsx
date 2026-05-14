@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { categories } from "@/constants/categories";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -251,6 +251,24 @@ export default function CreatePage() {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  /** Повторный клик «Создать» в шапке на той же странице /create */
+  useEffect(() => {
+    function onRestart() {
+      setCreateType(null);
+      setTitle("");
+      setDescription("");
+      setCategory("");
+      setSteps([{ id: uid(), title: "", content: "", link: "", media_urls: [], duration_minutes: undefined }]);
+      setResources([]);
+      setIsPrivate(false);
+      setToast(null);
+      setSaving(false);
+      setUploadingStepId(null);
+    }
+    window.addEventListener("roadmap:create-flow-restart", onRestart);
+    return () => window.removeEventListener("roadmap:create-flow-restart", onRestart);
+  }, []);
 
   function handleDragEnd(event: any) {
     const { active, over } = event;
