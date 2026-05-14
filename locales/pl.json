@@ -242,7 +242,12 @@
     "registering": "Rejestracja...",
     "username": "Nazwa użytkownika",
     "showPassword": "Pokaż hasło",
-    "hidePassword": "Ukryj hasło"
+    "hidePassword": "Ukryj hasło",
+    "checkEmailTitle": "Potwierdź adres e-mail",
+    "checkEmailBody": "Wysłaliśmy link aktywacyjny na {{email}}. Otwórz go, aby aktywować konto, a następnie zaloguj się.",
+    "checkEmailSpamHint": "Jeśli nie widzisz wiadomości, sprawdź folder Spam lub Oferty.",
+    "goToLogin": "Przejdź do logowania",
+    "callbackError": "Link logowania jest nieprawidłowy lub wygasł. Spróbuj zalogować się ponownie lub poproś o nowy e-mail."
   },
   "notifications": {
     "title": "Powiadomienia",

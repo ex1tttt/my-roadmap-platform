@@ -86,6 +86,13 @@ export default function LoginForm() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "auth_callback") {
+      setError(t("auth.callbackError"));
+    }
+  }, [searchParams, t]);
+
   // Автоматический вход если был передан пароль
   useEffect(() => {
     if (autoLoginAttempted && email && password && !loading) {

@@ -1,7 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { verifyRecaptchaToken, isValidScore } from "@/lib/recaptcha";
+import { verifyRecaptchaToken } from "@/lib/recaptcha";
 import { NextRequest, NextResponse } from "next/server";
+
+function siteOrigin(req: NextRequest): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") || "http";
+  if (host) return `${proto}://${host}`;
+  return new URL(req.url).origin;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,10 +70,16 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Регистрация через Supabase
+    const emailRedirectTo = `${siteOrigin(req)}/auth/callback`;
+
+    // Регистрация через Supabase (при включённом «Confirm email» сессия будет null до клика по ссылке)
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo,
+        data: { username },
+      },
     });
 
     if (error) {
@@ -72,24 +88,63 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = data?.user?.id;
-    if (userId) {
-      // Создаём профиль
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({ id: userId, username });
+    const needsEmailConfirmation = !data.session && !!data.user;
 
-      if (profileError) {
-        console.error("[REGISTER] Profile insert error:", profileError);
-        return NextResponse.json(
-          { error: "Ошибка при создании профиля" },
-          { status: 500 }
+    if (userId) {
+      if (data.session) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .upsert({ id: userId, username }, { onConflict: "id" });
+
+        if (profileError) {
+          console.error("[REGISTER] Profile upsert error:", profileError);
+          return NextResponse.json(
+            { error: "Ошибка при создании профиля" },
+            { status: 500 }
+          );
+        }
+      } else {
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!serviceKey) {
+          console.error(
+            "[REGISTER] SUPABASE_SERVICE_ROLE_KEY is not set (required when session is empty, e.g. email confirmation enabled)"
+          );
+          return NextResponse.json(
+            {
+              error:
+                "Регистрация с подтверждением email: на сервере нужен SUPABASE_SERVICE_ROLE_KEY. Обратитесь к администратору.",
+            },
+            { status: 503 }
+          );
+        }
+
+        const admin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          serviceKey
         );
+
+        const { error: profileError } = await admin
+          .from("profiles")
+          .upsert({ id: userId, username }, { onConflict: "id" });
+
+        if (profileError) {
+          console.error("[REGISTER] Profile upsert error:", profileError);
+          return NextResponse.json(
+            { error: "Ошибка при создании профиля" },
+            { status: 500 }
+          );
+        }
       }
     }
 
-    console.log('[REGISTER] Successful registration for:', email);
+    console.log('[REGISTER] Successful registration for:', email, { needsEmailConfirmation });
     return NextResponse.json(
-      { success: true, user: data.user },
+      {
+        success: true,
+        user: data.user,
+        needsEmailConfirmation,
+        email: data.user?.email ?? email,
+      },
       { status: 200 }
     );
   } catch (error: any) {
