@@ -2,6 +2,51 @@
 // Версия кэша — меняй при обновлении ассетов
 const CACHE_VERSION = 'v1'
 
+const MAX_PUSH_URL_LEN = 2048
+
+/** Только путь на этом сайте (без javascript:, //, внешних https). */
+function safeNavigateUrl(raw) {
+  if (typeof raw !== 'string') return '/'
+  const s = raw.trim().slice(0, MAX_PUSH_URL_LEN)
+  if (!s || !s.startsWith('/') || s.startsWith('//') || s.includes('://')) return '/'
+  if (/[\u0000-\u001F\u007F]/.test(s)) return '/'
+  try {
+    const u = new URL(s, 'https://placeholder.invalid')
+    if (u.origin !== 'https://placeholder.invalid') return '/'
+    return u.pathname + u.search + u.hash
+  } catch {
+    return '/'
+  }
+}
+
+/**
+ * icon / badge / image: относительный путь или https с этого origin / Supabase storage.
+ * (Дублирует часть правил API — на случай старых/подменённых payload.)
+ */
+function safeAssetUrl(raw) {
+  if (typeof raw !== 'string') return null
+  const s = raw.trim().slice(0, MAX_PUSH_URL_LEN)
+  if (!s || /[\u0000-\u001F\u007F]/.test(s)) return null
+  if (s.startsWith('/') && !s.startsWith('//') && !s.includes('://')) {
+    try {
+      const u = new URL(s, 'https://placeholder.invalid')
+      if (u.origin !== 'https://placeholder.invalid') return null
+      return u.pathname + u.search + u.hash
+    } catch {
+      return null
+    }
+  }
+  try {
+    const u = new URL(s)
+    if (u.protocol !== 'https:') return null
+    if (u.origin === self.location.origin) return u.href
+    if (/\.supabase\.co$/i.test(u.hostname)) return u.href
+    return null
+  } catch {
+    return null
+  }
+}
+
 // ── Установка ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -42,6 +87,14 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  data.url = safeNavigateUrl(data.url)
+  const iconSafe = safeAssetUrl(data.icon)
+  const badgeSafe = safeAssetUrl(data.badge)
+  const imageSafe = safeAssetUrl(data.image)
+  data.icon = iconSafe || '/icon-192.png'
+  data.badge = badgeSafe || '/badge-72.png'
+  if (!imageSafe) delete data.image
+
   const options = {
     body: data.body,
     icon: data.icon,
@@ -50,6 +103,7 @@ self.addEventListener('push', (event) => {
     vibrate: [100, 50, 100],
     requireInteraction: false,
   }
+  if (imageSafe) options.image = imageSafe
 
   event.waitUntil(
     self.registration.showNotification(data.title, options)
@@ -60,7 +114,8 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
-  const targetUrl = event.notification.data?.url ?? '/'
+  const pathOnly = safeNavigateUrl(event.notification.data?.url)
+  const targetUrl = new URL(pathOnly, self.location.origin).href
 
   event.waitUntil(
     self.clients

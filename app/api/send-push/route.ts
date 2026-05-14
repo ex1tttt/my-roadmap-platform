@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
+import {
+  getPushImageAllowedHosts,
+  sanitizePushAssetUrl,
+  sanitizePushNavigatePath,
+} from '@/lib/push-notification-urls'
 
 export const runtime = 'nodejs'
 
@@ -29,6 +34,18 @@ export async function POST(req: NextRequest) {
 
     const body_json = await req.json()
     const { title, body, url, actor_id, notificationType } = body_json
+
+    const allowedImageHosts = getPushImageAllowedHosts()
+    const safeUrl = sanitizePushNavigatePath(url, '/')
+    const payloadData: Record<string, string> = {
+      title: typeof title === 'string' ? title.slice(0, 300) : String(title ?? '').slice(0, 300),
+      body: typeof body === 'string' ? body.slice(0, 2000) : '',
+      url: safeUrl,
+    }
+    for (const key of ['icon', 'badge', 'image'] as const) {
+      const safe = sanitizePushAssetUrl(body_json[key], allowedImageHosts)
+      if (safe) payloadData[key] = safe
+    }
 
     // Поддерживаем как одиночный userId, так и массив userIds
     const rawIds = body_json.userIds ?? (body_json.userId ? [body_json.userId] : null)
@@ -77,7 +94,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ sent: 0 })
     }
 
-    const payload = JSON.stringify({ title, body: body ?? '', url: url ?? '/' })
+    const payload = JSON.stringify(payloadData)
 
     const results = await Promise.allSettled(
       subs.map((sub) =>
