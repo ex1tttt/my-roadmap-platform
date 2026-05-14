@@ -31,11 +31,12 @@ type AppComment = {
   isDisliked: boolean
 }
 
-function ActionBar({ comment, currentUserId, onReaction, onReplyClick }: {
+function ActionBar({ comment, currentUserId, onReaction, onReplyClick, allowReply = true }: {
   comment: AppComment;
   currentUserId: string | null;
   onReaction: (id: string, type: 'like' | 'dislike') => void;
   onReplyClick: (id: string) => void;
+  allowReply?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -59,7 +60,7 @@ function ActionBar({ comment, currentUserId, onReaction, onReplyClick }: {
         {comment.dislikesCount > 0 && <span>{comment.dislikesCount}</span>}
       </button>
       {/* Ответить */}
-      {currentUserId && (
+      {currentUserId && allowReply && (
         <button
           onClick={() => onReplyClick(comment.id)}
           className="font-semibold transition-colors hover:text-blue-500"
@@ -160,6 +161,13 @@ function RootCommentRow(props: RootCommentRowProps) {
           currentUserId={rest.currentUserId}
           onReaction={rest.onReaction}
           onReplyClick={rest.onReplyClick}
+          allowReply={
+            !(
+              rest.currentUserId &&
+              rest.cardOwnerId &&
+              rest.currentUserId === rest.cardOwnerId
+            )
+          }
         />
 
         {/* Форма ответа */}
@@ -171,6 +179,13 @@ function RootCommentRow(props: RootCommentRowProps) {
             onReplyTextChange={rest.onReplyTextChange}
             onReplySubmit={rest.onReplySubmit}
             onReplyCancel={rest.onReplyCancel}
+            isCardOwner={
+              !!(
+                rest.currentUserId &&
+                rest.cardOwnerId &&
+                rest.currentUserId === rest.cardOwnerId
+              )
+            }
           />
         )}
 
@@ -434,6 +449,7 @@ function ReplyForm({
   onReplyTextChange,
   onReplySubmit,
   onReplyCancel,
+  isCardOwner,
 }: {
   replyText: string
   replySending: boolean
@@ -441,18 +457,23 @@ function ReplyForm({
   onReplyTextChange: (t: string) => void
   onReplySubmit: (id: string) => void
   onReplyCancel: () => void
+  isCardOwner: boolean
 }) {
   const { t } = useTranslation()
+  const blocked = isCardOwner
   return (
     <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-50 dark:bg-slate-900/60 p-3">
       <MentionTextarea
         autoFocus
         value={replyText}
         onChange={onReplyTextChange}
-        placeholder={t('comments.replyPlaceholder')}
+        placeholder={blocked ? t("comments.ownerCannotComment") : t("comments.replyPlaceholder")}
         rows={2}
-        className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
-        onEnterSubmit={() => { if (replyText.trim() && !replySending) onReplySubmit(parentId); }}
+        disabled={blocked || replySending}
+        className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-60"
+        onEnterSubmit={() => {
+          if (!blocked && replyText.trim() && !replySending) onReplySubmit(parentId)
+        }}
       />
       <div className="mt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/5 pt-2">
         <button
@@ -462,7 +483,7 @@ function ReplyForm({
           {t('comments.cancel')}
         </button>
         <button
-          disabled={!replyText.trim() || replySending}
+          disabled={blocked || !replyText.trim() || replySending}
           onClick={() => onReplySubmit(parentId)}
           className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -525,6 +546,13 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
           currentUserId={rest.currentUserId}
           onReaction={rest.onReaction}
           onReplyClick={rest.onReplyClick}
+          allowReply={
+            !(
+              rest.currentUserId &&
+              rest.cardOwnerId &&
+              rest.currentUserId === rest.cardOwnerId
+            )
+          }
         />
 
         {/* Форма ответа */}
@@ -536,6 +564,13 @@ function ReplyRow({ comment, ...rest }: CommentRowProps) {
             onReplyTextChange={rest.onReplyTextChange}
             onReplySubmit={rest.onReplySubmit}
             onReplyCancel={rest.onReplyCancel}
+            isCardOwner={
+              !!(
+                rest.currentUserId &&
+                rest.cardOwnerId &&
+                rest.currentUserId === rest.cardOwnerId
+              )
+            }
           />
         )}
       </div>
@@ -777,6 +812,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed || !currentUserId || sending) return
+    if (cardOwnerId && currentUserId === cardOwnerId) {
+      toast.error(t("comments.ownerCannotComment"))
+      return
+    }
 
     setSending(true)
     setText('')
@@ -891,6 +930,10 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
   async function handleReplySubmit(parentId: string) {
     const trimmed = replyText.trim()
     if (!trimmed || !currentUserId || replySending) return
+    if (cardOwnerId && currentUserId === cardOwnerId) {
+      toast.error(t("comments.ownerCannotComment"))
+      return
+    }
     setReplySending(true)
     // Запоминаем автора родителя до отправки
     const parentComment = flat.find((c) => c.id === parentId)
@@ -1156,6 +1199,8 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     // onPin не нужен для ReplyRow и не должен попадать в RootCommentRow через spread
   }
 
+  const isViewerCardOwner = !!(currentUserId && cardOwnerId && currentUserId === cardOwnerId)
+
   if (!mounted) return null
 
   return (
@@ -1177,16 +1222,24 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             innerRef={textareaRef}
             value={text}
             onChange={setText}
-            placeholder={currentUserId ? t('comments.placeholder') : t('comments.loginToComment')}
-            disabled={!currentUserId || sending}
+            placeholder={
+              isViewerCardOwner
+                ? t("comments.ownerCannotComment")
+                : currentUserId
+                  ? t("comments.placeholder")
+                  : t("comments.loginToComment")
+            }
+            disabled={!currentUserId || sending || isViewerCardOwner}
             rows={3}
             className="w-full resize-none bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            onEnterSubmit={() => { if (currentUserId && text.trim() && !sending) handleSubmit({ preventDefault: () => {} } as React.FormEvent); }}
+            onEnterSubmit={() => {
+              if (currentUserId && !isViewerCardOwner && text.trim() && !sending) handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+            }}
           />
           <div className="mt-3 flex justify-end border-t border-slate-200 dark:border-white/5 pt-3">
             <button
               type="submit"
-              disabled={!currentUserId || !text.trim() || sending}
+              disabled={!currentUserId || !text.trim() || sending || isViewerCardOwner}
               className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Send className="h-4 w-4" />

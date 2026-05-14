@@ -158,7 +158,9 @@
     "rate": "Оценить",
     "ganttTitle": "Gantt",
     "stepsPreviewEmpty": "Нет шагов",
-    "moreStepsShort": "+ ещё {{count}}"
+    "moreStepsShort": "+ ещё {{count}}",
+    "ownerCannotLike": "Нельзя лайкать свою карточку",
+    "ownerCannotFavorite": "Нельзя добавлять в избранное свою карточку"
   },
   "comments": {
     "title": "Комментарии",
@@ -185,7 +187,8 @@
     "pinnedByAuthor": "Закреплено автором",
     "pinned": "Комментарий закреплён",
     "unpinned": "Комментарий откреплён",
-    "pinError": "Ошибка закрепления"
+    "pinError": "Ошибка закрепления",
+    "ownerCannotComment": "Автор не может комментировать свою карточку"
   },
   "favorites": {
     "title": "Избранное",
@@ -454,7 +457,8 @@
     "count_many": "оценок",
     "unrate": "Отменить оценку",
     "hint": "Оцените эту дорожную карту",
-    "hintUnrate": "Ваша оценка: {{value}}. Нажмите ту же звезду или ×, чтобы убрать"
+    "hintUnrate": "Ваша оценка: {{value}}. Нажмите ту же звезду или ×, чтобы убрать",
+    "ownerCannotRate": "Нельзя оценивать свою карточку"
   },
   "share": {
     "label": "Поделиться",

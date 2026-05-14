@@ -11,6 +11,8 @@ type Props = {
   roadmapId: string
   initialAverageRate?: number
   compact?: boolean
+  /** Если передан и совпадает с текущим пользователем — только просмотр среднего, без оценки */
+  ownerUserId?: string | null
 }
 
 // Стабильный clipId передаётся снаружи (uid + индекс звезды)
@@ -48,7 +50,7 @@ function StarIcon({ fill, clipId, transitioning }: { fill: number; clipId: strin
   )
 }
 
-export default function StarRating({ roadmapId, initialAverageRate = 0, compact = false }: Props) {
+export default function StarRating({ roadmapId, initialAverageRate = 0, compact = false, ownerUserId = null }: Props) {
   const uid = useId() // стабильный уникальный префикс для clipPath id
   const router = useRouter()
   const { t } = useTranslation()
@@ -137,8 +139,10 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
     return () => { supabase.removeChannel(channel) }
   }, [roadmapId])
 
+  const isCardOwner = !!(ownerUserId && currentUserId && ownerUserId === currentUserId)
+
   async function handleRate(value: number) {
-    if (!currentUserId || submitting) return
+    if (!currentUserId || submitting || isCardOwner) return
 
     // Повторный клик на ту же звезду — отмена оценки
     if (value === userRating) {
@@ -186,7 +190,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
   }
 
   async function handleUnrate() {
-    if (!currentUserId || submitting) return
+    if (!currentUserId || submitting || isCardOwner) return
 
     const prevRating = userRating
     const prevAverage = average
@@ -248,7 +252,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
   // Что рисуем в звёздах: hover → оценка пользователя → среднее
   const displayValue = hovered ?? (userRating !== null ? userRating : average)
   // Во время удаления оценки кнопки всё ещё недоступны, но остальные элементы показываются
-  const isInteractive = !!currentUserId && !submitting
+  const isInteractive = !!currentUserId && !submitting && !isCardOwner
 
   function declCount(n: number) {
     return t('rating.count', { count: n })
@@ -264,10 +268,13 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
             <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
             <span className="text-slate-400">·</span>
             <span>{totalCount} {declCount(totalCount)}</span>
-            {userRating !== null && (
+            {userRating !== null && !isCardOwner && (
               <span className="text-slate-500">({t('rating.yourRating', { value: userRating })})</span>
             )}
           </>
+        )}
+        {totalCount === 0 && isCardOwner && (
+          <span className="text-slate-500 dark:text-slate-400">{t("rating.ownerCannotRate")}</span>
         )}
       </div>
     )
@@ -295,7 +302,7 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
                 type="button"
                 disabled={!isInteractive}
                 onClick={() => handleRate(star)}
-                onMouseEnter={() => currentUserId && setHovered(star)}
+                onMouseEnter={() => isInteractive && setHovered(star)}
                 className={`rounded p-0.5 transition-all ${
                   isInteractive
                     ? 'cursor-pointer hover:scale-110 active:scale-95'
@@ -330,12 +337,20 @@ export default function StarRating({ roadmapId, initialAverageRate = 0, compact 
             <span className="font-semibold text-amber-400">{average.toFixed(1)}</span>
             {' · '}
             {totalCount} {declCount(totalCount)}
-            {userRating !== null && (
+            {userRating !== null && !isCardOwner && (
               <span className="ml-1 text-slate-400">({t('rating.yourRating', { value: userRating })})</span>
             )}
           </>
         ) : (
-          <span>{isMounted ? (currentUserId ? t('rating.beFirst') : t('rating.loginToRate')) : ''}</span>
+          <span>
+            {isMounted
+              ? isCardOwner
+                ? t("rating.ownerCannotRate")
+                : currentUserId
+                  ? t("rating.beFirst")
+                  : t("rating.loginToRate")
+              : ""}
+          </span>
         )}
         {submitting && (
           <span className={`inline-block h-2.5 w-2.5 rounded-full border-2 border-current border-t-transparent animate-spin ${

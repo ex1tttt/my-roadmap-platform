@@ -80,7 +80,7 @@ export default function Card({
   async function handleLike(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!userId || likeLoading) return;
+    if (!userId || likeLoading || isOwnCard) return;
 
     const wasLiked = isLiked;
     const newLiked = !wasLiked;
@@ -159,7 +159,7 @@ export default function Card({
   async function handleFavorite(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!userId || favLoading) return;
+    if (!userId || favLoading || isOwnCard) return;
 
     const wasFavorite = isFavorite;
     const newFavorite = !wasFavorite;
@@ -188,6 +188,8 @@ export default function Card({
   }
 
   if (!mounted) return null;
+
+  const isOwnCard = !!(userId && card.user?.id && userId === card.user.id);
 
   const cardLink = card.slug || card.id;
 
@@ -283,10 +285,18 @@ export default function Card({
         <div className="flex items-center gap-2">
           <button
             onClick={handleLike}
-            disabled={!userId || likeLoading}
-            title={userId ? (isLiked ? t('comments.dislike') : t('comments.like')) : t('auth.login')}
-            className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
-              isLiked ? 'text-red-400' : 'text-slate-400 dark:text-slate-500 hover:text-red-400'
+            disabled={!userId || likeLoading || isOwnCard}
+            title={
+              isOwnCard
+                ? t("card.ownerCannotLike")
+                : userId
+                  ? isLiked
+                    ? t("comments.dislike")
+                    : t("comments.like")
+                  : t("auth.login")
+            }
+            className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40 ${
+              isLiked ? "text-red-400" : "text-slate-400 dark:text-slate-500 hover:text-red-400"
             }`}
           >
             <Heart
@@ -310,10 +320,18 @@ export default function Card({
         <div className="flex items-center gap-2">
           <button
             onClick={handleFavorite}
-            disabled={!userId || favLoading}
-            title={userId ? (isFavorite ? t('card.removeFromFavorites') : t('card.addToFavorites')) : t('auth.login')}
-            className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-default disabled:opacity-40 ${
-              isFavorite ? 'text-yellow-400' : 'text-slate-400 dark:text-slate-500 hover:text-yellow-400'
+            disabled={!userId || favLoading || isOwnCard}
+            title={
+              isOwnCard
+                ? t("card.ownerCannotFavorite")
+                : userId
+                  ? isFavorite
+                    ? t("card.removeFromFavorites")
+                    : t("card.addToFavorites")
+                  : t("auth.login")
+            }
+            className={`flex items-center gap-1 text-xs transition-all duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40 ${
+              isFavorite ? "text-yellow-400" : "text-slate-400 dark:text-slate-500 hover:text-yellow-400"
             }`}
           >
             <Bookmark

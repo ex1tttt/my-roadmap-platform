@@ -95,6 +95,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: cardRow } = await supabaseAdmin
+      .from("cards")
+      .select("user_id")
+      .eq("id", roadmap_id)
+      .maybeSingle()
+    if (cardRow?.user_id === user.id) {
+      return NextResponse.json(
+        { error: "Card author cannot comment on their own card" },
+        { status: 403 }
+      )
+    }
+
     console.log('[COMMENTS] Creating comment for user:', user.id)
 
     // Вставляем комментарий

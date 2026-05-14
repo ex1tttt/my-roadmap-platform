@@ -151,7 +151,7 @@ export default function CardClient({ id }: { id: string }) {
           <aside className="space-y-8">
             <div className="p-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">{t('card.rating')}</h3>
-              <StarRating roadmapId={card.id} />
+              <StarRating roadmapId={card.id} ownerUserId={card.user_id} />
             </div>
             {card.resources && card.resources.length > 0 && (
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-5">
@@ -187,7 +187,7 @@ export default function CardClient({ id }: { id: string }) {
             )}
             <span className="font-medium">{authorName}</span>
           </Link>
-          <StarRating roadmapId={card.id} compact />
+          <StarRating roadmapId={card.id} compact ownerUserId={card.user_id} />
           {/* Счётчик просмотров */}
           <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
             <Eye className="h-3.5 w-3.5" />

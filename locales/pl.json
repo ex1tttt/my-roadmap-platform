@@ -159,7 +159,9 @@
     "loadError": "Błąd podczas ładowania karty",
     "rate": "Oceń",
     "stepsPreviewEmpty": "Brak kroków",
-    "moreStepsShort": "+ jeszcze {{count}}"
+    "moreStepsShort": "+ jeszcze {{count}}",
+    "ownerCannotLike": "Nie możesz polubić własnej karty",
+    "ownerCannotFavorite": "Nie możesz dodać do ulubionych własnej karty"
   },
   "comments": {
     "title": "Komentarze",
@@ -186,7 +188,8 @@
     "pinnedByAuthor": "Przypięte przez autora",
     "pinned": "Komentarz przypięty",
     "unpinned": "Komentarz odpięty",
-    "pinError": "Błąd przypinania"
+    "pinError": "Błąd przypinania",
+    "ownerCannotComment": "Autor nie może komentować własnej karty"
   },
   "favorites": {
     "title": "Ulubione",
@@ -454,7 +457,8 @@
     "count_other": "ocen",
     "unrate": "Usuń ocenę",
     "hint": "Oceń tę mapę drogową",
-    "hintUnrate": "Twoja ocena: {{value}}. Kliknij tę samą gwiazdek lub ×, aby usunąć"
+    "hintUnrate": "Twoja ocena: {{value}}. Kliknij tę samą gwiazdek lub ×, aby usunąć",
+    "ownerCannotRate": "Nie możesz ocenić własnej karty"
   },
   "share": {
     "label": "Udostępnij",

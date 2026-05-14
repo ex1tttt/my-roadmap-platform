@@ -157,7 +157,9 @@
     "loadError": "Error loading card",
     "rate": "Rate",
     "stepsPreviewEmpty": "No steps",
-    "moreStepsShort": "+ {{count}} more"
+    "moreStepsShort": "+ {{count}} more",
+    "ownerCannotLike": "You can't like your own roadmap",
+    "ownerCannotFavorite": "You can't bookmark your own roadmap"
   },
   "comments": {
     "title": "Comments",
@@ -184,7 +186,8 @@
     "pinnedByAuthor": "Pinned by author",
     "pinned": "Comment pinned",
     "unpinned": "Comment unpinned",
-    "pinError": "Error pinning comment"
+    "pinError": "Error pinning comment",
+    "ownerCannotComment": "You can't comment on your own roadmap"
   },
   "favorites": {
     "title": "Favorites",
@@ -449,7 +452,8 @@
     "count_other": "ratings",
     "unrate": "Remove rating",
     "hint": "Rate this roadmap",
-    "hintUnrate": "Your rating: {{value}}. Click same star or × to remove"
+    "hintUnrate": "Your rating: {{value}}. Click same star or × to remove",
+    "ownerCannotRate": "You can't rate your own roadmap"
   },
   "share": {
     "label": "Share",

@@ -397,7 +397,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 </Link>
                 <div className="flex items-center">
                   <ClientOnly fallback={<div className="h-5 w-20" />}>
-                    <StarRating roadmapId={data.id} compact />
+                    <StarRating roadmapId={data.id} compact ownerUserId={data.user_id} />
                   </ClientOnly>
                 </div>
               </div>
@@ -412,7 +412,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 <T k="card.rate" />
               </p>
               <ClientOnly fallback={<div className="h-6 w-24" />}>
-                <StarRating roadmapId={data.id} />
+                <StarRating roadmapId={data.id} ownerUserId={data.user_id} />
               </ClientOnly>
             </div>
           </div>
