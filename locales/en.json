@@ -292,7 +292,12 @@
     "confirmPasswordLabel": "Repeat password",
     "confirmPasswordPlaceholder": "Enter password again",
     "passwordsMismatch": "Passwords do not match.",
-    "loginCta": "Sign in!"
+    "loginCta": "Sign in!",
+    "emailInvalidFormat": "Enter a valid email address.",
+    "emailDisposable": "Temporary email addresses are not allowed.",
+    "emailNoMx": "This email domain cannot receive mail. Check the address or use another email.",
+    "emailAlreadyRegistered": "An account with this email already exists. Sign in or reset your password.",
+    "emailChecking": "Checking email…"
   },
   "notifications": {
     "title": "Notifications",

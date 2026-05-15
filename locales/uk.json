@@ -296,7 +296,12 @@
     "confirmPasswordLabel": "Повторіть пароль",
     "confirmPasswordPlaceholder": "Введіть пароль ще раз",
     "passwordsMismatch": "Паролі не збігаються.",
-    "loginCta": "Увійти!"
+    "loginCta": "Увійти!",
+    "emailInvalidFormat": "Введіть коректну адресу email.",
+    "emailDisposable": "Тимчасові поштові скриньки не підтримуються.",
+    "emailNoMx": "Домен цієї пошти не приймає листи. Перевірте адресу або вкажіть іншу.",
+    "emailAlreadyRegistered": "Обліковий запис з цією поштою вже існує. Увійдіть або відновіть пароль.",
+    "emailChecking": "Перевірка пошти…"
   },
   "notifications": {
     "title": "Сповіщення",

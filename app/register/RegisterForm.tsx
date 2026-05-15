@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,12 @@ import GoogleIcon from "@/components/auth/GoogleIcon";
 import { AUTH_INPUT_CLASS, AUTH_MODAL_CLASS } from "@/components/auth/authStyles";
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{1,32}$/;
+
+type EmailIssue =
+  | "invalid_format"
+  | "disposable"
+  | "no_mx"
+  | "already_registered";
 
 export default function RegisterForm() {
   const { t } = useTranslation();
@@ -24,7 +30,72 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailIssue, setEmailIssue] = useState<EmailIssue | null>(null);
+  const [emailChecking, setEmailChecking] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const emailCheckSeq = useRef(0);
+
+  const issueMessage = useCallback(
+    (issue: EmailIssue) => {
+      switch (issue) {
+        case "invalid_format":
+          return t("auth.emailInvalidFormat");
+        case "disposable":
+          return t("auth.emailDisposable");
+        case "no_mx":
+          return t("auth.emailNoMx");
+        case "already_registered":
+          return t("auth.emailAlreadyRegistered");
+        default:
+          return t("auth.emailInvalidFormat");
+      }
+    },
+    [t]
+  );
+
+  const validateEmail = useCallback(
+    async (raw: string): Promise<{ ok: true } | { ok: false; issue: EmailIssue }> => {
+      const trimmed = raw.trim();
+      if (!trimmed) {
+        setEmailIssue("invalid_format");
+        return { ok: false, issue: "invalid_format" };
+      }
+
+      const seq = ++emailCheckSeq.current;
+      setEmailChecking(true);
+      setEmailIssue(null);
+
+      try {
+        const res = await fetch("/api/auth/validate-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: trimmed }),
+        });
+        const data = await res.json();
+        if (seq !== emailCheckSeq.current) {
+          return { ok: false, issue: "invalid_format" };
+        }
+
+        if (!res.ok || data.valid === false) {
+          const issue = (data.issue as EmailIssue) || "invalid_format";
+          setEmailIssue(issue);
+          return { ok: false, issue };
+        }
+        setEmailIssue(null);
+        return { ok: true };
+      } catch {
+        if (seq === emailCheckSeq.current) {
+          setEmailIssue("invalid_format");
+        }
+        return { ok: false, issue: "invalid_format" };
+      } finally {
+        if (seq === emailCheckSeq.current) {
+          setEmailChecking(false);
+        }
+      }
+    },
+    []
+  );
 
   async function handleGoogleSignup() {
     setGoogleLoading(true);
@@ -59,6 +130,13 @@ export default function RegisterForm() {
         return;
       }
 
+      const emailCheck = await validateEmail(email);
+      if (!emailCheck.ok) {
+        setError(issueMessage(emailCheck.issue));
+        setLoading(false);
+        return;
+      }
+
       const recaptchaToken = await getToken("register");
       if (!recaptchaToken) {
         setError(t("auth.securityCheckFailed"));
@@ -75,7 +153,15 @@ export default function RegisterForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || t("auth.registerError", { message: "" }));
+        if (data.issue) {
+          const issue = data.issue as EmailIssue;
+          setEmailIssue(issue);
+          setError(issueMessage(issue));
+        } else {
+          setError(data.error || t("auth.registerError", { message: "" }));
+        }
+        setLoading(false);
+        return;
       }
 
       if (data.needsEmailConfirmation) {
@@ -125,12 +211,24 @@ export default function RegisterForm() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailIssue(null);
+                    setError(null);
+                  }}
+                  onBlur={() => void validateEmail(email)}
                   required
                   autoComplete="email"
                   placeholder={t("auth.emailPlaceholder")}
                   className={AUTH_INPUT_CLASS}
+                  aria-invalid={emailIssue != null}
                 />
+                {emailChecking && (
+                  <p className="mt-1 text-xs text-slate-500">{t("auth.emailChecking")}</p>
+                )}
+                {emailIssue && !emailChecking && (
+                  <p className="mt-1 text-xs text-red-400">{issueMessage(emailIssue)}</p>
+                )}
               </label>
 
               <label className="block">

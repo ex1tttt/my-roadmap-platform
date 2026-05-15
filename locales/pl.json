@@ -314,7 +314,12 @@
     "confirmPasswordLabel": "Powtórz hasło",
     "confirmPasswordPlaceholder": "Wpisz hasło jeszcze raz",
     "passwordsMismatch": "Hasła nie są takie same.",
-    "loginCta": "To się zaloguj!"
+    "loginCta": "To się zaloguj!",
+    "emailInvalidFormat": "Wprowadź poprawny adres e-mail.",
+    "emailDisposable": "Tymczasowe adresy e-mail nie są dozwolone.",
+    "emailNoMx": "Ta domena nie obsługuje poczty. Sprawdź adres lub użyj innego e-maila.",
+    "emailAlreadyRegistered": "Konto z tym adresem już istnieje. Zaloguj się lub zresetuj hasło.",
+    "emailChecking": "Sprawdzanie e-maila…"
   },
   "notifications": {
     "title": "Powiadomienia",

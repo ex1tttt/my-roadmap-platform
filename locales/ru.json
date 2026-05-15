@@ -295,7 +295,12 @@
     "confirmPasswordLabel": "Повторите пароль",
     "confirmPasswordPlaceholder": "Введите пароль ещё раз",
     "passwordsMismatch": "Пароли не совпадают.",
-    "loginCta": "Войти!"
+    "loginCta": "Войти!",
+    "emailInvalidFormat": "Введите корректный адрес email.",
+    "emailDisposable": "Временные почтовые ящики не поддерживаются.",
+    "emailNoMx": "Домен этой почты не принимает письма. Проверьте адрес или укажите другой.",
+    "emailAlreadyRegistered": "Аккаунт с этой почтой уже зарегистрирован. Войдите или восстановите пароль.",
+    "emailChecking": "Проверка почты…"
   },
   "notifications": {
     "title": "Уведомления",

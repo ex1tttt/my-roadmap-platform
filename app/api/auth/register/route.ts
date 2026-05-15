@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { verifyRecaptchaToken } from "@/lib/recaptcha";
+import { validateRegistrationEmail } from "@/lib/validate-registration-email";
 import { NextRequest, NextResponse } from "next/server";
 
 function siteOrigin(req: NextRequest): string {
@@ -15,7 +16,32 @@ function siteOrigin(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, username, recaptchaToken } = await req.json();
+    const { email: emailRaw, password, username, recaptchaToken } = await req.json();
+
+    const emailValidation = await validateRegistrationEmail(
+      typeof emailRaw === "string" ? emailRaw : ""
+    );
+    if (!emailValidation.ok) {
+      return NextResponse.json(
+        { error: "Invalid email", issue: emailValidation.issue },
+        { status: 400 }
+      );
+    }
+    const email = emailValidation.email;
+
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceKey) {
+      const adminCheck = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
+      const { data: exists, error: rpcError } = await adminCheck.rpc("auth_email_exists", {
+        check_email: email,
+      });
+      if (!rpcError && exists === true) {
+        return NextResponse.json(
+          { error: "Email already registered", issue: "already_registered" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Проверка reCAPTCHA токена
     if (!recaptchaToken) {
@@ -83,12 +109,27 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      console.error('[REGISTER] Supabase signup error:', error);
+      console.error("[REGISTER] Supabase signup error:", error);
+      const msg = error.message?.toLowerCase() ?? "";
+      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        return NextResponse.json(
+          { error: error.message, issue: "already_registered" },
+          { status: 400 }
+        );
+      }
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     const userId = data?.user?.id;
     const needsEmailConfirmation = !data.session && !!data.user;
+
+    // При включённом Confirm email Supabase не всегда отдаёт ошибку для дубликата
+    if (needsEmailConfirmation && data.user?.identities?.length === 0) {
+      return NextResponse.json(
+        { error: "Email already registered", issue: "already_registered" },
+        { status: 400 }
+      );
+    }
 
     if (userId) {
       if (data.session) {
