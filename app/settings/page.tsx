@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import UserAvatar from "@/components/UserAvatar";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
+import AvatarCropModal from "@/components/AvatarCropModal";
 import { Home, Save, Camera, Lock, Eye, EyeOff, Trash2, Loader2, Globe, ChevronDown, Bell, BellOff, ShieldBan, User, ChevronRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -93,7 +94,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
   const [language, setLanguage] = useState<SupportedLanguage>("en");
 
   // Смена пароля
@@ -250,10 +251,11 @@ export default function SettingsPage() {
       return;
     }
 
-    setSelectedFile(file);
-    // Сбрасываем после захвата файла, чтобы можно было повторно выбрать тот же файл
+    setAvatarCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
     e.target.value = "";
-    handleAvatarUpload(file);
   }
 
   // Загрузка аватара в бакет avatars
@@ -265,7 +267,7 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error(t('settings.loginRequired'));
-        return;
+        throw new Error("not authenticated");
       }
 
       const filePath = `${user.id}/${Date.now()}.png`;
@@ -297,6 +299,7 @@ export default function SettingsPage() {
     } catch (err: any) {
       console.error("Avatar upload error:", err);
       toast.error(t('settings.avatarUploadError', { message: err?.message ?? t('common.error') }));
+      throw err;
     } finally {
       setUploading(false);
     }
@@ -942,6 +945,19 @@ export default function SettingsPage() {
           </main>
         </div>
       </div>
+
+      {avatarCropSrc ? (
+        <AvatarCropModal
+          imageSrc={avatarCropSrc}
+          onClose={() => {
+            URL.revokeObjectURL(avatarCropSrc);
+            setAvatarCropSrc(null);
+          }}
+          onApply={async (file) => {
+            await handleAvatarUpload(file);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
