@@ -239,7 +239,7 @@ export default function RegisterForm() {
                   maxLength={32}
                   required
                   autoComplete="username"
-                  placeholder={t("profile.usernamePlaceholder")}
+                  placeholder={t("settings.usernamePlaceholder")}
                   className={AUTH_INPUT_CLASS}
                 />
               </label>
