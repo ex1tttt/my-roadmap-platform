@@ -4,6 +4,7 @@ import React, { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDeferredT } from "@/hooks/useDeferredT";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { supabase } from "@/lib/supabase";
 import LoginBackdrop from "@/components/auth/LoginBackdrop";
@@ -20,6 +21,7 @@ type EmailIssue =
 
 export default function RegisterForm() {
   const { t } = useTranslation();
+  const dt = useDeferredT();
   const { getToken } = useRecaptcha();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -119,7 +121,7 @@ export default function RegisterForm() {
 
     try {
       if (!USERNAME_RE.test(username.trim())) {
-        setError(t("profile.usernameInvalid"));
+        setError(t("settings.usernameInvalid"));
         setLoading(false);
         return;
       }
@@ -184,18 +186,18 @@ export default function RegisterForm() {
 
       <div className="relative z-10 flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-10 sm:px-6">
         <div className={AUTH_MODAL_CLASS}>
-          <h1 className="mb-8 text-center text-3xl font-bold tracking-tight text-white">{t("auth.register")}</h1>
+          <h1 className="mb-8 text-center text-3xl font-bold tracking-tight text-white">{dt("auth.register")}</h1>
 
           {pendingEmail ? (
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
-              <p className="text-sm font-medium text-emerald-100">{t("auth.checkEmailTitle")}</p>
-              <p className="text-sm text-emerald-100/90">{t("auth.checkEmailBody", { email: pendingEmail })}</p>
-              <p className="text-xs text-emerald-200/80">{t("auth.checkEmailSpamHint")}</p>
+              <p className="text-sm font-medium text-emerald-100">{dt("auth.checkEmailTitle")}</p>
+              <p className="text-sm text-emerald-100/90">{dt("auth.checkEmailBody", { email: pendingEmail })}</p>
+              <p className="text-xs text-emerald-200/80">{dt("auth.checkEmailSpamHint")}</p>
               <Link
                 href="/login"
                 className="mt-2 inline-block text-sm font-medium text-blue-400 hover:text-blue-300"
               >
-                {t("auth.goToLogin")}
+                {dt("auth.goToLogin")}
               </Link>
             </div>
           ) : (
@@ -207,7 +209,7 @@ export default function RegisterForm() {
               )}
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-slate-300">{t("auth.emailAddress")}</span>
+                <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.emailAddress")}</span>
                 <input
                   type="email"
                   value={email}
@@ -219,12 +221,12 @@ export default function RegisterForm() {
                   onBlur={() => void validateEmail(email)}
                   required
                   autoComplete="email"
-                  placeholder={t("auth.emailPlaceholder")}
+                  placeholder={dt("auth.emailPlaceholder")}
                   className={AUTH_INPUT_CLASS}
                   aria-invalid={emailIssue != null}
                 />
                 {emailChecking && (
-                  <p className="mt-1 text-xs text-slate-500">{t("auth.emailChecking")}</p>
+                  <p className="mt-1 text-xs text-slate-500">{dt("auth.emailChecking")}</p>
                 )}
                 {emailIssue && !emailChecking && (
                   <p className="mt-1 text-xs text-red-400">{issueMessage(emailIssue)}</p>
@@ -232,20 +234,20 @@ export default function RegisterForm() {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-slate-300">{t("auth.username")}</span>
+                <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.username")}</span>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
                   maxLength={32}
                   required
                   autoComplete="username"
-                  placeholder={t("settings.usernamePlaceholder")}
+                  placeholder={dt("settings.usernamePlaceholder")}
                   className={AUTH_INPUT_CLASS}
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-slate-300">{t("auth.password")}</span>
+                <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.password")}</span>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -253,14 +255,14 @@ export default function RegisterForm() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="new-password"
-                    placeholder={t("auth.passwordPlaceholder")}
+                    placeholder={dt("auth.passwordPlaceholder")}
                     className={`${AUTH_INPUT_CLASS} pr-11`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((p) => !p)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-200"
-                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    aria-label={showPassword ? dt("auth.hidePassword") : dt("auth.showPassword")}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -268,7 +270,7 @@ export default function RegisterForm() {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-slate-300">{t("auth.confirmPasswordLabel")}</span>
+                <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.confirmPasswordLabel")}</span>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
@@ -276,14 +278,14 @@ export default function RegisterForm() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     autoComplete="new-password"
-                    placeholder={t("auth.confirmPasswordPlaceholder")}
+                    placeholder={dt("auth.confirmPasswordPlaceholder")}
                     className={`${AUTH_INPUT_CLASS} pr-11`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((p) => !p)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-200"
-                    aria-label={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    aria-label={showConfirmPassword ? dt("auth.hidePassword") : dt("auth.showPassword")}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -297,7 +299,7 @@ export default function RegisterForm() {
                 className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-500/70 bg-transparent py-2.5 text-sm font-medium text-white transition hover:border-slate-400 hover:bg-white/5 disabled:opacity-60"
               >
                 <GoogleIcon className="h-5 w-5 shrink-0" />
-                {googleLoading ? t("auth.registering") : t("auth.loginWithGoogle")}
+                {googleLoading ? dt("auth.registering") : dt("auth.loginWithGoogle")}
               </button>
 
               <button
@@ -305,13 +307,13 @@ export default function RegisterForm() {
                 disabled={loading}
                 className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500 disabled:opacity-60"
               >
-                {loading ? t("auth.registering") : t("auth.register")}
+                {loading ? dt("auth.registering") : dt("auth.register")}
               </button>
 
               <p className="pt-2 text-center text-sm text-slate-400">
-                {t("auth.hasAccount")}{" "}
+                {dt("auth.hasAccount")}{" "}
                 <Link href="/login" className="font-medium text-blue-400 hover:text-blue-300">
-                  {t("auth.loginCta")}
+                  {dt("auth.loginCta")}
                 </Link>
               </p>
             </form>
