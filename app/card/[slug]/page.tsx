@@ -483,16 +483,14 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               </span>
             </h2>
             <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/3">
-              <div className="scrollbar-subtle max-h-[min(70vh,36rem)] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain p-4 md:p-5">
-                <ClientOnly>
-                  <GanttCardView
-                    cardId={data.id}
-                    cardSlug={data.slug}
-                    tasks={ganttTasks}
-                    canConfigure={isOwner || collaboratorRole === "editor"}
-                  />
-                </ClientOnly>
-              </div>
+              <ClientOnly>
+                <GanttCardView
+                  cardId={data.id}
+                  cardSlug={data.slug}
+                  tasks={ganttTasks}
+                  canConfigure={isOwner || collaboratorRole === "editor"}
+                />
+              </ClientOnly>
             </div>
           </div>
         ) : null}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -28,6 +28,109 @@ type Props = {
   tasks: GanttTaskRow[];
   canConfigure: boolean;
 };
+
+function canStartGanttPan(target: EventTarget | null, viewport: HTMLElement): boolean {
+  if (!(target instanceof Element)) return false;
+  if (!viewport.contains(target)) return false;
+  if (target.closest("button, a, input, select, textarea, [role='menu'], [role='menuitem']")) return false;
+  if (target.closest("[data-gantt-card-root], [data-gantt-menu]")) return false;
+  return true;
+}
+
+/** Прокрутка диаграммы перетаскиванием по пустому месту (как лист на столе). */
+function GanttPanViewport({ children, panHint }: { children: ReactNode; panHint: string }) {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const panState = useRef({
+    active: false,
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+  });
+  const [isPanning, setIsPanning] = useState(false);
+
+  const endPan = useCallback((pointerId?: number) => {
+    const el = viewportRef.current;
+    const st = panState.current;
+    if (!st.active) return;
+    if (el && pointerId !== undefined && st.pointerId === pointerId) {
+      try {
+        el.releasePointerCapture(pointerId);
+      } catch {
+        /* already released */
+      }
+    }
+    st.active = false;
+    st.pointerId = -1;
+    setIsPanning(false);
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const el = viewportRef.current;
+    if (!el || !canStartGanttPan(e.target, el)) return;
+
+    panState.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollLeft: el.scrollLeft,
+      scrollTop: el.scrollTop,
+    };
+    setIsPanning(true);
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const st = panState.current;
+    if (!st.active || e.pointerId !== st.pointerId) return;
+    const el = viewportRef.current;
+    if (!el) return;
+    el.scrollLeft = st.scrollLeft - (e.clientX - st.startX);
+    el.scrollTop = st.scrollTop - (e.clientY - st.startY);
+    e.preventDefault();
+  }, []);
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerId === panState.current.pointerId) endPan(e.pointerId);
+    },
+    [endPan]
+  );
+
+  const onPointerCancel = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerId === panState.current.pointerId) endPan(e.pointerId);
+    },
+    [endPan]
+  );
+
+  useEffect(() => {
+    const onBlur = () => endPan();
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  }, [endPan]);
+
+  return (
+    <div
+      ref={viewportRef}
+      data-gantt-pan-viewport
+      title={panHint}
+      className={`gantt-pan-viewport scrollbar-subtle max-h-[min(70vh,36rem)] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain p-4 md:p-5 ${
+        isPanning ? "gantt-pan-active" : ""
+      }`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+    >
+      {children}
+    </div>
+  );
+}
 
 /** Вертикальная «шина» только между мостом и центрами карточек детей — без хвостов на всю высоту строк с поддеревьями. При одном ребёнке вертикаль не рисуется. */
 function GanttBusConnectorPanel({
@@ -382,10 +485,12 @@ export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }:
   const roots = (childrenMap.get(null) ?? []) as GanttTaskRow[];
 
   return (
-    <div className="flex w-max min-w-full shrink-0 flex-col gap-8 pb-1 md:gap-10">
+    <GanttPanViewport panHint={t("gantt.panHint")}>
+      <div className="flex w-max min-w-full shrink-0 flex-col gap-8 pb-1 md:gap-10">
       {roots.map((r) => (
         <div key={r.id}>{renderNode(r)}</div>
       ))}
-    </div>
+      </div>
+    </GanttPanViewport>
   );
 }

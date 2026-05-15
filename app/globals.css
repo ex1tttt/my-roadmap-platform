@@ -132,6 +132,24 @@ body {
   );
 }
 
+.gantt-pan-viewport {
+  cursor: grab;
+}
+
+.gantt-pan-viewport.gantt-pan-active {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.gantt-pan-viewport [data-gantt-card-root],
+.gantt-pan-viewport button {
+  cursor: auto;
+}
+
+.gantt-pan-viewport a {
+  cursor: pointer;
+}
+
 /* ─── Sonner Toaster Styling ─── */
 .sonner-toast {
   margin-bottom: 20px;

@@ -815,7 +815,8 @@
     "parentStepHint": "Two parallel branches from the same step: pick the same parent for both rows. Change the parent here if a step ended up in the wrong place.",
     "firstStepNoParent": "This is the beginning of the diagram — it has no parent. After you add more steps, you can choose a parent for each one.",
     "moreThanTwoBranches": "This step has more than two direct branches; the diagram shows the first two side‑by‑side and the rest below. At most two branches per step are supported in the layout.",
-    "addBranchDisabledHint": "This step already has two branches. Remove or reattach one in the editor to add another."
+    "addBranchDisabledHint": "This step already has two branches. Remove or reattach one in the editor to add another.",
+    "panHint": "Drag on empty space to pan the diagram"
   },
   "meta": {
     "defaultTitle": "Roadmap Platform — Learn by Following Step-by-Step Guides",
