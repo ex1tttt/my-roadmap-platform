@@ -288,7 +288,11 @@
     "sendResetLink": "Send reset link",
     "sendingReset": "Sending…",
     "resetEmailSent": "We sent a password reset link to {{email}}.",
-    "securityCheckFailed": "Could not initialize security check. Refresh the page and try again."
+    "securityCheckFailed": "Could not initialize security check. Refresh the page and try again.",
+    "confirmPasswordLabel": "Repeat password",
+    "confirmPasswordPlaceholder": "Enter password again",
+    "passwordsMismatch": "Passwords do not match.",
+    "loginCta": "Sign in!"
   },
   "notifications": {
     "title": "Notifications",

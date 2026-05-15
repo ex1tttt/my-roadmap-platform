@@ -291,7 +291,11 @@
     "sendResetLink": "Отправить ссылку",
     "sendingReset": "Отправка…",
     "resetEmailSent": "Ссылка для сброса пароля отправлена на {{email}}.",
-    "securityCheckFailed": "Не удалось инициализировать проверку безопасности. Обновите страницу и попробуйте снова."
+    "securityCheckFailed": "Не удалось инициализировать проверку безопасности. Обновите страницу и попробуйте снова.",
+    "confirmPasswordLabel": "Повторите пароль",
+    "confirmPasswordPlaceholder": "Введите пароль ещё раз",
+    "passwordsMismatch": "Пароли не совпадают.",
+    "loginCta": "Войти!"
   },
   "notifications": {
     "title": "Уведомления",

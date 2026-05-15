@@ -310,7 +310,11 @@
     "sendResetLink": "Wyślij link",
     "sendingReset": "Wysyłanie…",
     "resetEmailSent": "Wysłaliśmy link resetujący na {{email}}.",
-    "securityCheckFailed": "Nie udało się uruchomić weryfikacji. Odśwież stronę i spróbuj ponownie."
+    "securityCheckFailed": "Nie udało się uruchomić weryfikacji. Odśwież stronę i spróbuj ponownie.",
+    "confirmPasswordLabel": "Powtórz hasło",
+    "confirmPasswordPlaceholder": "Wpisz hasło jeszcze raz",
+    "passwordsMismatch": "Hasła nie są takie same.",
+    "loginCta": "To się zaloguj!"
   },
   "notifications": {
     "title": "Powiadomienia",
