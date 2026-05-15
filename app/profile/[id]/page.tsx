@@ -6,6 +6,8 @@ import { Home } from "lucide-react";
 import ProfileTabsWrapper from "./ProfileTabsWrapper";
 import PublicProfileCards from "@/components/PublicProfileCards";
 import ProfileHeader from "@/components/ProfileHeader";
+import { ProfileBlocked, ProfileNotFound } from "@/components/ProfileStateMessage";
+import { getServerT } from "@/lib/i18n-server";
 
 const ADMIN_IDS = [
   'a48b5f93-2e98-48c8-98f1-860ca962f651', // tkachmaksim2007
@@ -19,16 +21,17 @@ const supabaseServer = createClient(
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const t = await getServerT();
   const { data } = await supabaseServer
     .from("profiles")
     .select("username, bio")
     .eq("id", id)
     .maybeSingle();
 
-  if (!data) return { title: "Профиль не найден" };
+  if (!data) return { title: t("profile.notFound") };
   return {
     title: `${data.username} | Roadmap Platform`,
-    description: data.bio ?? `Профиль пользователя ${data.username}`,
+    description: data.bio ?? t("profile.metaDescription", { username: data.username }),
   };
 }
 
@@ -184,33 +187,11 @@ export default async function PublicProfilePage({
   }
 
   if (!profile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
-        <div className="text-center">
-          <p className="text-lg text-slate-500 dark:text-slate-400">Пользователь не найден</p>
-          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:underline">
-            <Home className="h-3.5 w-3.5" />
-            На главную
-          </Link>
-        </div>
-      </div>
-    );
+    return <ProfileNotFound />;
   }
 
-  // Если владелец профиля заблокировал просматривающего
   if (isBlockedByOwner) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
-        <div className="text-center">
-          <p className="text-lg text-slate-500 dark:text-slate-400">Доступ ограничен</p>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Этот профиль недоступен.</p>
-          <Link href="/" className="mt-4 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:underline">
-            <Home className="h-3.5 w-3.5" />
-            На главную
-          </Link>
-        </div>
-      </div>
-    );
+    return <ProfileBlocked />;
   }
 
   return (

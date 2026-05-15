@@ -9,6 +9,7 @@ import ShareButton from './ShareButton';
 import UserAvatar from './UserAvatar';
 import CategoryBadge from './CategoryBadge';
 import { useTranslation } from 'react-i18next';
+import { pushLike } from '@/lib/push-notify';
 import { checkAndAwardBadges } from '@/lib/badges';
 
 interface HtmlToImageOptions {
@@ -102,6 +103,7 @@ export default function Card({
         // Уведомление создаётся DB-триггером handle_new_like автоматически
         if (card.user.id !== userId) {
           // Push-уведомление автору карточки
+          const push = pushLike(card.title, card.id)
           fetch('/api/send-push', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -109,9 +111,7 @@ export default function Card({
               userId: card.user.id,
               actor_id: userId,
               notificationType: 'like',
-              title: 'Новый лайк ❤️',
-              body: `Кто-то лайкнул вашу карточку «${card.title}»`,
-              url: `/card/${card.id}`,
+              ...push,
             }),
           }).catch(() => {})
         }

@@ -43,7 +43,7 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
                   await new Promise(res => setTimeout(res, 300));
                   await checkAndRevokeBadges(user.id);
                 }
-                toast.success('Карточка успешно удалена');
+                toast.success(t('delete.success'));
                 router.push("/");
                 router.refresh();
               } catch (err: any) {
@@ -55,7 +55,7 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
           <button
             className="px-3 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
             onClick={() => toast.dismiss(tId)}
-          >{t('common.cancel') || 'Отмена'}</button>
+          >{t('common.cancel')}</button>
         </div>
       </div>,
       { duration: 10000, id: 'delete-confirm', position: 'top-center', closeButton: false, style: { padding: '10px 14px', minWidth: '0', width: 'auto', maxWidth: '300px' } }
@@ -75,12 +75,12 @@ export default function DeleteButton({ cardId }: { cardId: string }) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
-          {mounted ? t('delete.deleting') : 'Deleting...'}
+          {t('delete.deleting')}
         </>
       ) : (
         <>
           <Trash2 className="h-4 w-4" />
-          {mounted ? t('delete.label') : 'Delete'}
+          {t('delete.label')}
         </>
       )}
     </button>

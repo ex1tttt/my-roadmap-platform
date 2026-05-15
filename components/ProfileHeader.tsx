@@ -9,6 +9,7 @@ import UserAvatar from '@/components/UserAvatar'
 import FollowListModal from '@/components/FollowListModal'
 import Toast from '@/components/Toast'
 import { useTranslation } from 'react-i18next'
+import { pushFollow } from '@/lib/push-notify'
 import { checkAndAwardBadges } from '@/lib/badges'
 import BlockButton from '@/components/BlockButton'
 
@@ -121,6 +122,7 @@ export default function ProfileHeader({
       if (!res.error) {
         checkAndAwardBadges(profile.id, 'follow_received').catch(() => {})
         // Push-уведомление владельцу профиля о новом подписчике
+        const push = pushFollow(currentUserId)
         fetch('/api/send-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -128,9 +130,7 @@ export default function ProfileHeader({
             userId: profile.id,
             actor_id: currentUserId,
             notificationType: 'follow',
-            title: '👤 Новый подписчик',
-            body: 'На вас подписался новый пользователь',
-            url: `/profile/${currentUserId}`,
+            ...push,
           }),
         }).catch(() => {})
       }

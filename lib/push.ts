@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import i18n from '@/lib/i18n'
 
 // ─── Конвертер VAPID public key ───────────────────────────────────────────────
 export function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
@@ -25,7 +26,7 @@ function waitForActivation(reg: ServiceWorkerRegistration): Promise<void> {
         resolve()
       } else if (sw.state === 'redundant') {
         sw.removeEventListener('statechange', onChange)
-        reject(new Error('Service Worker стал redundant — попробуйте обновить страницу.'))
+        reject(new Error(i18n.t('push.errors.swRedundant')))
       }
     }
     sw.addEventListener('statechange', onChange)
@@ -47,24 +48,24 @@ let _subscribing = false // глобальный флаг — защита от 
 
 export async function subscribeUser(userId: string): Promise<{ ok: boolean; error?: string }> {
   if (_subscribing) {
-    return { ok: false, error: 'Подписка уже выполняется, подождите.' }
+    return { ok: false, error: i18n.t('push.errors.alreadySubscribing') }
   }
   _subscribing = true
   try {
     // 1. Проверяем поддержку браузером
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return { ok: false, error: 'Push-уведомления не поддерживаются вашим браузером.' }
+      return { ok: false, error: i18n.t('push.errors.unsupported') }
     }
 
     // 2. Запрашиваем разрешение, если ещё не дано
     if (Notification.permission === 'denied') {
-      return { ok: false, error: 'Push-уведомления заблокированы в настройках браузера.' }
+      return { ok: false, error: i18n.t('push.errors.denied') }
     }
 
     if (Notification.permission === 'default') {
       const result = await Notification.requestPermission()
       if (result !== 'granted') {
-        return { ok: false, error: 'Вы отказали в разрешении на уведомления.' }
+        return { ok: false, error: i18n.t('push.errors.permissionDenied') }
       }
     }
 
@@ -97,7 +98,7 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
     // 4. Получаем VAPID public key
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
     if (!vapidPublicKey) {
-      return { ok: false, error: 'VAPID ключ не настроен. Добавьте NEXT_PUBLIC_VAPID_PUBLIC_KEY в .env.' }
+      return { ok: false, error: i18n.t('push.errors.vapidMissing') }
     }
     console.log('[push] vapidPublicKey length:', vapidPublicKey.length)
 
@@ -135,26 +136,13 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
       const err = subErr instanceof Error ? subErr : new Error(String(subErr))
       // Расшифровываем типичные причины
       if (err?.message === 'TimeoutError') {
-        return {
-          ok: false,
-          error:
-            'Push-сервер не отвечает (таймаут 10 сек). ' +
-            'Скорее всего fcm.googleapis.com заблокирован у вашего провайдера. ' +
-            'Попробуйте с VPN или Firefox.',
-        }
+        return { ok: false, error: i18n.t('push.errors.timeout') }
       }
       if (err?.name === 'AbortError') {
-        return {
-          ok: false,
-          error:
-            'Браузер не смог подключиться к Push-серверу Google (FCM). ' +
-            'Возможные причины: VPN/Firewall блокирует fcm.googleapis.com, ' +
-            'или откройте DevTools → Application → Service Workers → Unregister, ' +
-            'затем попробуйте снова.',
-        }
+        return { ok: false, error: i18n.t('push.errors.abort') }
       }
       if (err?.name === 'NotAllowedError') {
-        return { ok: false, error: 'Разрешение на уведомления было отозвано.' }
+        return { ok: false, error: i18n.t('push.errors.permissionRevoked') }
       }
       throw err
     }
@@ -185,7 +173,7 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
   } catch (err: Error | unknown) {
     const error = err instanceof Error ? err : new Error(String(err))
     console.error('[push] subscribeUser error:', error)
-    return { ok: false, error: error?.message ?? 'Неизвестная ошибка при подписке.' }
+    return { ok: false, error: error?.message ?? i18n.t('push.errors.subscribeUnknown') }
   } finally {
     _subscribing = false
   }
@@ -194,10 +182,10 @@ export async function subscribeUser(userId: string): Promise<{ ok: boolean; erro
 // ─── Отписка ──────────────────────────────────────────────────────────────────
 export async function unsubscribeUser(userId: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    if (!('serviceWorker' in navigator)) return { ok: false, error: 'Service Worker не поддерживается.' }
+    if (!('serviceWorker' in navigator)) return { ok: false, error: i18n.t('push.errors.swUnsupported') }
 
     const registration = await navigator.serviceWorker.getRegistration('/sw.js')
-    if (!registration) return { ok: false, error: 'Service Worker не зарегистрирован.' }
+    if (!registration) return { ok: false, error: i18n.t('push.errors.swNotRegistered') }
 
     const subscription = await registration.pushManager.getSubscription()
     if (subscription) {
@@ -215,7 +203,7 @@ export async function unsubscribeUser(userId: string): Promise<{ ok: boolean; er
   } catch (err: Error | unknown) {
     const error = err instanceof Error ? err : new Error(String(err))
     console.error('[push] unsubscribeUser error:', error)
-    return { ok: false, error: error?.message ?? 'Ошибка при отписке.' }
+    return { ok: false, error: error?.message ?? i18n.t('push.errors.unsubscribeFailed') }
   }
 }
 

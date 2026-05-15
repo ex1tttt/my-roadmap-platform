@@ -47,6 +47,25 @@ function safeAssetUrl(raw) {
   }
 }
 
+/**
+ * Запросы из контекста страницы под контролем SW должны уносить cookie-сессию.
+ * Если не перехватывать и не выставлять credentials: 'include', часть запросов
+ * уходит как omit / без cookies — API и RSC видят пользователя как гостя.
+ */
+self.addEventListener('fetch', (event) => {
+  const req = event.request
+  try {
+    const url = new URL(req.url)
+    if (!url.protocol.startsWith('http')) return
+    if (url.origin !== self.location.origin) return
+    if (req.credentials === 'include') return
+
+    event.respondWith(fetch(new Request(req, { credentials: 'include' })))
+  } catch (e) {
+    console.error('[SW] fetch handler:', e)
+  }
+})
+
 // ── Установка ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   self.skipWaiting()

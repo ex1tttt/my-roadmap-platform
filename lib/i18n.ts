@@ -57,6 +57,7 @@ export function detectLanguage(): SupportedLanguage {
 export function saveLanguage(lang: SupportedLanguage): void {
   if (typeof window !== "undefined") {
     localStorage.setItem(STORAGE_KEY, lang);
+    document.cookie = `${STORAGE_KEY}=${lang};path=/;max-age=31536000;SameSite=Lax`;
   }
 }
 

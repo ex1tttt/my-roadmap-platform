@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { checkAndAwardBadges } from '@/lib/badges'
+import { useTranslation } from 'react-i18next'
+import { pushLike } from '@/lib/push-notify'
 
 interface LikeButtonProps {
   cardId: string
 }
 
 export default function LikeButton({ cardId }: LikeButtonProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [liked, setLiked] = useState(false)
   const [count, setCount] = useState(0)
@@ -95,6 +98,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
           // Проверяем достижение «Сенсей»/«Популярный» для автора карточки
           await checkAndAwardBadges(card.user_id, 'like')
           // Push-уведомление автору карточки
+          const push = pushLike(card.title, cardId)
           fetch('/api/send-push', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -102,9 +106,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
               userId: card.user_id,
               actor_id: userId,
               notificationType: 'like',
-              title: 'Новый лайк ❤️',
-              body: `Кто-то лайкнул вашу карточку «${card.title}»`,
-              url: `/card/${cardId}`,
+              ...push,
             }),
           }).catch(() => {})
         }
@@ -123,7 +125,7 @@ export default function LikeButton({ cardId }: LikeButtonProps) {
   return (
     <button
       onClick={handleClick}
-      aria-label={liked ? 'Убрать лайк' : 'Поставить лайк'}
+      aria-label={liked ? t('card.unlike') : t('card.like')}
       className={`
         group flex items-center gap-1.5 px-3 py-1.5 rounded-full
         border transition-all duration-200 select-none

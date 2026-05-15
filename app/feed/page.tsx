@@ -9,6 +9,7 @@ import Card from "@/components/Card";
 import UserAvatar from "@/components/UserAvatar";
 import { CardSkeleton } from "@/components/ui/CardSkeleton";
 import { useTranslation } from "react-i18next";
+import { pushFollow } from "@/lib/push-notify";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Rss, Users, Check, Loader2 } from "lucide-react";
 
@@ -77,6 +78,7 @@ function MiniFollowButton({
 
       if (!followError) {
         // Push-уведомление о новом подписчике
+        const push = pushFollow(currentUserId);
         fetch("/api/send-push", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -84,9 +86,7 @@ function MiniFollowButton({
             userId: author.id,
             actor_id: currentUserId,
             notificationType: "follow",
-            title: "👤 Новый подписчик",
-            body: "На вас подписался новый пользователь",
-            url: `/profile/${currentUserId}`,
+            ...push,
           }),
         }).catch(() => {});
       }

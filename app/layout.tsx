@@ -20,8 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Roadmap Platform — Платформа для роста и обучения",
-  description: "Современная платформа для развития, обучения и достижения новых высот. Стройте свои дорожные карты, отслеживайте прогресс и достигайте целей вместе с нами!",
+  title: "Roadmap Platform — Learn by Following Step-by-Step Guides",
+  description:
+    "A modern platform for sharing step-by-step guides. Build roadmaps, track progress, and learn from the community.",
 };
 
 export default function RootLayout({

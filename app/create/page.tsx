@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { useTranslation } from "react-i18next";
+import { pushNewCard } from "@/lib/push-notify";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Lock, Globe, GripVertical } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -386,6 +387,7 @@ export default function CreatePage() {
           .filter((f: any) => f.notify_new_cards === true)
           .map((f: any) => f.follower_id);
         if (pushIds.length > 0) {
+          const push = pushNewCard(cardId, title);
           fetch('/api/send-push', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -393,9 +395,7 @@ export default function CreatePage() {
               userIds: pushIds,
               actor_id: user.id,
               notificationType: 'new_card',
-              title: '🗺️ Новая карточка',
-              body: `Опубликована карточка «${title}»`,
-              url: `/card/${cardId}`,
+              ...push,
             }),
           }).catch(() => {});
         }

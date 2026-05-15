@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { useTranslation } from "react-i18next";
+import { pushNewGantt } from "@/lib/push-notify";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { Lock, Globe, Trash2 } from "lucide-react";
 import Toast from "@/components/Toast";
@@ -133,7 +134,7 @@ export default function CreateGanttPage() {
       const recaptchaToken = await getRecaptchaToken("create");
       if (!recaptchaToken) {
         setToast({
-          message: "Не удалось инициализировать проверку безопасности",
+          message: t("auth.recaptchaFailed"),
           type: "error",
         });
         setSaving(false);
@@ -257,6 +258,7 @@ export default function CreateGanttPage() {
           .filter((f: any) => f.notify_new_cards === true)
           .map((f: any) => f.follower_id);
         if (pushIds.length > 0) {
+          const push = pushNewGantt(cardId, title);
           fetch("/api/send-push", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -264,9 +266,7 @@ export default function CreateGanttPage() {
               userIds: pushIds,
               actor_id: user.id,
               notificationType: "new_card",
-              title: "📊 Новая диаграмма Gantt",
-              body: `Опубликована диаграмма Gantt «${title}»`,
-              url: `/card/${cardId}`,
+              ...push,
             }),
           }).catch(() => {});
         }

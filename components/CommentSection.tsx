@@ -10,6 +10,13 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import Avatar from '@/components/UserAvatar';
 import { useTranslation } from 'react-i18next';
 import { checkAndAwardBadges } from '@/lib/badges';
+import {
+  pushComment,
+  pushCommentLike,
+  pushCommentReply,
+  pushMention,
+  notifySomeone,
+} from '@/lib/push-notify';
 
 // Тип комментария должен быть выше всех его использований
 type AppComment = {
@@ -828,7 +835,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       created_at: new Date().toISOString(),
       user_id: currentUserId,
       parent_id: null,
-      author: currentUserProfile ?? { username: 'Вы' },
+      author: currentUserProfile ?? { username: t('comments.you') },
       likesCount: 0,
       isLiked: false,
       dislikesCount: 0,
@@ -901,6 +908,11 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
           // Уведомление создаётся DB-триггером handle_new_comment автоматически
           if (cardData && cardData.user_id !== currentUserId && !(mentionedIds ?? []).includes(cardData.user_id)) {
             // Push
+            const push = pushComment(
+              cardData.title,
+              roadmapId,
+              currentUserProfile?.username
+            )
             fetch('/api/send-push', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -908,9 +920,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
                 userId: cardData.user_id,
                 actor_id: currentUserId,
                 notificationType: 'comment',
-                title: 'Новый комментарий 💬',
-                body: `${currentUserProfile?.username ?? 'Кто-то'} прокомментировал вашу карточку «${cardData.title}»`,
-                url: `/card/${roadmapId}`,
+                ...push,
               }),
             }).catch(() => {})
           }
@@ -921,7 +931,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       setTotalCount((prev) => prev - 1)
       setText(trimmed)
       console.error('[COMMENT] Error:', err)
-      toast.error(err.message || 'Не удалось отправить комментарий')
+      toast.error(err.message || t('comments.sendFailed'))
     } finally {
       setSending(false)
     }
@@ -997,6 +1007,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
       notifyMentions(trimmed, roadmapId, data.id).catch(e => console.error('[notifyMentions]', e))
       // Push-уведомление автору родительского комментария
       if (parentComment && parentComment.user_id !== currentUserId) {
+        const push = pushCommentReply(roadmapId, currentUserProfile?.username)
         fetch('/api/send-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1004,15 +1015,13 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
             userId: parentComment.user_id,
             actor_id: currentUserId,
             notificationType: 'comment',
-            title: 'Новый ответ на комментарий 💬',
-            body: `${currentUserProfile?.username ?? 'Кто-то'} ответил на ваш комментарий`,
-            url: `/card/${roadmapId}#comments`,
+            ...push,
           }),
         }).catch(() => {})
       }
     } catch (err: any) {
       console.error('[REPLY] Error:', err)
-      toast.error(err.message || 'Не удалось отправить ответ')
+      toast.error(err.message || t('comments.replyFailed'))
     } finally {
       setReplySending(false)
     }
@@ -1039,6 +1048,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
         // Push-уведомление автору комментария (не себе)
         if (current.user_id !== currentUserId) {
+          const push = pushCommentLike(roadmapId, currentUserProfile?.username)
           fetch('/api/send-push', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1046,9 +1056,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
               userId: current.user_id,
               actor_id: currentUserId,
               notificationType: 'comment_like',
-              title: 'Новый лайк 👍',
-              body: `${currentUserProfile?.username ?? 'Кто-то'} лайкнул ваш комментарий`,
-              url: `/card/${roadmapId}#comments`,
+              ...push,
             }),
           }).catch(() => {})
         }
@@ -1082,7 +1090,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
     const { data: cardData } = await supabase
       .from('cards').select('title').eq('id', cardId).maybeSingle()
     const cardTitle = cardData?.title ?? ''
-    const actorName = currentUserProfile?.username ?? 'Кто-то'
+    const actorName = notifySomeone(currentUserProfile?.username)
 
     // Вставляем DB-уведомления
     const { error: insertErr } = await supabase.from('notifications').insert(
@@ -1097,6 +1105,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
 
     // Push-уведомление каждому упомянутому (fire-and-forget)
     for (const p of toNotify as { id: string; username: string }[]) {
+      const push = pushMention(cardId, actorName, cardTitle)
       fetch('/api/send-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1104,11 +1113,7 @@ export default function CommentSection({ roadmapId }: { roadmapId: string }) {
           userId: p.id,
           actor_id: currentUserId,
           notificationType: 'mention',
-          title: `${actorName} упомянул вас 🔔`,
-          body: cardTitle
-            ? `В комментарии к «${cardTitle}»`
-            : 'В комментарии к карточке',
-          url: `/card/${cardId}#comments`,
+          ...push,
         }),
       }).catch(() => {})
     }

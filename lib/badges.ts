@@ -6,6 +6,13 @@
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
+async function toastBadgeAwarded(badgeId: string) {
+  if (typeof window === 'undefined') return
+  const { default: i18n } = await import('@/lib/i18n')
+  const name = i18n.t(`badges.${badgeId}.label`)
+  toast.success(i18n.t('badges.toastAwarded', { name }))
+}
+
 export type BadgeType = 'first_card' | 'like' | 'comment' | 'follow_received' | 'fan' | 'collector'
 
 /** Вставляет значок если ещё не выдан. Возвращает true если выдан впервые. */
@@ -42,11 +49,11 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
     if (error) { return }
     const n = count ?? 0
 
-    if (n >= 1 && await awardIfNew(userId, 'pioneer'))  toast.success('🏆 Значок «Первопроходец» получен!')
+    if (n >= 1 && await awardIfNew(userId, 'pioneer')) await toastBadgeAwarded('pioneer')
     if (n >= 5) {
-      if (await awardIfNew(userId, 'creator')) toast.success('🏆 Значок «Картограф» получен!')
+      if (await awardIfNew(userId, 'creator')) await toastBadgeAwarded('creator')
     }
-    if (n >= 10 && await awardIfNew(userId, 'explorer')) toast.success('🏆 Значок «Исследователь» получен!')
+    if (n >= 10 && await awardIfNew(userId, 'explorer')) await toastBadgeAwarded('explorer')
   }
 
   // ── like: sensei (100 лайков на картах владельца), popular (500) ─────────
@@ -69,8 +76,8 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
     if (likesErr) { return }
     const n = count ?? 0
 
-    if (n >= 100 && await awardIfNew(userId, 'sensei'))  toast.success('🏆 Значок «Сенсей» получен!')
-    if (n >= 500 && await awardIfNew(userId, 'popular')) toast.success('🏆 Значок «Популярный» получен!')
+    if (n >= 100 && await awardIfNew(userId, 'sensei')) await toastBadgeAwarded('sensei')
+    if (n >= 500 && await awardIfNew(userId, 'popular')) await toastBadgeAwarded('popular')
   }
 
   // ── comment: critic (50), wordsmith (100) ────────────────────────────────
@@ -83,8 +90,8 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
     if (error) { return }
     const n = count ?? 0
 
-    if (n >= 50  && await awardIfNew(userId, 'critic'))    toast.success('🏆 Значок «Критик» получен!')
-    if (n >= 100 && await awardIfNew(userId, 'wordsmith')) toast.success('🏆 Значок «Словоплёт» получен!')
+    if (n >= 50 && await awardIfNew(userId, 'critic')) await toastBadgeAwarded('critic')
+    if (n >= 100 && await awardIfNew(userId, 'wordsmith')) await toastBadgeAwarded('wordsmith')
   }
 
   // ── follow_received: social (10 подписчиков), influencer (50) ────────────
@@ -97,8 +104,8 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
     if (error) { return }
     const n = count ?? 0
 
-    if (n >= 10 && await awardIfNew(userId, 'social'))      toast.success('🏆 Значок «Общительный» получен!')
-    if (n >= 50 && await awardIfNew(userId, 'influencer'))  toast.success('🏆 Значок «Инфлюенсер» получен!')
+    if (n >= 10 && await awardIfNew(userId, 'social')) await toastBadgeAwarded('social')
+    if (n >= 50 && await awardIfNew(userId, 'influencer')) await toastBadgeAwarded('influencer')
   }
 
   // ── fan: поставил 50 лайков ──────────────────────────────────────────────
@@ -111,7 +118,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
     if (error) { return }
     const n = count ?? 0
 
-    if (n >= 50 && await awardIfNew(userId, 'fan')) toast.success('🏆 Значок «Фанат» получен!')
+    if (n >= 50 && await awardIfNew(userId, 'fan')) await toastBadgeAwarded('fan')
   }
 
   // ── collector: добавил 20 в избранное ────────────────────────────────────
@@ -124,7 +131,7 @@ export async function checkAndAwardBadges(userId: string, type: BadgeType): Prom
     if (error) { return }
     const n = count ?? 0
 
-    if (n >= 20 && await awardIfNew(userId, 'collector')) toast.success('🏆 Значок «Коллекционер» получен!')
+    if (n >= 20 && await awardIfNew(userId, 'collector')) await toastBadgeAwarded('collector')
   }
 }
 

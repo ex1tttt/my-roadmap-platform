@@ -123,14 +123,7 @@ export default function SettingsPage() {
   const [pushLoading, setPushLoading] = useState(false);
 
   // Настройки типов уведомлений (localStorage)
-  const NOTIF_TYPES = [
-    { key: 'like',         label: 'Лайки' },
-    { key: 'comment',      label: 'Комментарии' },
-    { key: 'comment_like', label: 'Лайки на комментарии' },
-    { key: 'follow',       label: 'Новые подписчики' },
-    { key: 'mention',      label: 'Упоминания' },
-    { key: 'new_card',     label: 'Новые карточки от подписок' },
-  ];
+  const NOTIF_TYPES = ['like', 'comment', 'comment_like', 'follow', 'mention', 'new_card'] as const;
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(() => {
     const defaults: Record<string, boolean> = {};
     ['like','comment','comment_like','follow','mention','new_card'].forEach(k => { defaults[k] = true; });
@@ -178,7 +171,7 @@ export default function SettingsPage() {
         .maybeSingle();
 
       if (error) {
-        toast.error("Не удалось загрузить профиль: " + error.message);
+        toast.error(t('settings.loadProfileError', { message: error.message }));
       } else if (data) {
         setProfile(data);
         setUsername(data.username ?? "");
@@ -206,7 +199,7 @@ export default function SettingsPage() {
           .single();
 
         if (upsertError) {
-          toast.error("Не удалось создать профиль: " + upsertError.message);
+          toast.error(t('settings.createProfileError', { message: upsertError.message }));
         } else if (newProfile) {
           setProfile(newProfile);
           setUsername(newProfile.username ?? "");
@@ -252,7 +245,7 @@ export default function SettingsPage() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Файл слишком большой. Максимальный размер — 5 МБ.');
+      alert(t('support.fileTooLarge'));
       e.target.value = "";
       return;
     }
@@ -271,7 +264,7 @@ export default function SettingsPage() {
       // Получаем актуальный ID пользователя из auth, а не из локального стейта profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("Необходимо войти в аккаунт.");
+        toast.error(t('settings.loginRequired'));
         return;
       }
 
@@ -300,10 +293,10 @@ export default function SettingsPage() {
       // Обновляем state постоянным URL из хранилища
       setAvatarUrl(publicUrl);
       setProfile((prev) => prev ? { ...prev, avatar: publicUrl } : prev);
-      toast.success("Аватар обновлён!");
+      toast.success(t('settings.avatarUpdated'));
     } catch (err: any) {
       console.error("Avatar upload error:", err);
-      toast.error("Ошибка загрузки аватара: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error(t('settings.avatarUploadError', { message: err?.message ?? t('common.error') }));
     } finally {
       setUploading(false);
     }
@@ -326,11 +319,11 @@ export default function SettingsPage() {
 
       const trimmed = username.trim();
       if (!trimmed) {
-        toast.error("Имя пользователя не может быть пустым.");
+        toast.error(t('settings.usernameEmpty'));
         return;
       }
       if (!/^[a-zA-Z0-9_]{1,32}$/.test(trimmed)) {
-        toast.error("Ник может содержать только латинские буквы, цифры и знак _. Пробелы запрещены.");
+        toast.error(t('settings.usernameInvalid'));
         return;
       }
 
@@ -348,18 +341,18 @@ export default function SettingsPage() {
           error.details?.toLowerCase().includes('already exists');
 
         if (isDuplicate) {
-          toast.error(`Пользователь с ником «${trimmed}» уже существует. Выберите другой ник.`);
+          toast.error(t('settings.usernameTaken', { username: trimmed }));
         } else {
-          toast.error("Ошибка сохранения: " + (error.message ?? "Неизвестная ошибка"));
+          toast.error(t('settings.saveError', { message: error.message ?? t('common.error') }));
         }
         return;
       }
 
-      toast.success("Профиль успешно обновлён!");
+      toast.success(t('settings.profileSaved'));
       setProfile((prev) => prev ? { ...prev, username: trimmed, avatar: avatarUrl, bio: bio.trim() || null } : prev);
     } catch (err: any) {
       console.error("Save profile error:", err);
-      toast.error("Ошибка сохранения: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error(t('settings.saveError', { message: err?.message ?? t('common.error') }));
     } finally {
       setSaving(false);
     }
@@ -390,7 +383,7 @@ export default function SettingsPage() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast.error("Ошибка смены пароля: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error(t('settings.passwordChangeError', { message: err?.message ?? t('common.error') }));
     } finally {
       setPasswordSaving(false);
     }
@@ -413,7 +406,7 @@ export default function SettingsPage() {
       // 2. Получаем ID текущего пользователя
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("Сессия истекла, войдите заново.");
+        toast.error(t('settings.sessionExpired'));
         return;
       }
 
@@ -425,12 +418,12 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error(json.error ?? "Ошибка сервера");
 
       // 4. Уведомляем, разлогиниваемся и переходим на главную
-      toast.success("Ваш аккаунт был успешно удалён.");
+      toast.success(t('settings.accountDeleted'));
       await supabase.auth.signOut();
       router.refresh();
       router.push("/");
     } catch (err: any) {
-      toast.error("Ошибка удаления: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error(t('settings.deleteError', { message: err?.message ?? t('common.error') }));
     } finally {
       setDeleteLoading(false);
     }
@@ -438,7 +431,7 @@ export default function SettingsPage() {
 
   async function handlePrivacyAgree() {
     if (!privacyAgreed) {
-      toast.error("Пожалуйста, согласитесь с Privacy Policy");
+      toast.error(t('settings.privacyRequired'));
       return;
     }
 
@@ -446,7 +439,7 @@ export default function SettingsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("Сессия истекла");
+        toast.error(t('settings.sessionExpired'));
         return;
       }
 
@@ -457,10 +450,10 @@ export default function SettingsPage() {
 
       if (error) throw error;
 
-      toast.success("Вы согласились с Privacy Policy");
+      toast.success(t('settings.privacySuccess'));
       setShowPrivacyModal(false);
     } catch (err: any) {
-      toast.error("Ошибка: " + (err?.message ?? "Неизвестная ошибка"));
+      toast.error(t('settings.saveError', { message: err?.message ?? t('common.error') }));
     } finally {
       setPrivacySaving(false);
     }
@@ -493,17 +486,17 @@ export default function SettingsPage() {
         const { ok, error } = await unsubscribeUser(profile.id);
         if (ok) {
           setPushStatus('default');
-          toast.success('Push-уведомления отключены.');
+          toast.success(t('pushNotifications.disabled'));
         } else {
-          toast.error(error ?? 'Ошибка при отписке.');
+          toast.error(error ?? t('push.errors.unsubscribeFailed'));
         }
       } else {
         const { ok, error } = await subscribeUser(profile.id);
         if (ok) {
           setPushStatus('subscribed');
-          toast.success('Push-уведомления включены!');
+          toast.success(t('pushNotifications.enabled'));
         } else {
-          toast.error(error ?? 'Ошибка при подписке.');
+          toast.error(error ?? t('push.errors.subscribeFailed'));
           // Если разрешение заблокировано — обновляем статус
           if (Notification.permission === 'denied') setPushStatus('denied');
         }
@@ -752,7 +745,7 @@ export default function SettingsPage() {
                   </h2>
                   <p className="mb-4 text-xs text-slate-500">{mounted ? t('pushNotifications.selectDescription') : 'Выберите, о чём хотите получать уведомления'}</p>
                   <div className="space-y-3">
-                    {NOTIF_TYPES.map(({ key, label }) => (
+                    {NOTIF_TYPES.map((key) => (
                       <label key={key} className="flex cursor-pointer items-center gap-3">
                         <input
                           type="checkbox"
@@ -760,7 +753,7 @@ export default function SettingsPage() {
                           onChange={(e) => setNotifPrefs(prev => ({ ...prev, [key]: e.target.checked }))}
                           className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 accent-blue-500"
                         />
-                        <span className="text-sm text-slate-700 dark:text-slate-300">{mounted ? t(`pushNotifications.types.${key}`) : label}</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{t(`pushNotifications.types.${key}`)}</span>
                       </label>
                     ))}
                   </div>

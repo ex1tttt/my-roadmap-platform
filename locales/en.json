@@ -34,6 +34,9 @@
     "cards": "Cards",
     "bio": "Bio",
     "noBio": "No bio added yet.",
+    "notFound": "User not found",
+    "defaultUsername": "User",
+    "metaDescription": "{{username}}'s profile",
     "settings": "Profile Settings",
     "publicProfile": "Public Profile",
     "joinedOn": "Joined on",
@@ -116,7 +119,23 @@
     "privacyRightsText": "You have the right to:",
     "privacyRightsItems": "Access your personal data|Correct inaccurate or incomplete data|Request deletion of your data|Withdraw consent for data processing",
     "privacyContacts": "Contacts",
-    "privacyContactsText": "If you have questions about this Privacy Policy or other security concerns, please use the built-in support chat (bottom right corner of the site). Our support team is ready to help you during business hours."
+    "privacyContactsText": "If you have questions about this Privacy Policy or other security concerns, please use the built-in support chat (bottom right corner of the site). Our support team is ready to help you during business hours.",
+    "loadProfileError": "Failed to load profile: {{message}}",
+    "createProfileError": "Failed to create profile: {{message}}",
+    "loginRequired": "You must be signed in.",
+    "avatarUpdated": "Avatar updated!",
+    "avatarUploadError": "Avatar upload error: {{message}}",
+    "usernameEmpty": "Username cannot be empty.",
+    "usernameInvalid": "Username may only contain Latin letters, digits, and _. No spaces.",
+    "usernameTaken": "Username «{{username}}» is already taken. Choose another.",
+    "saveError": "Save error: {{message}}",
+    "profileSaved": "Profile updated successfully!",
+    "passwordChangeError": "Password change error: {{message}}",
+    "sessionExpired": "Session expired. Please sign in again.",
+    "accountDeleted": "Your account was deleted successfully.",
+    "deleteError": "Deletion error: {{message}}",
+    "privacyRequired": "Please agree to the Privacy Policy",
+    "usernamePlaceholder": "letters, digits, _ only"
   },
   "card": {
     "create": "Create Roadmap",
@@ -159,7 +178,11 @@
     "stepsPreviewEmpty": "No steps",
     "moreStepsShort": "+ {{count}} more",
     "ownerCannotLike": "You can't like your own roadmap",
-    "ownerCannotFavorite": "You can't bookmark your own roadmap"
+    "ownerCannotFavorite": "You can't bookmark your own roadmap",
+    "untitled": "Untitled",
+    "unknownAuthor": "Unknown author",
+    "like": "Like",
+    "unlike": "Remove like"
   },
   "comments": {
     "title": "Comments",
@@ -187,7 +210,10 @@
     "pinned": "Comment pinned",
     "unpinned": "Comment unpinned",
     "pinError": "Error pinning comment",
-    "ownerCannotComment": "You can't comment on your own roadmap"
+    "ownerCannotComment": "You can't comment on your own roadmap",
+    "you": "You",
+    "sendFailed": "Failed to send comment",
+    "replyFailed": "Failed to send reply"
   },
   "favorites": {
     "title": "Favorites",
@@ -246,7 +272,12 @@
     "checkEmailBody": "We sent a confirmation link to {{email}}. Open it to activate your account, then sign in.",
     "checkEmailSpamHint": "If you don't see the message, check your Spam or Promotions folder.",
     "goToLogin": "Go to sign in",
-    "callbackError": "The sign-in link is invalid or has expired. Try signing in again or request a new email."
+    "callbackError": "The sign-in link is invalid or has expired. Try signing in again or request a new email.",
+    "recaptchaFailed": "Security check failed. Refresh the page and try again.",
+    "loginError": "Sign-in error: {{message}}",
+    "registerError": "Registration error: {{message}}",
+    "passwordExpired": "Password reset link has expired. Request a new one.",
+    "enterPassword": "Enter your password"
   },
   "notifications": {
     "title": "Notifications",
@@ -440,7 +471,8 @@
     "confirm": "Are you sure you want to delete this card?",
     "deleting": "Deleting...",
     "label": "Delete",
-    "error": "Error deleting"
+    "error": "Error deleting",
+    "success": "Roadmap deleted successfully"
   },
   "rating": {
     "label": "Rating: {{value}} out of 5",
@@ -503,6 +535,7 @@
     "deleteIrreversible": "This action is irreversible. Are you sure?",
     "deleteMultipleDone": "Roadmaps deleted successfully",
     "cardDeleted": "Card deleted",
+    "actions": "Actions",
     "pinError": "Error pinning card",
     "pinnedSuccess": "Card pinned",
     "unpinnedSuccess": "Unpinned",
@@ -578,7 +611,8 @@
     "social": { "label": "Social", "description": "10 people followed you!", "hint": "Get 10 followers" },
     "influencer": { "label": "Influencer", "description": "50 people followed you!", "hint": "Get 50 followers" },
     "fan": { "label": "Fan", "description": "You liked 50 cards!", "hint": "Like 50 cards" },
-    "collector": { "label": "Collector", "description": "20 cards added to favorites!", "hint": "Add 20 cards to favorites" }
+    "collector": { "label": "Collector", "description": "20 cards added to favorites!", "hint": "Add 20 cards to favorites" },
+    "toastAwarded": "🏆 Badge «{{name}}» earned!"
   },
   "block": {
     "block": "Block",
@@ -628,7 +662,9 @@
     "dialogs_one": "ticket",
     "dialogs_few": "tickets",
     "dialogs_many": "tickets",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "imageAlt": "Image",
+    "imagePreview": "📷 Image"
   },
   "report": {
     "label": "Report",
@@ -780,5 +816,56 @@
     "firstStepNoParent": "This is the beginning of the diagram — it has no parent. After you add more steps, you can choose a parent for each one.",
     "moreThanTwoBranches": "This step has more than two direct branches; the diagram shows the first two side‑by‑side and the rest below. At most two branches per step are supported in the layout.",
     "addBranchDisabledHint": "This step already has two branches. Remove or reattach one in the editor to add another."
+  },
+  "meta": {
+    "defaultTitle": "Roadmap Platform — Learn by Following Step-by-Step Guides",
+    "defaultDescription": "A modern platform for sharing step-by-step guides. Build roadmaps, track progress, and learn from the community."
+  },
+  "push": {
+    "errors": {
+      "swRedundant": "Service worker became redundant — refresh the page.",
+      "alreadySubscribing": "Subscription already in progress, please wait.",
+      "unsupported": "Push notifications are not supported in your browser.",
+      "denied": "Push notifications are blocked in browser settings.",
+      "permissionDenied": "You denied notification permission.",
+      "vapidMissing": "VAPID key is not configured. Add NEXT_PUBLIC_VAPID_PUBLIC_KEY to .env.",
+      "timeout": "Push server did not respond (10s timeout). fcm.googleapis.com may be blocked — try VPN or Firefox.",
+      "abort": "Could not connect to Google Push (FCM). Check VPN/firewall or unregister the service worker in DevTools.",
+      "permissionRevoked": "Notification permission was revoked.",
+      "subscribeUnknown": "Unknown error while subscribing.",
+      "swUnsupported": "Service Worker is not supported.",
+      "swNotRegistered": "Service Worker is not registered.",
+      "unsubscribeFailed": "Error while unsubscribing.",
+      "subscribeFailed": "Error while subscribing.",
+      "unsubscribeFailedShort": "Error while unsubscribing."
+    },
+    "title": {
+      "like": "New like ❤️",
+      "comment": "New comment 💬",
+      "commentReply": "New reply to your comment 💬",
+      "commentLike": "New like 👍",
+      "mention": "{{name}} mentioned you 🔔",
+      "follow": "👤 New follower",
+      "newCard": "🗺️ New roadmap",
+      "newGantt": "📊 New Gantt chart"
+    },
+    "body": {
+      "like": "{{someone}} liked your roadmap «{{card}}»",
+      "comment": "{{someone}} commented on your roadmap «{{card}}»",
+      "commentReply": "{{someone}} replied to your comment",
+      "commentLike": "{{someone}} liked your comment",
+      "mentionWithCard": "In a comment on «{{card}}»",
+      "mentionNoCard": "In a comment on a roadmap",
+      "follow": "Someone started following you",
+      "newCard": "Published roadmap «{{title}}»",
+      "newGantt": "Published Gantt chart «{{title}}»"
+    }
+  },
+  "access": {
+    "invalidEmail": "Invalid email address",
+    "emailPlaceholder": "User email",
+    "invite": "Invite",
+    "revokeAccess": "Revoke access",
+    "noInvited": "No invited users yet"
   }
 }

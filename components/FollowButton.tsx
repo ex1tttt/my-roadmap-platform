@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Bell } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
+import { pushFollow } from '@/lib/push-notify'
 
 interface Props {
   profileId: string
@@ -74,6 +75,7 @@ export default function FollowButton({
 
       if (!followError) {
         // Push-уведомление владельцу профиля о новом подписчике
+        const push = pushFollow(currentUserId)
         fetch('/api/send-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -81,9 +83,7 @@ export default function FollowButton({
             userId: profileId,
             actor_id: currentUserId,
             notificationType: 'follow',
-            title: '👤 Новый подписчик',
-            body: 'На вас подписался новый пользователь',
-            url: `/profile/${currentUserId}`,
+            ...push,
           }),
         }).catch(() => {})
       }

@@ -48,7 +48,10 @@
     "card_one": "картка",
     "card_few": "картки",
     "card_many": "карток",
-    "card_other": "карток"
+    "card_other": "карток",
+    "notFound": "User not found",
+    "defaultUsername": "User",
+    "metaDescription": "{{username}}'s profile"
   },
   "settings": {
     "title": "Налаштування",
@@ -77,9 +80,9 @@
     "save_button": "Зберегти зміни",
     "uploading": "Завантаження...",
     "deleteAvatarLabel": "Видалити аватар",
-    "avatarHint": "JPG, PNG, WebP \u2014 до 5 МБ",
+    "avatarHint": "JPG, PNG, WebP — до 5 МБ",
     "profileInfo": "Дані профілю",
-    "emailReadonlyHint": "Щоб змінити пошту, використайте розділ \u00abЗмінити пошту\u00bb нижче.",
+    "emailReadonlyHint": "Щоб змінити пошту, використайте розділ «Змінити пошту» нижче.",
     "bioPlaceholder": "Напишіть трохи про себе...",
     "languageHint": "Мова буде збережена у вашому профілі та застосовуватиметься на всіх пристроях.",
     "saving": "Збереження...",
@@ -118,7 +121,23 @@
     "privacyRightsText": "Ви маєте право:",
     "privacyRightsItems": "Отримати доступ до своїх персональних даних|Виправити неточні або неповні дані|Запросити видалення своїх даних|Відкликати згоду на обробку даних",
     "privacyContacts": "Контакти",
-    "privacyContactsText": "Якщо у вас є запитання щодо цієї Політики конфіденційності чи інших проблем безпеки, скористайтеся вбудованим чатом підтримки (нижній правий кут сайту). Наша команда підтримки готова допомогти вам під час робочого часу."
+    "privacyContactsText": "Якщо у вас є запитання щодо цієї Політики конфіденційності чи інших проблем безпеки, скористайтеся вбудованим чатом підтримки (нижній правий кут сайту). Наша команда підтримки готова допомогти вам під час робочого часу.",
+    "loadProfileError": "Failed to load profile: {{message}}",
+    "createProfileError": "Failed to create profile: {{message}}",
+    "loginRequired": "You must be signed in.",
+    "avatarUpdated": "Avatar updated!",
+    "avatarUploadError": "Avatar upload error: {{message}}",
+    "usernameEmpty": "Username cannot be empty.",
+    "usernameInvalid": "Username may only contain Latin letters, digits, and _. No spaces.",
+    "usernameTaken": "Username «{{username}}» is already taken. Choose another.",
+    "saveError": "Save error: {{message}}",
+    "profileSaved": "Profile updated successfully!",
+    "passwordChangeError": "Password change error: {{message}}",
+    "sessionExpired": "Session expired. Please sign in again.",
+    "accountDeleted": "Your account was deleted successfully.",
+    "deleteError": "Deletion error: {{message}}",
+    "privacyRequired": "Please agree to the Privacy Policy",
+    "usernamePlaceholder": "letters, digits, _ only"
   },
   "card": {
     "create": "Створити роудмеп",
@@ -161,7 +180,11 @@
     "stepsPreviewEmpty": "Немає кроків",
     "moreStepsShort": "+ ще {{count}}",
     "ownerCannotLike": "Не можна лайкати власну картку",
-    "ownerCannotFavorite": "Не можна додавати в закладки власну картку"
+    "ownerCannotFavorite": "Не можна додавати в закладки власну картку",
+    "untitled": "Untitled",
+    "unknownAuthor": "Unknown author",
+    "like": "Like",
+    "unlike": "Remove like"
   },
   "comments": {
     "title": "Коментарі",
@@ -189,7 +212,10 @@
     "pinned": "Коментар закріплено",
     "unpinned": "Коментар відкріплено",
     "pinError": "Помилка закріплення",
-    "ownerCannotComment": "Автор не може коментувати власну картку"
+    "ownerCannotComment": "Автор не може коментувати власну картку",
+    "you": "You",
+    "sendFailed": "Failed to send comment",
+    "replyFailed": "Failed to send reply"
   },
   "favorites": {
     "title": "Обрані",
@@ -250,7 +276,12 @@
     "checkEmailBody": "Ми надіслали посилання для підтвердження на {{email}}. Перейдіть за ним, щоб активувати обліковий запис, потім увійдіть на сайт.",
     "checkEmailSpamHint": "Якщо листа немає, перевірте папку «Спам» або «Акції».",
     "goToLogin": "Перейти до входу",
-    "callbackError": "Посилання для входу недійсне або застаріло. Спробуйте увійти знову або надішліть новий лист."
+    "callbackError": "Посилання для входу недійсне або застаріло. Спробуйте увійти знову або надішліть новий лист.",
+    "recaptchaFailed": "Security check failed. Refresh the page and try again.",
+    "loginError": "Sign-in error: {{message}}",
+    "registerError": "Registration error: {{message}}",
+    "passwordExpired": "Password reset link has expired. Request a new one.",
+    "enterPassword": "Enter your password"
   },
   "notifications": {
     "title": "Сповіщення",
@@ -286,8 +317,8 @@
   },
   "notification": {
     "follow": "{{name}} підписався на вас",
-    "like": "{{name}} вподобав вашу картку \u00ab{{card}}\u00bb",
-    "comment": "{{name}} прокоментував вашу картку \u00ab{{card}}\u00bb",
+    "like": "{{name}} вподобав вашу картку «{{card}}»",
+    "comment": "{{name}} прокоментував вашу картку «{{card}}»",
     "comment_like": "{{name}} вподобав ваш коментар",
     "unknown": "{{name}} здійснив дію"
   },
@@ -445,7 +476,8 @@
     "confirm": "Ви впевнені, що хочете видалити цю картку?",
     "deleting": "Видалення...",
     "label": "Видалити",
-    "error": "Помилка при видаленні"
+    "error": "Помилка при видаленні",
+    "success": "Roadmap deleted successfully"
   },
   "rating": {
     "label": "Рейтинг: {{value}} з 5",
@@ -459,7 +491,8 @@
     "unrate": "Скасувати оцінку",
     "hint": "Оцініть цю дорожню карту",
     "hintUnrate": "Ваша оцінка: {{value}}. Натисніть ту саму зірку або ×, щоб видалити",
-    "ownerCannotRate": "Не можна оцінювати власну картку"
+    "ownerCannotRate": "Не можна оцінювати власну картку",
+    "count_other": "ratings"
   },
   "share": {
     "label": "Поділитись",
@@ -512,198 +545,8 @@
     "pinError": "Помилка при закріпленні",
     "pinnedSuccess": "Карточку закріплено",
     "unpinnedSuccess": "Відкріплено",
-    "myCards": "Мої карточки"
-  },
-  "privacy": {
-    "privateCard": "Приватна карточка",
-    "publicCard": "Публічна карточка",
-    "privateDesc": "Видна лише вам та співавторам",
-    "publicDesc": "Видна всім користувачам"
-  },
-  "passwordChange": {
-    "wrongPassword": "Поточний пароль невірний.",
-    "success": "Пароль успішно змінено!",
-    "wrongEmailOrPassword": "Невірна пошта або пароль."
-  },
-  "history": {
-    "title": "Історія переглядів",
-    "count": "{{count}} карток в історії",
-    "empty": "Ваша історія порожня",
-    "emptyTitle": "Історія переглядів порожня",
-    "emptyDesc": "Карточки, які ви відкриваєте, з’являться тут.",
-    "clear": "Очистити історію",
-    "clearing": "Очищення...",
-    "justNow": "щойно",
-    "minutesAgo": "{{count}} хв. тому",
-    "hoursAgo": "{{count}} год. тому",
-    "daysAgo": "{{count}} дн. тому"
-  },
-  "stats": {
-    "title": "Статистика",
-    "subtitle": "Показники ваших карточок",
-    "backToProfile": "Назад до профілю",
-    "cards": "Карточки",
-    "views": "Перегляди",
-    "likes": "Лайки",
-    "favorites": "Обране",
-    "comments": "Коментарі",
-    "avgRating": "Середня оцінка",
-    "tableCard": "Карточка",
-    "loading": "Завантаження...",
-    "noCards": "У вас поки немає карточок."
-  },
-  "createPrivacy": {
-    "privateTitle": "Приватна дорожня карта",
-    "privateDesc": "Буде видна лише вам",
-    "successPublished": "Карточку успішно опубліковано!"
-  },
-  "pushNotifications": {
-    "sectionTitle": "Сповіщення",
-    "sectionDesc": "Отримуйте Push-сповіщення прямо у браузері — про лайки, коментарі, нові карточки.",
-    "unsupported": "Ваш браузер не підтримує Push-сповіщень.",
-    "denied": "Сповіщення заблоковано в налаштуваннях браузера. Дозвольте їх вручну в адресному рядку.",
-    "enabled": "Push-сповіщення включено",
-    "disabled": "Push-сповіщення вимкнено",
-    "waiting": "Зачекайте...",
-    "disable": "Вимкнути",
-    "enable": "Увімкнути сповіщення"
-  },
-  "achievements": {
-    "title": "Досягнення",
-    "notEarned": "Не отримано",
-    "featured": "витрина профілю"
-  },
-  "badges": {
-    "pioneer": { "label": "Піонер", "description": "Створено першу карточку-роудмеп!", "hint": "Створіть свою першу карточку-роудмеп" },
-    "creator": { "label": "Картограф", "description": "Створено 5 карточок-роудмеп!", "hint": "Створіть 5 карточок-роудмеп" },
-    "explorer": { "label": "Дослідник", "description": "Створено 10 карточок-роудмеп!", "hint": "Створіть 10 карточок-роудмеп" },
-    "sensei": { "label": "Сенсей", "description": "Ваші картки полайкали 100 разів!", "hint": "Зберіть 100 лайків" },
-    "popular": { "label": "Популярний", "description": "Ваші картки полайкали 500 разів!", "hint": "Зберіть 500 лайків" },
-    "critic": { "label": "Критик", "description": "Написано 50 коментарів!", "hint": "Напишіть 50 коментарів" },
-    "wordsmith": { "label": "Словесник", "description": "Написано 100 коментарів!", "hint": "Напишіть 100 коментарів" },
-    "social": { "label": "Товариський", "description": "10 людей підписались на вас!", "hint": "Зберіть 10 підписників" },
-    "influencer": { "label": "Інфлюенсер", "description": "50 людей підписались на вас!", "hint": "Зберіть 50 підписників" },
-    "fan": { "label": "Фанат", "description": "Ви полайкали 50 карточок!", "hint": "Поставте лайк 50 карточкам" },
-    "collector": { "label": "Колекціонер", "description": "20 карточок додано до обраних!", "hint": "Додайте 20 карточок до обраних" }
-  },
-  "block": {
-    "block": "Заблокувати",
-    "unblock": "Розблокувати",
-    "blocked": "Користувача заблоковано",
-    "unblocked": "Блокування знято",
-    "confirmBlock": "Заблокувати цього користувача? Він не зможе бачити ваш профіль і карточки.",
-    "blockAction": "Заблокувати",
-    "blockHint": "Заблокувати користувача",
-    "unblockHint": "Розблокувати користувача",
-    "blockedPage": "Доступ обмежено",
-    "blockedPageDesc": "Цей профіль недоступний.",
-    "settingsTitle": "Заблоковані користувачі",
-    "settingsEmpty": "Немає заблокованих користувачів",
-    "unblockInSettings": "Розблокувати"
-  },
-  "support": {
-    "title": "Технічна підтримка",
-    "subtitle": "Звичайно відповідаємо протягом дня",
-    "emptyTitle": "Напишіть нам!",
-    "emptyDesc": "Опишіть вашу проблему і ми допоможемо",
-    "fromSupport": "Підтримка",
-    "placeholder": "Написати повідомлення...",
-    "sendImage": "Надіслати зображення",
-    "fileTooLarge": "Файл завеликий. Максимум 5 МБ.",
-    "uploadError": "Помилка завантаження: ",
-    "adminTitle": "Панель підтримки",
-    "backToHome": "На головну",
-    "sessions": "Звернення",
-    "noSessions": "Немає звернень",
-    "selectSession": "Оберіть звернення",
-    "replyPlaceholder": "Написати відповідь...",
-    "deleteChat": "Видалити чат",
-    "deleteConfirm": "Видалити весь чат? Цю дію неможливо скасувати.",
-    "editMessage": "Редагувати",
-    "deleteMessage": "Видалити повідомлення",
-    "deleteMsgConfirm": "Видалити це повідомлення? Цю дію неможливо скасувати.",
-    "save": "Зберегти",
-    "reply": "Відповісти",
-    "lastSeen": "був у мережі:",
-    "justNow": "щойно",
-    "minutesAgo": "хв. тому",
-    "hoursAgo": "год. тому",
-    "daysAgo": "дн. тому",
-    "lastSeenUnknown": "невідомо",
-    "guest": "Гість",
-    "dialogs_one": "діалог",
-    "dialogs_few": "діалоги",
-    "dialogs_many": "діалогів",
-    "cancel": "Скасувати"
-  },
-  "report": {
-    "label": "Поскаржитися",
-    "title": "Скарга на карточку",
-    "subtitle": "Опишіть, що не так з цією карточкою",
-    "reasonLabel": "Причина скарги",
-    "descriptionLabel": "Додатковий опис (необов'язково)",
-    "descriptionPlaceholder": "Опишіть ситуацію детальніше...",
-    "submit": "Надіслати скаргу",
-    "submitting": "Надсилання...",
-    "success": "Скаргу надіслано. Дякуємо!",
-    "error": "Не вдалося надіслати скаргу",
-    "alreadyReported": "Ви вже скаржились на цю карточку",
-    "reported": "Скарга надіслана",
-    "reasons": {
-      "spam": "Спам",
-      "inappropriate": "Неприйнятний вміст",
-      "misinformation": "Дезінформація",
-      "copyright": "Порушення авторських прав",
-      "other": "Інше"
-    }
-  },
-  "adminReports": {
-    "title": "Скарги на картки",
-    "backHome": "На головну",
-    "tabs": {
-      "pending": "На розгляді",
-      "reviewed": "Переглянуто",
-      "resolved": "Вирішено"
-    },
-    "card": "Картка",
-    "cardDeleted": "Картку видалено",
-    "from": "Від",
-    "unknown": "Невідомо",
-    "noReports": "Скарг немає",
-    "loadError": "Помилка завантаження",
-    "migrationHint": "Переконайтесь, що виконана SQL-міграція migration_card_reports.sql у Supabase.",
-    "actions": {
-      "reviewed": "Переглянуто",
-      "resolved": "Вирішено",
-      "closed": "Закрито"
-    }
-  },
-  "achievements": {
-    "title": "Досягнення",
-    "earned": "✅ Отримано",
-    "locked": "🔒 Не отримано"
-  },
-  "pushNotifications": {
-    "sectionTitle": "Сповіщення",
-    "sectionDesc": "Керуйте параметрами push-сповіщень",
-    "typesTitle": "ТИПИ СПОВІЩЕНЬ",
-    "selectDescription": "Виберіть, про що ви хочете отримувати сповіщення",
-    "types": {
-      "like": "Вподобання",
-      "comment": "Коментарі",
-      "comment_like": "Вподобання коментарів",
-      "follow": "Нові підписники",
-      "mention": "Згадування",
-      "new_card": "Нові карточки від підписок"
-    },
-    "save": "Зберегти",
-    "enabled": "Сповіщення увімкнені",
-    "disabled": "Сповіщення вимкнені",
-    "unsupported": "Ваш браузер не підтримує push-сповіщення",
-    "denied": "Ви відхилили push-сповіщення. Будь ласка, включіть їх у налаштуваннях браузера",
-    "enable": "Увімкнути сповіщення",
-    "disable": "Вимкнути сповіщення",
-    "waiting": "Обробка..."
+    "myCards": "Мої карточки",
+    "actions": "Actions"
   },
   "privacy": {
     "title": "ПОЛІТИКА ПРИВАТНОСТІ",
@@ -764,6 +607,222 @@
       }
     }
   },
+  "passwordChange": {
+    "wrongPassword": "Поточний пароль невірний.",
+    "success": "Пароль успішно змінено!",
+    "wrongEmailOrPassword": "Невірна пошта або пароль."
+  },
+  "history": {
+    "title": "Історія переглядів",
+    "count": "{{count}} карток в історії",
+    "empty": "Ваша історія порожня",
+    "emptyTitle": "Історія переглядів порожня",
+    "emptyDesc": "Карточки, які ви відкриваєте, з’являться тут.",
+    "clear": "Очистити історію",
+    "clearing": "Очищення...",
+    "justNow": "щойно",
+    "minutesAgo": "{{count}} хв. тому",
+    "hoursAgo": "{{count}} год. тому",
+    "daysAgo": "{{count}} дн. тому"
+  },
+  "stats": {
+    "title": "Статистика",
+    "subtitle": "Показники ваших карточок",
+    "backToProfile": "Назад до профілю",
+    "cards": "Карточки",
+    "views": "Перегляди",
+    "likes": "Лайки",
+    "favorites": "Обране",
+    "comments": "Коментарі",
+    "avgRating": "Середня оцінка",
+    "tableCard": "Карточка",
+    "loading": "Завантаження...",
+    "noCards": "У вас поки немає карточок."
+  },
+  "createPrivacy": {
+    "privateTitle": "Приватна дорожня карта",
+    "privateDesc": "Буде видна лише вам",
+    "successPublished": "Карточку успішно опубліковано!"
+  },
+  "pushNotifications": {
+    "sectionTitle": "Сповіщення",
+    "sectionDesc": "Керуйте параметрами push-сповіщень",
+    "typesTitle": "ТИПИ СПОВІЩЕНЬ",
+    "selectDescription": "Виберіть, про що ви хочете отримувати сповіщення",
+    "types": {
+      "like": "Вподобання",
+      "comment": "Коментарі",
+      "comment_like": "Вподобання коментарів",
+      "follow": "Нові підписники",
+      "mention": "Згадування",
+      "new_card": "Нові карточки від підписок"
+    },
+    "save": "Зберегти",
+    "enabled": "Сповіщення увімкнені",
+    "disabled": "Сповіщення вимкнені",
+    "unsupported": "Ваш браузер не підтримує push-сповіщення",
+    "denied": "Ви відхилили push-сповіщення. Будь ласка, включіть їх у налаштуваннях браузера",
+    "enable": "Увімкнути сповіщення",
+    "disable": "Вимкнути сповіщення",
+    "waiting": "Обробка..."
+  },
+  "achievements": {
+    "title": "Досягнення",
+    "earned": "✅ Отримано",
+    "locked": "🔒 Не отримано"
+  },
+  "badges": {
+    "pioneer": {
+      "label": "Піонер",
+      "description": "Створено першу карточку-роудмеп!",
+      "hint": "Створіть свою першу карточку-роудмеп"
+    },
+    "creator": {
+      "label": "Картограф",
+      "description": "Створено 5 карточок-роудмеп!",
+      "hint": "Створіть 5 карточок-роудмеп"
+    },
+    "explorer": {
+      "label": "Дослідник",
+      "description": "Створено 10 карточок-роудмеп!",
+      "hint": "Створіть 10 карточок-роудмеп"
+    },
+    "sensei": {
+      "label": "Сенсей",
+      "description": "Ваші картки полайкали 100 разів!",
+      "hint": "Зберіть 100 лайків"
+    },
+    "popular": {
+      "label": "Популярний",
+      "description": "Ваші картки полайкали 500 разів!",
+      "hint": "Зберіть 500 лайків"
+    },
+    "critic": {
+      "label": "Критик",
+      "description": "Написано 50 коментарів!",
+      "hint": "Напишіть 50 коментарів"
+    },
+    "wordsmith": {
+      "label": "Словесник",
+      "description": "Написано 100 коментарів!",
+      "hint": "Напишіть 100 коментарів"
+    },
+    "social": {
+      "label": "Товариський",
+      "description": "10 людей підписались на вас!",
+      "hint": "Зберіть 10 підписників"
+    },
+    "influencer": {
+      "label": "Інфлюенсер",
+      "description": "50 людей підписались на вас!",
+      "hint": "Зберіть 50 підписників"
+    },
+    "fan": {
+      "label": "Фанат",
+      "description": "Ви полайкали 50 карточок!",
+      "hint": "Поставте лайк 50 карточкам"
+    },
+    "collector": {
+      "label": "Колекціонер",
+      "description": "20 карточок додано до обраних!",
+      "hint": "Додайте 20 карточок до обраних"
+    },
+    "toastAwarded": "🏆 Badge «{{name}}» earned!"
+  },
+  "block": {
+    "block": "Заблокувати",
+    "unblock": "Розблокувати",
+    "blocked": "Користувача заблоковано",
+    "unblocked": "Блокування знято",
+    "confirmBlock": "Заблокувати цього користувача? Він не зможе бачити ваш профіль і карточки.",
+    "blockAction": "Заблокувати",
+    "blockHint": "Заблокувати користувача",
+    "unblockHint": "Розблокувати користувача",
+    "blockedPage": "Доступ обмежено",
+    "blockedPageDesc": "Цей профіль недоступний.",
+    "settingsTitle": "Заблоковані користувачі",
+    "settingsEmpty": "Немає заблокованих користувачів",
+    "unblockInSettings": "Розблокувати"
+  },
+  "support": {
+    "title": "Технічна підтримка",
+    "subtitle": "Звичайно відповідаємо протягом дня",
+    "emptyTitle": "Напишіть нам!",
+    "emptyDesc": "Опишіть вашу проблему і ми допоможемо",
+    "fromSupport": "Підтримка",
+    "placeholder": "Написати повідомлення...",
+    "sendImage": "Надіслати зображення",
+    "fileTooLarge": "Файл завеликий. Максимум 5 МБ.",
+    "uploadError": "Помилка завантаження: ",
+    "adminTitle": "Панель підтримки",
+    "backToHome": "На головну",
+    "sessions": "Звернення",
+    "noSessions": "Немає звернень",
+    "selectSession": "Оберіть звернення",
+    "replyPlaceholder": "Написати відповідь...",
+    "deleteChat": "Видалити чат",
+    "deleteConfirm": "Видалити весь чат? Цю дію неможливо скасувати.",
+    "editMessage": "Редагувати",
+    "deleteMessage": "Видалити повідомлення",
+    "deleteMsgConfirm": "Видалити це повідомлення? Цю дію неможливо скасувати.",
+    "save": "Зберегти",
+    "reply": "Відповісти",
+    "lastSeen": "був у мережі:",
+    "justNow": "щойно",
+    "minutesAgo": "хв. тому",
+    "hoursAgo": "год. тому",
+    "daysAgo": "дн. тому",
+    "lastSeenUnknown": "невідомо",
+    "guest": "Гість",
+    "dialogs_one": "діалог",
+    "dialogs_few": "діалоги",
+    "dialogs_many": "діалогів",
+    "cancel": "Скасувати",
+    "imageAlt": "Image",
+    "imagePreview": "📷 Image"
+  },
+  "report": {
+    "label": "Поскаржитися",
+    "title": "Скарга на карточку",
+    "subtitle": "Опишіть, що не так з цією карточкою",
+    "reasonLabel": "Причина скарги",
+    "descriptionLabel": "Додатковий опис (необов'язково)",
+    "descriptionPlaceholder": "Опишіть ситуацію детальніше...",
+    "submit": "Надіслати скаргу",
+    "submitting": "Надсилання...",
+    "success": "Скаргу надіслано. Дякуємо!",
+    "error": "Не вдалося надіслати скаргу",
+    "alreadyReported": "Ви вже скаржились на цю карточку",
+    "reported": "Скарга надіслана",
+    "reasons": {
+      "spam": "Спам",
+      "inappropriate": "Неприйнятний вміст",
+      "misinformation": "Дезінформація",
+      "copyright": "Порушення авторських прав",
+      "other": "Інше"
+    }
+  },
+  "adminReports": {
+    "title": "Скарги на картки",
+    "backHome": "На головну",
+    "tabs": {
+      "pending": "На розгляді",
+      "reviewed": "Переглянуто",
+      "resolved": "Вирішено"
+    },
+    "card": "Картка",
+    "cardDeleted": "Картку видалено",
+    "from": "Від",
+    "unknown": "Невідомо",
+    "noReports": "Скарг немає",
+    "loadError": "Помилка завантаження",
+    "migrationHint": "Переконайтесь, що виконана SQL-міграція migration_card_reports.sql у Supabase.",
+    "actions": {
+      "reviewed": "Переглянуто",
+      "resolved": "Вирішено",
+      "closed": "Закрито"
+    }
+  },
   "gantt": {
     "noDates": "Без дат",
     "markDone": "Позначити як виконане",
@@ -786,5 +845,56 @@
     "firstStepNoParent": "Це початок діаграми — у першого кроку немає батька. Після додавання інших кроків з’явиться вибір батька.",
     "moreThanTwoBranches": "У цього кроку більше двох прямих гілок: на картці перші дві показані поруч праворуч, решта — нижче. У макеті не більше двох гілок від одного кроку.",
     "addBranchDisabledHint": "У кроку вже дві гілки. Видаліть або перепризначте одну в редакторі, щоб додати ще одну."
+  },
+  "meta": {
+    "defaultTitle": "Roadmap Platform — Learn by Following Step-by-Step Guides",
+    "defaultDescription": "A modern platform for sharing step-by-step guides. Build roadmaps, track progress, and learn from the community."
+  },
+  "push": {
+    "errors": {
+      "swRedundant": "Service worker became redundant — refresh the page.",
+      "alreadySubscribing": "Subscription already in progress, please wait.",
+      "unsupported": "Push notifications are not supported in your browser.",
+      "denied": "Push notifications are blocked in browser settings.",
+      "permissionDenied": "You denied notification permission.",
+      "vapidMissing": "VAPID key is not configured. Add NEXT_PUBLIC_VAPID_PUBLIC_KEY to .env.",
+      "timeout": "Push server did not respond (10s timeout). fcm.googleapis.com may be blocked — try VPN or Firefox.",
+      "abort": "Could not connect to Google Push (FCM). Check VPN/firewall or unregister the service worker in DevTools.",
+      "permissionRevoked": "Notification permission was revoked.",
+      "subscribeUnknown": "Unknown error while subscribing.",
+      "swUnsupported": "Service Worker is not supported.",
+      "swNotRegistered": "Service Worker is not registered.",
+      "unsubscribeFailed": "Error while unsubscribing.",
+      "subscribeFailed": "Error while subscribing.",
+      "unsubscribeFailedShort": "Error while unsubscribing."
+    },
+    "title": {
+      "like": "New like ❤️",
+      "comment": "New comment 💬",
+      "commentReply": "New reply to your comment 💬",
+      "commentLike": "New like 👍",
+      "mention": "{{name}} mentioned you 🔔",
+      "follow": "👤 New follower",
+      "newCard": "🗺️ New roadmap",
+      "newGantt": "📊 New Gantt chart"
+    },
+    "body": {
+      "like": "{{someone}} liked your roadmap «{{card}}»",
+      "comment": "{{someone}} commented on your roadmap «{{card}}»",
+      "commentReply": "{{someone}} replied to your comment",
+      "commentLike": "{{someone}} liked your comment",
+      "mentionWithCard": "In a comment on «{{card}}»",
+      "mentionNoCard": "In a comment on a roadmap",
+      "follow": "Someone started following you",
+      "newCard": "Published roadmap «{{title}}»",
+      "newGantt": "Published Gantt chart «{{title}}»"
+    }
+  },
+  "access": {
+    "invalidEmail": "Invalid email address",
+    "emailPlaceholder": "User email",
+    "invite": "Invite",
+    "revokeAccess": "Revoke access",
+    "noInvited": "No invited users yet"
   }
 }
