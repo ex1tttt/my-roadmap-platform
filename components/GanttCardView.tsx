@@ -382,7 +382,7 @@ export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }:
   const roots = (childrenMap.get(null) ?? []) as GanttTaskRow[];
 
   return (
-    <div className="flex w-max shrink-0 flex-col gap-8 pb-2 md:gap-10">
+    <div className="flex w-max min-w-full shrink-0 flex-col gap-8 pb-1 md:gap-10">
       {roots.map((r) => (
         <div key={r.id}>{renderNode(r)}</div>
       ))}

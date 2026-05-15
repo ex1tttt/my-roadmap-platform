@@ -475,22 +475,24 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </aside>
         {data.card_type === "gantt" ? (
           <div className="flex min-w-0 flex-col lg:col-span-2 lg:col-start-1 lg:row-start-2">
-            <h2 className="mb-6 flex w-[120%] -mx-[10%] items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
               <BookOpen className="h-5 w-5 shrink-0 text-blue-400" />
               <T k="card.ganttTitle" />
               <span className="ml-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">
                 {ganttTasks.length}
               </span>
             </h2>
-            <div className="scrollbar-subtle max-h-[min(70vh,36rem)] w-[120%] min-h-0 min-w-0 -mx-[10%] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain">
-              <ClientOnly>
-                <GanttCardView
-                  cardId={data.id}
-                  cardSlug={data.slug}
-                  tasks={ganttTasks}
-                  canConfigure={isOwner || collaboratorRole === "editor"}
-                />
-              </ClientOnly>
+            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/3">
+              <div className="scrollbar-subtle max-h-[min(70vh,36rem)] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain p-4 md:p-5">
+                <ClientOnly>
+                  <GanttCardView
+                    cardId={data.id}
+                    cardSlug={data.slug}
+                    tasks={ganttTasks}
+                    canConfigure={isOwner || collaboratorRole === "editor"}
+                  />
+                </ClientOnly>
+              </div>
             </div>
           </div>
         ) : null}
