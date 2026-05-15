@@ -12,6 +12,7 @@ import AccountSwitcher from '@/components/AccountSwitcher'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { saveLanguage, type SupportedLanguage } from '@/lib/i18n'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const ADMIN_IDS = [
   'a48b5f93-2e98-48c8-98f1-860ca962f651',
@@ -346,6 +347,8 @@ export default function Navbar() {
                 <UserPlus className="w-4 h-4" />
                 {mounted ? t('nav.register') : ''}
               </Link>
+
+              <ThemeToggle />
             </>
           )}
         </div>

@@ -281,7 +281,18 @@
     "loginError": "Sign-in error: {{message}}",
     "registerError": "Registration error: {{message}}",
     "passwordExpired": "Password reset link has expired. Request a new one.",
-    "enterPassword": "Enter your password"
+    "enterPassword": "Введіть пароль",
+    "emailAddress": "Адреса електронної пошти",
+    "emailPlaceholder": "Адреса електронної пошти",
+    "passwordPlaceholder": "Введіть пароль",
+    "loginWithGoogle": "Увійти через Google",
+    "signupCta": "Створіть!",
+    "forgotPasswordHint": "Вкажіть email — надішлемо посилання для скидання пароля.",
+    "forgotPasswordEnterEmail": "Спочатку введіть email.",
+    "sendResetLink": "Надіслати посилання",
+    "sendingReset": "Надсилання…",
+    "resetEmailSent": "Посилання для скидання надіслано на {{email}}.",
+    "securityCheckFailed": "Не вдалося ініціалізувати перевірку безпеки. Оновіть сторінку та спробуйте знову."
   },
   "notifications": {
     "title": "Сповіщення",

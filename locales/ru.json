@@ -280,7 +280,18 @@
     "loginError": "Ошибка входа: {{message}}",
     "registerError": "Ошибка регистрации: {{message}}",
     "passwordExpired": "Ссылка для сброса пароля устарела. Запросите новую.",
-    "enterPassword": "Введите пароль"
+    "enterPassword": "Введите пароль",
+    "emailAddress": "Адрес электронной почты",
+    "emailPlaceholder": "Адрес электронной почты",
+    "passwordPlaceholder": "Введите пароль",
+    "loginWithGoogle": "Войти через Google",
+    "signupCta": "Создайте!",
+    "forgotPasswordHint": "Укажите email — мы отправим ссылку для сброса пароля.",
+    "forgotPasswordEnterEmail": "Сначала введите email.",
+    "sendResetLink": "Отправить ссылку",
+    "sendingReset": "Отправка…",
+    "resetEmailSent": "Ссылка для сброса пароля отправлена на {{email}}.",
+    "securityCheckFailed": "Не удалось инициализировать проверку безопасности. Обновите страницу и попробуйте снова."
   },
   "notifications": {
     "title": "Уведомления",

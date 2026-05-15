@@ -277,7 +277,18 @@
     "loginError": "Sign-in error: {{message}}",
     "registerError": "Registration error: {{message}}",
     "passwordExpired": "Password reset link has expired. Request a new one.",
-    "enterPassword": "Enter your password"
+    "enterPassword": "Enter your password",
+    "emailAddress": "Email address",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Enter password",
+    "loginWithGoogle": "Sign in with Google",
+    "signupCta": "Create one!",
+    "forgotPasswordHint": "Enter your email and we will send you a reset link.",
+    "forgotPasswordEnterEmail": "Enter your email first.",
+    "sendResetLink": "Send reset link",
+    "sendingReset": "Sending…",
+    "resetEmailSent": "We sent a password reset link to {{email}}.",
+    "securityCheckFailed": "Could not initialize security check. Refresh the page and try again."
   },
   "notifications": {
     "title": "Notifications",

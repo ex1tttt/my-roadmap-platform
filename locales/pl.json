@@ -299,7 +299,18 @@
     "loginError": "Sign-in error: {{message}}",
     "registerError": "Registration error: {{message}}",
     "passwordExpired": "Password reset link has expired. Request a new one.",
-    "enterPassword": "Enter your password"
+    "enterPassword": "Wpisz hasło",
+    "emailAddress": "Adres e-mail",
+    "emailPlaceholder": "Adres e-mail",
+    "passwordPlaceholder": "Wpisz hasło",
+    "loginWithGoogle": "Zaloguj się za pomocą Google",
+    "signupCta": "Tak stwórz!",
+    "forgotPasswordHint": "Podaj e-mail — wyślemy link do resetu hasła.",
+    "forgotPasswordEnterEmail": "Najpierw wpisz adres e-mail.",
+    "sendResetLink": "Wyślij link",
+    "sendingReset": "Wysyłanie…",
+    "resetEmailSent": "Wysłaliśmy link resetujący na {{email}}.",
+    "securityCheckFailed": "Nie udało się uruchomić weryfikacji. Odśwież stronę i spróbuj ponownie."
   },
   "notifications": {
     "title": "Powiadomienia",
