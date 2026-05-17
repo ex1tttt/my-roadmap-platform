@@ -299,7 +299,7 @@ export default function RegisterForm() {
                 className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-500/70 bg-transparent py-2.5 text-sm font-medium text-white transition hover:border-slate-400 hover:bg-white/5 disabled:opacity-60"
               >
                 <GoogleIcon className="h-5 w-5 shrink-0" />
-                {googleLoading ? dt("auth.registering") : dt("auth.loginWithGoogle")}
+                {googleLoading ? dt("auth.registering") : dt("auth.signupWithGoogle")}
               </button>
 
               <button
