@@ -119,7 +119,7 @@ function GanttPanViewport({ children, panHint }: { children: ReactNode; panHint:
       ref={viewportRef}
       data-gantt-pan-viewport
       title={panHint}
-      className={`gantt-pan-viewport scrollbar-subtle max-h-[min(70vh,36rem)] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain p-4 md:p-5 ${
+      className={`gantt-pan-viewport scrollbar-subtle min-h-72 max-h-[min(70vh,36rem)] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-contain p-4 md:min-h-80 md:p-5 ${
         isPanning ? "gantt-pan-active" : ""
       }`}
       onPointerDown={onPointerDown}
@@ -486,7 +486,7 @@ export default function GanttCardView({ cardId, cardSlug, tasks, canConfigure }:
 
   return (
     <GanttPanViewport panHint={t("gantt.panHint")}>
-      <div className="flex w-max min-w-full shrink-0 flex-col gap-8 pb-1 md:gap-10">
+      <div className="flex min-h-64 w-max min-w-full shrink-0 flex-col items-start justify-center gap-8 pb-1 md:min-h-70 md:gap-10">
       {roots.map((r) => (
         <div key={r.id}>{renderNode(r)}</div>
       ))}
