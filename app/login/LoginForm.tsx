@@ -36,6 +36,14 @@ const decryptPassword = (encrypted: string): string => {
   }
 };
 
+function authRedirectOrigin(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (fromEnv) {
+    return /^https?:\/\//i.test(fromEnv) ? fromEnv : `https://${fromEnv}`;
+  }
+  return window.location.origin;
+}
+
 const saveAccount = (email: string, password: string) => {
   const saved = localStorage.getItem("saved_accounts");
   let accounts: SavedAccount[] = [];
@@ -181,7 +189,7 @@ export default function LoginForm() {
     setError(null);
     setInfo(null);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback?next=/settings`,
+      redirectTo: `${authRedirectOrigin()}/auth/callback?next=/settings`,
     });
     setResetSending(false);
     if (resetError) {

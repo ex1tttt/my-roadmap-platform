@@ -315,7 +315,7 @@
     "sendResetLink": "Wyślij link",
     "sendingReset": "Wysyłanie…",
     "resetEmailSent": "Wysłaliśmy link resetujący na {{email}}.",
-    "resetEmailRateLimit": "Wysłano zbyt wiele próśb o reset hasła. Poczekaj kilka minut i spróbuj ponownie.",
+    "resetEmailRateLimit": "Wysłano zbyt wiele próśb o reset hasła. Limit wiadomości może trwać do godziny, spróbuj później.",
     "resetEmailError": "Nie udało się wysłać wiadomości do resetowania hasła. Spróbuj ponownie później.",
     "securityCheckFailed": "Nie udało się uruchomić weryfikacji. Odśwież stronę i spróbuj ponownie.",
     "confirmPasswordLabel": "Powtórz hasło",

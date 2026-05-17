@@ -6,8 +6,8 @@ import { validateRegistrationEmail } from "@/lib/validate-registration-email";
 import { NextRequest, NextResponse } from "next/server";
 
 function siteOrigin(req: NextRequest): string {
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (fromEnv) return /^https?:\/\//i.test(fromEnv) ? fromEnv : `https://${fromEnv}`;
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
   const proto = req.headers.get("x-forwarded-proto") || "http";
   if (host) return `${proto}://${host}`;
