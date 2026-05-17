@@ -37,11 +37,15 @@ const decryptPassword = (encrypted: string): string => {
 };
 
 function authRedirectOrigin(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
   if (fromEnv) {
     return /^https?:\/\//i.test(fromEnv) ? fromEnv : `https://${fromEnv}`;
   }
-  return window.location.origin;
+  return "";
 }
 
 const saveAccount = (email: string, password: string) => {
