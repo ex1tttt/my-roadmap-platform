@@ -293,6 +293,8 @@
     "sendResetLink": "Send reset link",
     "sendingReset": "Sending…",
     "resetEmailSent": "We sent a password reset link to {{email}}.",
+    "resetEmailRateLimit": "Too many reset emails have been requested. Please wait a few minutes and try again.",
+    "resetEmailError": "Could not send the password reset email. Please try again later.",
     "securityCheckFailed": "Could not initialize security check. Refresh the page and try again.",
     "confirmPasswordLabel": "Repeat password",
     "confirmPasswordPlaceholder": "Enter password again",

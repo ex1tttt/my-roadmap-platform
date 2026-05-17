@@ -185,7 +185,16 @@ export default function LoginForm() {
     });
     setResetSending(false);
     if (resetError) {
-      setError(resetError.message);
+      const normalizedMessage = resetError.message.toLowerCase();
+      if (
+        normalizedMessage.includes("rate limit") ||
+        normalizedMessage.includes("too many") ||
+        normalizedMessage.includes("exceeded")
+      ) {
+        setError(t("auth.resetEmailRateLimit"));
+      } else {
+        setError(t("auth.resetEmailError"));
+      }
       return;
     }
     setInfo(t("auth.resetEmailSent", { email: email.trim() }));
