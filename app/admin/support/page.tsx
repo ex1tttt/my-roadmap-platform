@@ -331,10 +331,19 @@ export default function AdminSupportPage() {
   }
 
   async function confirmDelete() {
-    if (!deleteTargetId) return
+    if (!deleteTargetId || !token) return
     const sid = deleteTargetId
     setDeleteTargetId(null)
-    await supabase.from('support_messages').delete().eq('session_id', sid)
+    const response = await fetch('/api/support-reply', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ session_id: sid }),
+    })
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      alert(data?.error ?? t('support.deleteChat'))
+      return
+    }
     setSessions((prev) => prev.filter((s) => s.session_id !== sid))
     if (activeSession === sid) {
       setActiveSession(null)
@@ -631,7 +640,7 @@ export default function AdminSupportPage() {
       {/* ── Контекстное меню сообщения ── */}
       {contextMenu && (
         <div
-          className="fixed z-[200]"
+          className="fixed z-200"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >

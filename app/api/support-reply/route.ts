@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE — удаление одного сообщения (только admin)
+// DELETE — удаление одного сообщения или всей сессии (только admin)
 export async function DELETE(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization')
@@ -87,13 +87,18 @@ export async function DELETE(req: NextRequest) {
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!ADMIN_IDS.includes(user.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    const { id } = await req.json()
-    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+    const { id, session_id } = await req.json()
+    if (!id && !session_id) {
+      return NextResponse.json({ error: 'Missing id or session_id' }, { status: 400 })
+    }
 
-    const { error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('support_messages')
       .delete()
-      .eq('id', id)
+
+    query = id ? query.eq('id', id) : query.eq('session_id', session_id)
+
+    const { error } = await query
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
