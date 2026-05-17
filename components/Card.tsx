@@ -199,12 +199,12 @@ export default function Card({
   const previewItems = isGantt
     ? ganttSorted.map((task, idx) => ({
         id: task.id,
-        order: task.order != null && task.order > 0 ? task.order : idx + 1,
+        order: idx + 1,
         title: (task.title ?? "").trim() || t("gantt.untitledStep"),
       }))
     : stepsSorted.map((step, idx) => ({
         id: step.id,
-        order: step.order && step.order > 0 ? step.order : idx + 1,
+        order: idx + 1,
         title: step.title,
       }));
   const previewCount = previewItems.length;
