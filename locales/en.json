@@ -761,6 +761,10 @@
     "waiting": "Processing..."
   },
   "privacy": {
+    "privateCard": "Private card",
+    "publicCard": "Public card",
+    "privateDesc": "Only visible to you and collaborators",
+    "publicDesc": "Visible to all users",
     "title": "PRIVACY POLICY",
     "description": "Please review our Privacy Policy and agree to its terms to continue using the service.",
     "viewButton": "View",

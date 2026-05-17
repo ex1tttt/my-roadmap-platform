@@ -590,6 +590,10 @@
     "actions": "Actions"
   },
   "privacy": {
+    "privateCard": "Prywatna karta",
+    "publicCard": "Publiczna karta",
+    "privateDesc": "Widoczna tylko dla Ciebie i współautorów",
+    "publicDesc": "Widoczna dla wszystkich użytkowników",
     "title": "POLITYKA PRYWATNOŚCI",
     "description": "Przejrzyj naszą Politykę prywatności i zgódź się z jej warunkami, aby kontynuować korzystanie z usługi.",
     "viewButton": "Wyświetl",
