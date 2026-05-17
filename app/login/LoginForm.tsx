@@ -10,7 +10,16 @@ import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { supabase } from "@/lib/supabase";
 import LoginBackdrop from "@/components/auth/LoginBackdrop";
 import GoogleIcon from "@/components/auth/GoogleIcon";
-import { AUTH_INPUT_CLASS, AUTH_MODAL_CLASS } from "@/components/auth/authStyles";
+import {
+  AUTH_HEADING_CLASS,
+  AUTH_ICON_BUTTON_CLASS,
+  AUTH_INPUT_CLASS,
+  AUTH_LABEL_CLASS,
+  AUTH_MODAL_CLASS,
+  AUTH_MUTED_CLASS,
+  AUTH_PAGE_CLASS,
+  AUTH_SECONDARY_BUTTON_CLASS,
+} from "@/components/auth/authStyles";
 
 interface SavedAccount {
   email: string;
@@ -184,31 +193,31 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="relative min-h-[calc(100dvh-4rem)] overflow-hidden bg-[#020617]">
+    <div className={AUTH_PAGE_CLASS}>
       <LoginBackdrop />
 
       <div className="relative z-10 flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-10 sm:px-6">
         <div className={AUTH_MODAL_CLASS}>
-          <h1 className="mb-8 text-center text-3xl font-bold tracking-tight text-white">
+          <h1 className={AUTH_HEADING_CLASS}>
             {passwordRequired ? dt("auth.enterPassword") : dt("auth.login")}
           </h1>
 
           {error && (
-            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-sm text-red-300">
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-50 px-3 py-2 text-center text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
               {error}
             </div>
           )}
           {info && (
-            <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-center text-sm text-emerald-200">
+            <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-50 px-3 py-2 text-center text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200">
               {info}
             </div>
           )}
 
           {forgotMode ? (
             <form onSubmit={handleForgotPassword} className="space-y-4">
-              <p className="text-center text-sm text-slate-400">{dt("auth.forgotPasswordHint")}</p>
+              <p className={`text-center text-sm ${AUTH_MUTED_CLASS}`}>{dt("auth.forgotPasswordHint")}</p>
               <label className="block">
-                <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.emailAddress")}</span>
+                <span className={AUTH_LABEL_CLASS}>{dt("auth.emailAddress")}</span>
                 <input
                   type="email"
                   value={email}
@@ -232,7 +241,7 @@ export default function LoginForm() {
                   setForgotMode(false);
                   setError(null);
                 }}
-                className="w-full text-sm text-slate-400 hover:text-slate-200"
+                className={`w-full text-sm ${AUTH_MUTED_CLASS} hover:text-slate-900 dark:hover:text-slate-200`}
               >
                 {dt("common.back")}
               </button>
@@ -241,7 +250,7 @@ export default function LoginForm() {
             <form onSubmit={(e) => void handleLogin(e)} className="space-y-4">
               {!passwordRequired && (
                 <label className="block">
-                  <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.emailAddress")}</span>
+                  <span className={AUTH_LABEL_CLASS}>{dt("auth.emailAddress")}</span>
                   <input
                     type="email"
                     value={email}
@@ -255,13 +264,13 @@ export default function LoginForm() {
               )}
 
               {passwordRequired && (
-                <div className="rounded-lg border border-slate-700/80 bg-slate-900/50 px-3 py-2 text-sm text-slate-300">
+                <div className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/50 dark:text-slate-300">
                   {email}
                 </div>
               )}
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-slate-300">{dt("auth.password")}</span>
+                <span className={AUTH_LABEL_CLASS}>{dt("auth.password")}</span>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -276,7 +285,7 @@ export default function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-200"
+                    className={AUTH_ICON_BUTTON_CLASS}
                     aria-label={showPassword ? dt("auth.hidePassword") : dt("auth.showPassword")}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -293,7 +302,7 @@ export default function LoginForm() {
                       setError(null);
                       setInfo(null);
                     }}
-                    className="text-sm text-slate-400 transition hover:text-slate-200"
+                    className={`text-sm transition ${AUTH_MUTED_CLASS} hover:text-slate-900 dark:hover:text-slate-200`}
                   >
                     {dt("auth.forgotPassword")}
                   </button>
@@ -304,7 +313,7 @@ export default function LoginForm() {
                 type="button"
                 onClick={() => void handleGoogleLogin()}
                 disabled={googleLoading || loading}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-500/70 bg-transparent py-2.5 text-sm font-medium text-white transition hover:border-slate-400 hover:bg-white/5 disabled:opacity-60"
+                className={AUTH_SECONDARY_BUTTON_CLASS}
               >
                 <GoogleIcon className="h-5 w-5 shrink-0" />
                 {googleLoading ? dt("auth.signingIn") : dt("auth.loginWithGoogle")}
@@ -319,14 +328,14 @@ export default function LoginForm() {
               </button>
 
               {!passwordRequired ? (
-                <p className="pt-2 text-center text-sm text-slate-400">
+                <p className={`pt-2 text-center text-sm ${AUTH_MUTED_CLASS}`}>
                   {dt("auth.noAccount")}{" "}
                   <Link href="/register" className="font-medium text-blue-400 hover:text-blue-300">
                     {dt("auth.signupCta")}
                   </Link>
                 </p>
               ) : (
-                <Link href="/login" className="block text-center text-sm text-slate-400 hover:text-slate-200">
+                <Link href="/login" className={`block text-center text-sm ${AUTH_MUTED_CLASS} hover:text-slate-900 dark:hover:text-slate-200`}>
                   {dt("common.back")}
                 </Link>
               )}

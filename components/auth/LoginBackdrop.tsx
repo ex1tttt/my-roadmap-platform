@@ -128,7 +128,7 @@ export default function LoginBackdrop() {
           </div>
         ))}
       </div>
-      <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-slate-50/85 backdrop-blur-md dark:bg-[#020617]/80" />
     </div>
   );
 }
