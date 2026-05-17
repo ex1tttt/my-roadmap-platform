@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import CollaboratorManager from "@/components/CollaboratorManager";
 import { supabase } from "@/lib/supabase";
 import { isUUID } from "@/lib/slug";
 import { categories } from "@/constants/categories";
@@ -437,26 +438,31 @@ export default function EditGanttPage() {
               <textarea className={INPUT_CLS} rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
             </label>
             {isOwner && (
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  {isPrivate ? (
-                    <Lock className="h-4 w-4 text-amber-400" />
-                  ) : (
-                    <Globe className="h-4 w-4 text-slate-400" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                      {isPrivate ? t('privacy.privateCard') : t('privacy.publicCard')}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {isPrivate ? t('privacy.privateDesc') : t('privacy.publicDesc')}
-                    </p>
+              <>
+                <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    {isPrivate ? (
+                      <Lock className="h-4 w-4 text-amber-400" />
+                    ) : (
+                      <Globe className="h-4 w-4 text-slate-400" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {isPrivate ? t('privacy.privateCard') : t('privacy.publicCard')}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {isPrivate ? t('privacy.privateDesc') : t('privacy.publicDesc')}
+                      </p>
+                    </div>
                   </div>
+                  <button type="button" onClick={() => setIsPrivate((v) => !v)} className={`relative inline-flex h-6 w-11 items-center rounded-full ${isPrivate ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPrivate ? "translate-x-5" : "translate-x-1"}`} />
+                  </button>
                 </div>
-                <button type="button" onClick={() => setIsPrivate((v) => !v)} className={`relative inline-flex h-6 w-11 items-center rounded-full ${isPrivate ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}>
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPrivate ? "translate-x-5" : "translate-x-1"}`} />
-                </button>
-              </div>
+                <div className="border-t border-slate-200 pt-4 dark:border-white/10">
+                  <CollaboratorManager cardId={cardId} />
+                </div>
+              </>
             )}
           </section>
 
