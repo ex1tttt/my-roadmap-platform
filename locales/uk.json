@@ -271,6 +271,7 @@
     "registerSuccess": "Реєстрацію завершено!",
     "logoutSuccess": "Ви вийшли.",
     "invalidCredentials": "Невірна пошта або пароль.",
+    "loginErrorGeneric": "Не вдалося увійти. Спробуйте пізніше.",
     "signingIn": "Вхід...",
     "registering": "Реєстрація...",
     "username": "Імʼя користувача",

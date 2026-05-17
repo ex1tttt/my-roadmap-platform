@@ -133,13 +133,12 @@ export default function LoginForm() {
         const data = await response.json();
 
         if (!response.ok) {
-          const errorMsg = data.error || t("auth.invalidCredentials");
           if (isAutoLogin) {
             setPasswordRequired(true);
             setPassword("");
             setError(t("auth.passwordExpired"));
           } else {
-            throw new Error(errorMsg);
+            setError(t("auth.invalidCredentials"));
           }
           setLoading(false);
           return;
@@ -150,7 +149,7 @@ export default function LoginForm() {
         window.location.href = "/";
       } catch (err: unknown) {
         if (!isAutoLogin) {
-          setError(err instanceof Error ? err.message : t("auth.invalidCredentials"));
+          setError(t("auth.loginErrorGeneric"));
         }
         setLoading(false);
       }

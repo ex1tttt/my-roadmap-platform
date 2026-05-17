@@ -289,6 +289,7 @@
     "registerSuccess": "Rejestracja zakończona!",
     "logoutSuccess": "Wylogowano.",
     "invalidCredentials": "Nieprawidłowy e-mail lub hasło.",
+    "loginErrorGeneric": "Nie udało się zalogować. Spróbuj ponownie później.",
     "signingIn": "Logowanie...",
     "registering": "Rejestracja...",
     "username": "Nazwa użytkownika",

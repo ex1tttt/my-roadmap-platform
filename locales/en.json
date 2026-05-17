@@ -267,6 +267,7 @@
     "registerSuccess": "Registered successfully!",
     "logoutSuccess": "Logged out.",
     "invalidCredentials": "Invalid email or password.",
+    "loginErrorGeneric": "Could not sign in. Please try again later.",
     "signingIn": "Signing in...",
     "registering": "Registering...",
     "username": "Username",

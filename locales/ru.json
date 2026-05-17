@@ -270,6 +270,7 @@
     "registerSuccess": "Регистрация завершена!",
     "logoutSuccess": "Вы вышли.",
     "invalidCredentials": "Неверная почта или пароль.",
+    "loginErrorGeneric": "Не удалось войти. Попробуйте позже.",
     "signingIn": "Вход...",
     "registering": "Регистрация...",
     "username": "Имя пользователя",
